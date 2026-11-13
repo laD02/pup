@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41a4f671a5ebe40ef98a08b1663c5f28, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.GameDatabase
+  levels:
+  - {fileID: 11400000, guid: f0315adf850294225abf21b3c46eb004, type: 2}
+  - {fileID: 11400000, guid: 7bcbf54614fee417ba1ace5285aaea68, type: 2}
+  - {fileID: 11400000, guid: 774a29a255239465296b091400a5ea4d, type: 2}
+  - {fileID: 11400000, guid: 98547e3bd8607414aa8e1bc221caf2f7, type: 2}
+  - {fileID: 11400000, guid: 9996067e7f09b41dbb5115feff2d3124, type: 2}
+  - {fileID: 11400000, guid: 53710ef8f02434cf48f4396b9f53e1ee, type: 2}
+  - {fileID: 11400000, guid: 1ed0963bc90f14d36912d466de517153, type: 2}
+  - {fileID: 11400000, guid: d7d026d85c2d749babcf0a370d9763f8, type: 2}
+  - {fileID: 11400000, guid: f033379e2c2ee49748d8a14b4d12731e, type: 2}
+  - {fileID: 11400000, guid: 3557a7d5a595d4e759e30d834ff7cf39, type: 2}
+  - {fileID: 11400000, guid: 3935e0d3bcd9a44aea85bb182f993500, type: 2}
+  - {fileID: 11400000, guid: ada4f80c2f4554a178b287541000410b, type: 2}
+  upgrades: {fileID: 11400000, guid: 2a8b928b3c9ce47cd868f97b432c48a8, type: 2}
+  tuning: {fileID: 11400000, guid: 97d8b265ac43e4c97a46b6a8f569f1e5, type: 2}

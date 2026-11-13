@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d21b630a227c42c18bb45999ebe6cad, type: 3}
+  m_Name: Upgrades
+  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.UpgradeData
+  upgrades:
+  - id: 0
+    icon: icon_spiky
+    costs: 03000000060000000a000000
+  - id: 1
+    icon: icon_ball
+    costs: 020000000500000008000000
+  - id: 2
+    icon: icon_pod
+    costs: 04000000080000000c000000
+  - id: 3
+    icon: icon_ninja
+    costs: 05000000090000000e000000
+  - id: 4
+    icon: icon_blaze
+    costs: 060000000a0000000f000000

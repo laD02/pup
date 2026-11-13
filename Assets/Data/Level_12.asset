@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb4e1d57f40484ff5a0a789e6ac5813b, type: 3}
+  m_Name: Level_12
+  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.LevelData
+  pufferCount: 8
+  requiredBears: 0
+  kind: 2
+  launcher: 0
+  caveFrom: 0
+  caveTo: 0
+  gapFrom: 0
+  gapTo: 0
+  zone: 0
+  threeStarScore: 600
+  terrain:
+  - shape: 0
+    position: {x: 2.2, y: 0.6}
+    size: {x: 2.6, y: 1.2}
+  - shape: 0
+    position: {x: 6.5, y: 1.6}
+    size: {x: 1, y: 3.2}
+  - shape: 0
+    position: {x: 10.8, y: 1}
+    size: {x: 3.4, y: 2}
+  blocks: []
+  bears:
+  - position: {x: 11.8, y: 2}
+    helmet: 0
+    mood: 1
+  - position: {x: 1.3, y: 1.2}
+    helmet: 0
+    mood: 2
+  objects:
+  - kind: 2
+    position: {x: 2.2, y: 1.2}
+    group: 7
+    value: 0
+  - kind: 2
+    position: {x: 10.8, y: 2}
+    group: 7
+    value: 0
+  - kind: 5
+    position: {x: 6.5, y: 3.2}
+    group: 7
+    value: 2
+  - kind: 4
+    position: {x: 4.3, y: 5.6}
+    group: 0
+    value: 0
+  showTutorial: 0

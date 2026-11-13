@@ -1,0 +1,128 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb4e1d57f40484ff5a0a789e6ac5813b, type: 3}
+  m_Name: Level_11
+  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.LevelData
+  pufferCount: 6
+  requiredBears: 0
+  kind: 1
+  launcher: 0
+  caveFrom: 0
+  caveTo: 0
+  gapFrom: 0
+  gapTo: 0
+  zone: 0
+  threeStarScore: 1450
+  terrain:
+  - shape: 0
+    position: {x: 6.5, y: 0.3}
+    size: {x: 5, y: 0.6}
+  blocks: []
+  bears: []
+  objects:
+  - kind: 3
+    position: {x: 0.8, y: 3.2}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 1.3199999, y: 4.140837}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 1.8399999, y: 4.8041735}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 2.36, y: 4.994357}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 2.8799999, y: 4.6552935}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 3.3999999, y: 3.8869898}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 3.9199998, y: 2.9160573}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 4.44, y: 2.0288746}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 4.96, y: 1.4871163}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 5.48, y: 1.4505746}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 6, y: 1.9300275}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 6.52, y: 2.7840605}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 7.04, y: 3.760775}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 7.56, y: 4.5720882}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 8.08, y: 4.978703}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 8.599999, y: 4.8606877}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 9.12, y: 4.2528505}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 9.639999, y: 3.3344743}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 10.16, y: 2.3764346}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 10.679999, y: 1.6613073}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 11.2, y: 1.4000177}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 11.719999, y: 1.669635}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 12.24, y: 2.3906353}
+    group: 0
+    value: 0
+  - kind: 3
+    position: {x: 12.759999, y: 3.3503585}
+    group: 0
+    value: 0
+  showTutorial: 0

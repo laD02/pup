@@ -1,0 +1,83 @@
+# Changelog
+
+## [Unreleased]
+
+- A dive that knocks out a bear always bounces the pup; snow blocks no longer stop a piercing dive; the bonus level needs every fish for Perfect.
+- Bears no longer wobble or slide off their spots in levels 7, 9 and 12; the boss can no longer fall out and leave its level unwinnable.
+- Progress is no longer lost if the phone dies while saving; erasing save data no longer breaks the volume sliders; leaving a paused level no longer lets it play on behind the wipe.
+- Buttons and sliders are easier to tap; the sound icons stay in sync with the pause menu and settings.
+- Smoother and cooler on phones: snow and smoke puffs are reused, the frame rate is held at 60, and idle screens do less work.
+- Like the classic: a gliding pup smashes straight through ice; a dive into ice bounces back a little; a pup that hits a rock slope slides down it on its belly in a shower of sparks.
+- Like the classic: any pup that touches ice breaks it at once; wooden crates cannot be smashed, only a floor button clears them.
+- The floating ledge on the right is now snowy rock instead of ice: only breakable things are ice.
+- The floating ice shelf wears the same snow cap; dents stay on the stone under the snow; a knocked-off hat lands on the rock and fades instead of falling through it.
+- The fortress snow is one continuous cap over all the rock, folding neatly at every corner. Pups fly in even higher.
+- The fortress view is wider; pups fly in higher, and dive at a gentler diagonal and a slower speed.
+- The launch pit is now one continuous painting with a diagonal exit channel: the right column's snowy top slopes up parallel to the ceiling's cut. Fortress rock is one unbroken stone texture.
+- The fortress rock and its snow caps are now taken straight from the launch pit painting, so both phases share one look.
+- Snow on fortress slopes now meets the snow on plateaus and the floor in clean rounded joints. The launch gap accepts slightly early or late hits, not only the perfect one.
+- A pup that misses the gap sticks right where it hit, head in the rock and feet kicking.
+- Bears face left toward the incoming pups. Snow rims on the fortress rock are redrawn with rounded joints at every corner.
+- Fortress ramps are cut from the same cobble as the blocks with the same snow rim. A pup that misses now tumbles down the pit rock and lies where it stops, or sticks where it hit the ceiling.
+- The fortress rock now uses the same stone as the launch pit.
+- The launch pit is repainted as a closed stone box: a full rock ceiling with a slanted cut at the top right, a tall right column, and the catapult standing in a snowy hollow.
+- A hit bear now tumbles and drops out of the arena; pups rebound lower and slide along snow and slopes. The launch gap is hard again and each pup's exit sets how it flies over the fortress.
+- After its hat is knocked off a pup stays bare-headed (getting up, walking off, cheering). No more level title card or falling snow; the caged pup on the map cries "HELP!".
+- Levels 5, 6, 7, 9 and 10 gain ice arches and beams that shelter bears; a pup bounces on bare-headed once its hat is knocked off.
+- A pup's hat flies off on its first hit, hits leave dents in rock, ice wedges cap beams and columns, and a water curtain drops between the launch pit and the fortress.
+- Every pup now bounces on as a ball after its first hit and trails smoke; bears turn to watch it. Levels 2 and 3 are rebuilt as an ice arch and an ice tower.
+- Like the classic: no score on screen, ice blocks stand still (a hit block breaks, the rest stay put), the launch pit's exit is the whole opening on the right with a flatter shot, and every pup flies over the fortress at the same height and speed.
+- Boss level reworked like the classic: the boss is a normal-sized angry bear with no life bar; dive into it twice to knock it out. The floor button throws it off its perch.
+- The tutorial level is more forgiving: shots are guided harder toward the gap.
+- Pups bounce higher off bears and the camera stays low while a pup is still bouncing. The pit wall now matches the pit stone.
+- Screens laid out like the classic: hero and bear portraits with big counters on the HUD (no score bar; the score is on the result card), a mission card that waits for Continue, "Congratulations!" result card, a plain PAUSE overlay, "?" stones and gold-star stones on the map with the pup standing at the next level, logo-and-big-Play title screen, and the instructions card on the first Play.
+- Bungee levels (5 and 8) are harder: the shot only clears the gap when the pup is hit on its way down.
+- A pup that rolls to a stop on the wall top no longer counts as through the gap.
+- Flung bears that fall off the arena edge stop simulating; a pup that bounces off a bear and lands on a knocked-out one now walks off instead of waiting forever.
+- The launch catapult now works like the classic: the snowball stays on the arm and the arm swings up to smack the pup, which now swings much wider on its rope. Time the tap as the pup passes over the catapult.
+- Bears are a little bigger and pups a little smaller.
+- Pups that make it through the gap now fly straight on to the fortress instead of waiting on the ledge. The way each pup leaves the pit sets how high and how fast it flies over the fortress: a steep shot comes in high and slow, a flat one low and fast.
+- Getting through the gap is harder: only a perfectly timed hit is guided straight into it, and the gap itself is smaller (a rock overhang and a taller right wall).
+- Pups over the fortress are smaller. A tap tips the pup nose-down into a quick, steep drop (about twice its flying speed): tap just before you reach a bear.
+- The fortress now has its cobble cliff on the left and open sky on the right, like the classic; broken ice leaves shards lying around. Some levels hang an ice shelf off the right edge with a bear perched on it.
+- Knocked-out bears are flung much further; the mission-card pup bows and then salutes.
+- Fixed: a pup that entered the fortress slowly could slow to a crawl and never dive, so the level could not end.
+- Hidden caves under the arena in levels 6 and 9: drop a pup through the gap in the floor to reach the bears (and a gate button) below.
+- Knocked-out bears are flung up spinning before they land; dazed pups now see little snowballs circling their heads; diving pups leave wind streaks.
+- New bears sit on ledge edges with their legs dangling; the mission card pup now salutes.
+- Fixed: the mission card showed the all-time bear total instead of the bears on this level.
+- Fixed: the Ice Bear King could not be beaten (3 lives, 2 buttons that stayed pressed). Buttons now pop back up when he climbs back onto his perch, and he counts in the bear counter (e.g. 2/3).
+- The sound and music buttons now show a red slash when off, and turning music back on restores your volume.
+- Leaving the app mid-level now pauses the game, so you come back to a still screen.
+- Fixed: Retry, Map or Next tapped while the water wipe was still draining did nothing.
+- Shop prices of 10 stars or more are no longer hidden under the star icon.
+- Pups that roll off a knocked-out bear's round belly now hop back on and cheer.
+- Bungee pups now fly at a flatter angle so a well-timed shot clears the icicles.
+- New bungee launch pit in levels 5 and 8: the pup bobs up and down on an elastic cord right over the catapult.
+- Every bear you knock out sends a gold star flying into the bear counter.
+- Pups that stop on a knocked-out bear stand on its belly and cheer.
+- Ninja Pup now kicks diagonally into the nearest bear below instead of only dropping straight down.
+- The Ice Bear King fumes steam from his ears, and his cage now bursts apart with flying bars and circling stars as the freed pup lands and waves.
+- All-new hand-painted look: the launch pit, the snowball catapult, the sunset arena, ice and snow blocks, crates, buttons, cages, fish, the level map, the menu and every panel and button were repainted in one storybook style.
+- Opening story: five painted scenes show how the bears stole the winter fish and caged the pups (skip any time, replay from the menu).
+- Launch pit: a shot at the bottom of the swing is "GREAT!", any pup out is "OK!", and a pup that hits the rock calls "OOPS!" and stays stuck upside down in the icicles or on its back on the floor, kicking. Each pup in the queue swings a little wider. A missed snowball can startle a waiting pup. Pups now reach down and grab the rope.
+- Arena pups keep flying round until you tap; a hand hint appears after two laps.
+- Every bear keeps its own antic: shadow-boxing, sitting hugging its knees, a smug nod or eating from a bowl.
+- Failed missions show the bear that is still standing, how many you knocked out and three empty stars. New statistics page (total bears, 2/3/4-bear dives, perfect missions) from the failed card and Settings; win cards show your total bears.
+- Call-outs and pop-up text now burst in with a bounce.
+- The whole game is now played in landscape, laid out like a classic catapult game: pups queue on a long bridge on the left, the whacker bats them out through the top-right gap, and they glide in from the left across the whole bear fortress. Island level map, menu, shop, pause and result screens redesigned for the wide screen.
+- Phase 2 is now a wide arena under a sunset sky over the pack ice: cobble ramps, plateaus and pillars across the screen, ice cubes stacked on them and bears standing exposed on top; pups fly in level from the left and dive on a slow diagonal when tapped.
+- The whacker operator now stands right at the machine, pulling its lever.
+- Phase 2 plays like a classic catapult game: pups fly level across the arena and wrap around from the left, nose-dive on a tap, bounce from bear to bear for ×2/×3 combos, smash through ice cubes, then get up and walk off. The camera follows the pup.
+- Missions: each level says how many bears to knock out; knock out every bear for a Perfect badge on the map.
+- Bears now eat from fish bowls, sleep or taunt, tip over with stars when hit and stay down.
+- Phase 1: a good hit shows "OK!", a miss "Grr…", the machine puffs smoke, and pups that make it out land on a ledge and queue there.
+- New arena objects: bumpers that fling the pup back, TNT crates, floor buttons that shatter ice gates.
+- Two new upgrades: Ninja Pup (tap again mid-dive to stop and drop straight down) and Blazing Pup (tap again to catch fire and melt through ice). Steering by swipe is gone.
+- Level 11 is a bonus fish-collecting run and level 12 is the Ice Bear King: press the floor buttons to knock him off his perch three times and free the caged pup.
+- New hand-drawn animations: the pup flaps across the arena, noses down into the dive, hangs as a ninja and gets up after a landing; the bears are proper villains now (angry brows, fangs, a scar) with eating, sleeping, taunting, dizzy and knocked-out frames.
+- The catapult now flings a snowball at the swinging pup; a hit shows "OK!", a miss "Grr…".
+- Water-wipe scene transitions with the bear running past carrying the cage; new sounds and a faster arena tune; zone colour palettes.
+- New hand-drawn seal pup hero with smooth walk, swing, flight, cheer and dizzy animations.
+- Launch stage redesigned: the whacker now faces the pit and a seal pulls its lever; good hits fly up toward the exit, and a pup that bumps a wall gets dizzy and drops out.
+- Polar ice-sea theme, renamed to Pup Launch, new art, HUD, result screen and scene fades.

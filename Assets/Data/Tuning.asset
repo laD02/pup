@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9b21bc23f3994a22a310164981e1b3e, type: 3}
+  m_Name: Tuning
+  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.GameTuning
+  gravityScale: 0.55
+  airDrag: 0.1
+  blockDrag: 0.6
+  strikePower: 13
+  strikeAngle: 41
+  aimAssist: 0.4
+  swingInfluence: 0.6
+  launcherReloadTime: 0.45
+  diveSpeedScale: 1.3
+  diveAngle: 45
+  steerSpeed: 7
+  pufferMass: 2.2
+  bounceKeep: 0.5
+  restTime: 0.8
+  maxLifetime: 7
+  snowHp: 2
+  iceHp: 7
+  stoneHp: 22
+  snowDensity: 0.6
+  iceDensity: 1
+  stoneDensity: 2.6
+  minDamageImpulse: 1.2
+  bearHitImpulse: 3
+  bearFallDistance: 1.1
+  snowScore: 50
+  iceScore: 120
+  stoneScore: 200
+  bearScore: 500
+  shakeOnBreak: 0.15
+  shakeOnBear: 0.35

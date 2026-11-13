@@ -1,0 +1,10 @@
+{
+    "name": "PufferLaunch",
+    "rootNamespace": "PufferLaunch",
+    "references": [
+        "Unity.InputSystem",
+        "Unity.Cinemachine",
+        "Unity.TextMeshPro"
+    ],
+    "autoReferenced": true
+}

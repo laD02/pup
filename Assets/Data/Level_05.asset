@@ -1,0 +1,114 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb4e1d57f40484ff5a0a789e6ac5813b, type: 3}
+  m_Name: Level_05
+  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.LevelData
+  pufferCount: 6
+  requiredBears: 3
+  kind: 0
+  launcher: 1
+  caveFrom: 0
+  caveTo: 0
+  gapFrom: 0
+  gapTo: 0
+  zone: 0
+  threeStarScore: 1900
+  terrain:
+  - shape: 1
+    position: {x: 1.75, y: 0.8}
+    size: {x: 2.5, y: 1.6}
+  - shape: 0
+    position: {x: 4.2, y: 0.8}
+    size: {x: 2.4, y: 1.6}
+  - shape: 0
+    position: {x: 11.5, y: 1.3}
+    size: {x: 2.2, y: 2.6}
+  blocks:
+  - material: 1
+    position: {x: 7, y: 0.4}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 0
+  - material: 1
+    position: {x: 7, y: 1.2}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 0
+  - material: 1
+    position: {x: 9.4, y: 0.4}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 0
+  - material: 1
+    position: {x: 9.4, y: 1.2}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 0
+  - material: 1
+    position: {x: 7, y: 2}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 0
+  - material: 1
+    position: {x: 7.8, y: 2}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 0
+  - material: 1
+    position: {x: 8.6, y: 2}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 0
+  - material: 1
+    position: {x: 9.4, y: 2}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 0
+  - material: 1
+    position: {x: 6.2, y: 0.4}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: 1
+  - material: 1
+    position: {x: 10.2, y: 2}
+    size: {x: 0.8, y: 0.8}
+    rotation: 0
+    group: 0
+    wedge: -1
+  bears:
+  - position: {x: 4.2, y: 1.6}
+    helmet: 1
+    mood: 0
+  - position: {x: 8.2, y: 2.4}
+    helmet: 0
+    mood: 0
+  - position: {x: 8.2, y: 0}
+    helmet: 0
+    mood: 1
+  - position: {x: 11.5, y: 2.6}
+    helmet: 0
+    mood: 2
+  objects:
+  - kind: 0
+    position: {x: 9.5, y: 4.6}
+    group: 0
+    value: 0
+  showTutorial: 0
