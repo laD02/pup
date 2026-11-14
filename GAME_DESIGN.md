@@ -274,6 +274,7 @@ Dây dài 1.9 (cũ 2.4) để đáy cung nằm ngay trên cốc máy bắn đặ
 11. [Nghệ thuật](#11-nghệ-thuật)
 12. [Âm thanh](#12-âm-thanh)
 13. [Kỹ thuật](#13-kỹ-thuật)
+13b. [Quảng cáo](#13b-quảng-cáo-admob-người-dùng-13112026)
 14. [Kế hoạch sản xuất](#14-kế-hoạch-sản-xuất)
 15. [Rủi ro](#15-rủi-ro)
 16. [Quyết định cần bạn chốt](#16-quyết-định-cần-bạn-chốt)
@@ -366,7 +367,7 @@ Android: thẻ "Star Upgrade" sau khi đủ sao: danh sách kỹ năng, chọn m
 | Người chơi | Mọi lứa tuổi, chơi bằng một ngón tay, quốc tế (EN mặc định, VI) |
 | Nền tảng | Android, Google Play, màn hình ngang (cả hai chiều), 16:9 chuẩn, 4:3 hẹp nhất, 20:9 rộng nhất |
 | Phiên chơi | 2–5 phút (3–5 màn), không cần mạng |
-| Tiền | Chưa quyết: miễn phí không quảng cáo (MVP) ❓ |
+| Tiền | Miễn phí, có quảng cáo AdMob nhẹ tay (người dùng 13/11/2026: "đẩy dự án lên admob"), xem §13b |
 
 **Trụ cột** (mọi quyết định đối chiếu với 4 điều này):
 1. **Canh nhịp dễ hiểu, khó thành thạo:** một nút chạm cho cả hai pha; nhìn là biết, luyện mới giỏi.
@@ -615,6 +616,42 @@ Save, PupRig), `Launch` (LaunchPhase, SwingRope, WhackerMachine), `Attack` (Atta
 BearRig), `Progress` (data), `UI`. Test: EditMode (sao, cửa hàng, save) + PlayMode (màn đứng yên, lao phá, chơi hết một
 màn bằng bot, quét nhịp đập, quay frame, chụp menu). Build: `ProjectBuilder` (APK test, AAB ký bằng biến môi trường).
 Máy: M1 8 GB, ổ trống ≥ 10 GB; QA trên AVD `Pixel_QA_34` (chụp qua `adb emu screenrecord screenshot`).
+
+## 13b. Quảng cáo (AdMob, người dùng 13/11/2026)
+
+Lấy theo quy tắc của one-fill-line (`docs/BAO-CAO-KHAO-SAT.md` §6b ở repo đó): quảng cáo **nhẹ tay**, không bao giờ
+chen giữa màn, mỗi quy tắc chặn đúng một lời chê hay gặp ở thể loại.
+
+| Vị trí | Quy tắc | Chặn lời chê nào |
+|---|---|---|
+| Banner | **Không có.** Game ngang, hành động: banner che sân chơi và gây chạm nhầm | Banner che, chạm nhầm |
+| Interstitial | Chỉ khi bấm **Tiếp tục** trên thẻ thắng, trước khi sang màn sau. Tối đa **1 lần mỗi 4 màn thắng**; cách mọi quảng cáo toàn màn **≥ 180 giây**; chưa có khi người chơi mới qua dưới **3 màn**; không có sau màn thưởng và màn boss (thẻ kết thúc chặng), không có khi bấm Chơi lại hay Bản đồ | "Quảng cáo sau mỗi màn", quảng cáo ngay sau phần hướng dẫn |
+| Rewarded | Chỉ khi người chơi tự bấm nút có huy hiệu ▶: trên **thẻ thua**, "Chơi lại +1 hải cẩu ▶" — chơi lại đúng màn đó với thêm 1 hải cẩu, dùng **một lần** (màn kế hay lần chơi lại sau đó trở lại bình thường) | Ép xem video; thua mãi là kẹt |
+| Khi quảng cáo lỗi / không mạng | Rewarded: hiện "Chưa có quảng cáo", **không tặng gì**. Interstitial: bỏ qua, sang màn luôn | Tắt mạng để lấy quà miễn phí; game treo chờ quảng cáo |
+| Âm thanh | Âm thanh game tắt (nút loa, menu tạm dừng, Cài đặt) thì quảng cáo cũng tắt tiếng (`MobileAds.SetApplicationMuted`) | Quảng cáo kêu to khi đã tắt âm |
+| Đồng ý (GDPR) | Google UMP hỏi khi mở game, **trước** `MobileAds.Initialize`; không được phép thì chơi không quảng cáo. Cài đặt có dòng **Quyền riêng tư** khi UMP yêu cầu | Luật EU, chính sách Play |
+
+Kỹ thuật: plugin Google Mobile Ads Unity (OpenUPM `com.google.ads.mobile`); quy tắc nằm ở lớp C# thuần
+`AdPolicy` (test EditMode), phần gọi SDK ở `Ads`. Bản test/QA và máy ảo luôn dùng **ID quảng cáo test** của Google;
+chỉ bản AAB phát hành dùng ID thật trong `AdsConfig.cs` (ID còn là chỗ trống thì vẫn dùng ID test và log lỗi, không
+crash). Đếm "4 màn thắng" và "180 giây" theo phiên chơi (mở lại game thì đếm lại); "3 màn" đếm theo save (màn có ≥ 1 sao).
+
+## 13c. Ngôn ngữ và đánh giá trong app (người dùng 13/11/2026: "làm SEO thật tốt, ưu tiên EU")
+
+- **7 ngôn ngữ**: en, vi, de, fr, es, it, pl (cột theo thứ tự `Loc.Codes`). Lần đầu theo ngôn ngữ máy, không khớp thì
+  English. Nút Ngôn ngữ trong Cài đặt **xoay vòng** en → vi → de → fr → es → it → pl, hiện tên của chính ngôn ngữ đó
+  ("Deutsch", "Polski"). Tên nâng cấp, vùng và huy hiệu dịch **đúng bảng** trong `docs/ASO.md` (mục Châu Âu), để ảnh store
+  và mô tả nói cùng một chữ. Giọng thân mật (du / tu / tú). Chữ dài hơn khung thì tự co tới 65% cỡ chữ (`UiKit.Text`),
+  không tràn. Bản dịch do Claude viết, chưa có người bản xứ đọc lại.
+- **Đánh giá trong app** (Google Play In-App Review, như one-fill-line `docs/ASO.md` §5): hỏi **một lần**, 1,5 giây sau khi
+  thẻ thắng hiện ở lần thắng đầu tiên từ **màn 5** trở đi. Không bao giờ khi thua, giữa màn hay khi đang rời màn; app ở
+  nền thì bỏ, lần thắng sau hỏi lại. Interstitial chỉ hiện khi rời thẻ thắng, nên thẻ thắng không bao giờ ngay sau quảng
+  cáo. Cờ `reviewAsked` chỉ bật khi Play nhận yêu cầu (lỗi mạng thì lần thắng sau hỏi lại) và **giữ qua Xóa dữ liệu**.
+  Play tự quyết có hiện hộp hay không và không cho game biết người chơi có đánh giá không, nên không gắn gì vào kết quả;
+  không hỏi "bạn có thích không" trước (Play cấm lọc review). Hộp chỉ hiện ở bản cài từ Play (internal track trở lên);
+  Editor và APK cài tay không hiện gì. Kỹ thuật: gọi thẳng thư viện `com.google.android.play:review` qua JNI (khai báo
+  cho EDM ở `Assets/Scripts/Review/Editor/PlayReviewDependencies.xml`), không dùng plugin Unity của Google vì plugin đó
+  kéo EDM bản `com.google.*` trùng với bản `com.unity.*` mà plugin AdMob dùng.
 
 ## 14. Kế hoạch sản xuất
 

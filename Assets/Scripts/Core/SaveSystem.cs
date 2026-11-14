@@ -28,6 +28,7 @@ namespace PufferLaunch.Core
         public int combo4;
         public bool seenIntro;                         // the opening story played once already
         public bool seenHowTo;                         // the instructions card was shown on the first Play
+        public bool reviewAsked;                       // Play took the one in-app review request (kept by Erase)
 
         /// <summary>Repairs data from older or hand-edited files so the game never indexes out of range.</summary>
         public void Normalize()
@@ -44,7 +45,7 @@ namespace PufferLaunch.Core
             combo2 = Mathf.Max(0, combo2);
             combo3 = Mathf.Max(0, combo3);
             combo4 = Mathf.Max(0, combo4);
-            if (language != "en" && language != "vi") language = "";
+            if (Array.IndexOf(Loc.Codes, language) < 0) language = "";
         }
 
         /// <summary>Records one pup's dive: how many bears it knocked out (combos of 2+ are counted by size).</summary>
@@ -104,6 +105,7 @@ namespace PufferLaunch.Core
                 sfxVolume = keep.sfxVolume,
                 muted = keep.muted,
                 language = keep.language,
+                reviewAsked = keep.reviewAsked,
             };
             Save();
         }

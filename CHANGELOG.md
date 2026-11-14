@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- The game now speaks German, French, Spanish, Italian and Polish, picked from the phone's language or in Settings; long texts shrink to fit.
+- A new painted app icon. After a few wins the game may ask once for a Google Play rating.
+- Light ads: an occasional ad between levels (at most one every 4 wins, never mid-level), and an optional video on the lose card for one retry with an extra pup. Ads stay silent when the game's sound is off; EU players are asked for consent and can change it in Settings.
 - A dive that knocks out a bear always bounces the pup; snow blocks no longer stop a piercing dive; the bonus level needs every fish for Perfect.
 - Bears no longer wobble or slide off their spots in levels 7, 9 and 12; the boss can no longer fall out and leave its level unwinnable.
 - Progress is no longer lost if the phone dies while saving; erasing save data no longer breaks the volume sliders; leaving a paused level no longer lets it play on behind the wipe.

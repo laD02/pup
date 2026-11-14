@@ -330,6 +330,31 @@ namespace PufferLaunch.EditorTools
             EditorBuildSettings.scenes = Scenes.Select(s => new EditorBuildSettingsScene(ScenePath(s.scene), true)).ToArray();
         }
 
+        const string AdMobSettingsPath = "Assets/GoogleMobileAds/Resources/GoogleMobileAdsSettings.asset";
+
+        /// <summary>Writes the AdMob app id into the plugin's settings asset (the plugin stops the build when it is empty).
+        /// Its settings class is internal, so the field is set through SerializedObject.</summary>
+        static void ConfigureAdMob()
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<ScriptableObject>(AdMobSettingsPath);
+            if (settings == null)
+            {
+                var type = System.Type.GetType("GoogleMobileAds.Editor.GoogleMobileAdsSettings, GoogleMobileAds.Editor");
+                if (type == null)
+                {
+                    Debug.LogError("[PufferLaunch] Google Mobile Ads plugin missing (Packages/manifest.json com.google.ads.mobile)");
+                    return;
+                }
+                Directory.CreateDirectory(Path.GetDirectoryName(AdMobSettingsPath));
+                settings = ScriptableObject.CreateInstance(type);
+                AssetDatabase.CreateAsset(settings, AdMobSettingsPath);
+            }
+            var so = new SerializedObject(settings);
+            so.FindProperty("adMobAndroidAppId").stringValue = PufferLaunch.Ads.AdsConfig.AppId;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.SaveAssets();
+        }
+
         static void ConfigurePlayer()
         {
             PlayerSettings.productName = "Pup Launch";
@@ -344,9 +369,12 @@ namespace PufferLaunch.EditorTools
             PlayerSettings.allowedAutorotateToLandscapeLeft = true;
             PlayerSettings.allowedAutorotateToLandscapeRight = true;
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
+            ConfigureAdMob();
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.runInBackground = false;
-            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>($"{ArtDir}/pup_ball.png");
+            // The painted store icon (docs/ASO.md §4); the old pup sprite only if that file is missing.
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Art/Reference/app_icon.png")
+                ?? AssetDatabase.LoadAssetAtPath<Texture2D>($"{ArtDir}/pup_ball.png");
             if (icon != null) PlayerSettings.SetIcons(UnityEditor.Build.NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
         }
     }

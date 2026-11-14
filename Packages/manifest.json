@@ -30,6 +30,16 @@
     "com.unity.modules.vectorgraphics": "1.0.0",
     "com.unity.render-pipelines.universal": "17.3.0",
     "com.unity.test-framework": "1.6.0",
-    "com.unity.ugui": "2.0.0"
-  }
+    "com.unity.ugui": "2.0.0",
+    "com.google.ads.mobile": "11.6.0"
+  },
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.google.ads.mobile"
+      ]
+    }
+  ]
 }

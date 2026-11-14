@@ -32,3 +32,6 @@ sysinfo.txt
 # Python
 __pycache__/
 *.pyc
+
+# Unity Performance Testing package leftovers
+/[Aa]ssets/[Rr]esources/PerformanceTestRun*.json*

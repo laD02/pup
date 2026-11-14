@@ -161,6 +161,10 @@ namespace PufferLaunch.UI
             tmp.alignment = align;
             tmp.raycastTarget = false;
             tmp.textWrappingMode = TextWrappingModes.Normal;
+            // German/French run ~30% longer than English: shrink to fit the box instead of spilling out of it.
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMax = size;
+            tmp.fontSizeMin = size * 0.65f;
             // Preset material asset (outline + soft drop shadow) so its shader variant ships in the build.
             if (outline && OutlineMaterial != null) tmp.fontSharedMaterial = OutlineMaterial;
             return tmp;

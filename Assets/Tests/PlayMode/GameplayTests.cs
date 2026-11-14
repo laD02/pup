@@ -17,6 +17,18 @@ namespace PufferLaunch.Tests
         const float SettleSeconds = 3f;
         const float MaxRestDrift = 0.15f;
 
+        // The ad policy is static: wins counted by one test must not decide whether another shows an interstitial.
+        [SetUp]
+        public void ResetAdPolicy() => PufferLaunch.Ads.AdMob.Policy.Reset();
+
+        [Test]
+        public void OnlyBonusAndBossLevelsCloseTheChapter()
+        {
+            var levels = GameDatabase.Instance.levels;
+            for (int i = 0; i < levels.Length; i++)
+                Assert.AreEqual(i >= levels.Length - 2, GameManager.IsChapterEnd(levels[i]), $"level {i + 1}");
+        }
+
         /// <summary>Loads a level and waits for the NEW scene (the fade keeps the old one alive for a moment).</summary>
         static IEnumerator LoadLevel(int index)
         {

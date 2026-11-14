@@ -83,7 +83,7 @@ namespace PufferLaunch.Tests
         [Test]
         public void RoundTripKeepsProgress()
         {
-            var d = new SaveData { spentStars = 4, language = "vi" };
+            var d = new SaveData { spentStars = 4, language = "pl", reviewAsked = true };
             d.stars[2] = 3;
             d.stars[3] = 2;
             d.upgrades[(int)UpgradeId.Ninja] = 2;
@@ -92,7 +92,8 @@ namespace PufferLaunch.Tests
             Assert.AreEqual(3, loaded.stars[2]);
             Assert.AreEqual(2, loaded.upgrades[(int)UpgradeId.Ninja]);
             Assert.AreEqual(4, loaded.spentStars);
-            Assert.AreEqual("vi", loaded.language);
+            Assert.AreEqual("pl", loaded.language);
+            Assert.IsTrue(loaded.reviewAsked);
         }
 
         [Test]
@@ -149,7 +150,7 @@ namespace PufferLaunch.Tests
         [Test]
         public void NormalizeClampsHandEditedValues()
         {
-            File.WriteAllText(path, "{\"stars\":[9,-1],\"upgrades\":[7],\"musicVolume\":3,\"language\":\"fr\"}");
+            File.WriteAllText(path, "{\"stars\":[9,-1],\"upgrades\":[7],\"musicVolume\":3,\"language\":\"xx\"}");
             var d = SaveSystem.LoadFrom(path);
             Assert.AreEqual(SaveData.LevelCount, d.stars.Length);
             Assert.AreEqual(3, d.stars[0]);
@@ -190,6 +191,21 @@ namespace PufferLaunch.Tests
         }
     }
 
+    public class InAppReviewTests
+    {
+        [Test]
+        public void AsksOnlyOnAWinFromLevelFiveUntilPlayAccepted()
+        {
+            var d = new SaveData();
+            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 3, true), "level 4 is too early");
+            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 4, false), "never on a loss");
+            Assert.IsTrue(PufferLaunch.Review.InAppReview.ShouldAsk(d, 4, true));
+            Assert.IsTrue(PufferLaunch.Review.InAppReview.ShouldAsk(d, 9, true), "a failed ask retries on a later win");
+            d.reviewAsked = true;
+            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 9, true), "asked once");
+        }
+    }
+
     public class LocTests
     {
         /// <summary>The table uses index initializers, so a repeated key silently replaces the earlier text (it once
@@ -203,6 +219,23 @@ namespace PufferLaunch.Tests
             foreach (System.Text.RegularExpressions.Match m in keys)
                 Assert.IsTrue(seen.Add(m.Groups[1].Value), $"key {m.Groups[1].Value} is defined twice");
             Assert.Greater(seen.Count, 50);
+        }
+
+        [Test]
+        public void EveryKeyHasTextInEveryLanguage()
+        {
+            Assert.IsTrue(Loc.IsComplete(out string problem), problem);
+        }
+
+        [Test]
+        public void EveryLanguageCodeIsAcceptedBySaves()
+        {
+            foreach (string code in Loc.Codes)
+            {
+                var d = new SaveData { language = code };
+                d.Normalize();
+                Assert.AreEqual(code, d.language);
+            }
         }
     }
 

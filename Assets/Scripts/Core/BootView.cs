@@ -15,6 +15,7 @@ namespace PufferLaunch.Core
             QualitySettings.vSyncCount = 0;   // vSync would override the cap and render 90/120 fps on fast panels (heat, battery)
             Application.targetFrameRate = 60;
             SaveSystem.Load();
+            Ads.AdMob.Create();   // consent form (if required) shows over the logo, then ads preload in the background
             var cam = new GameObject("Main Camera") { tag = "MainCamera" }.AddComponent<Camera>();
             cam.gameObject.AddComponent<AudioListener>();
             cam.clearFlags = CameraClearFlags.SolidColor;

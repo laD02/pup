@@ -67,6 +67,8 @@ Follow `~/.claude/rules/ship-push-deploy-qa.md` (applies to every project). Proj
 Update the matching doc in the same change as the code: a new file or command goes in `README.md`; a
 design change goes in `GAME_DESIGN.md`; a player-visible change goes under `## [Unreleased]` in
 `CHANGELOG.md`.
+A feature added or removed also updates the Play listing in `docs/ASO.md` §3 (every language) and `site/`
+(regenerate with `site/make_pages.py`, republish); new UI text gets all 7 languages in `Loc.cs`.
 
 ## Language
 

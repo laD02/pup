@@ -80,8 +80,12 @@ namespace PufferLaunch.UI
             }
             else
             {
-                UiKit.Button(panel, Loc.T("map"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-250, 36), new Vector2(360, 108), game.ToMap, "glyph_map");
-                UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(250, 36), new Vector2(460, 108), game.Retry, "glyph_retry");
+                UiKit.Button(panel, Loc.T("map"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-430, 36), new Vector2(300, 108), game.ToMap, "glyph_map");
+                UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-90, 36), new Vector2(340, 108), game.Retry, "glyph_retry");
+                // Opt-in rewarded ad (GAME_DESIGN.md §13b): the ▶ glyph marks it; no ad means a note, never a free pup.
+                var noAd = UiKit.Text(panel, "", 34, UiKit.Bottom, new Vector2(330, 172), new Vector2(520, 50), UiKit.Ink);
+                UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(330, 36), new Vector2(460, 108),
+                    () => game.RetryWithBonusPup(() => noAd.text = Loc.T("ad_none")), "glyph_play");
             }
         }
 

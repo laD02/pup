@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
+using PufferLaunch.Ads;
 using PufferLaunch.Attack;
 using PufferLaunch.Launch;
 using PufferLaunch.Progress;
+using PufferLaunch.Review;
 using PufferLaunch.UI;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -70,7 +72,7 @@ namespace PufferLaunch.Core
 
             launch = new GameObject("Launcher").AddComponent<LaunchPhase>();
             launch.QueueChanged += hud.SetPuffers;
-            int count = level.pufferCount + SaveSystem.Data.upgrades[(int)UpgradeId.School];
+            int count = level.pufferCount + SaveSystem.Data.upgrades[(int)UpgradeId.School] + AdMob.Policy.TakeBonusPups(LevelIndex);
             Current = State.Launch;
             launch.Begin(tuning, count, OnLaunchDone, level.launcher, level.showTutorial);
             if (level.launcher == LaunchStyle.Bungee) StartCoroutine(After(2.4f, () => hud.Banner(Loc.T("bungee_tip"))));
@@ -203,6 +205,11 @@ namespace PufferLaunch.Core
             Current = won ? State.Won : State.Lost;
             GameInput.GameplayEnabled = false;
             hud.ShowHint(false);
+            if (won)
+            {
+                AdMob.Policy.RecordWin();
+                AdMob.TryConsentAgain();   // a player offline at launch gets the consent check once back online
+            }
             int stars = StarRating.Compute(won, puffersLeft, score, level.threeStarScore);
             bool perfect = won && attack.Perfect;
             var data = SaveSystem.Data;
@@ -215,6 +222,7 @@ namespace PufferLaunch.Core
             SaveSystem.Save();
             AudioManager.Sfx(won ? "win" : "lose", 0f);
             result.Show(LevelIndex + 1, won, perfect, stars, attack.BearsDown, attack.BearsRequired, data.totalBears);
+            if (InAppReview.ShouldAsk(data, LevelIndex, won)) StartCoroutine(InAppReview.AskOnce());
         }
 
         /// <summary>Going to the background mid-level opens the pause menu, so the player comes back to a still game
@@ -235,7 +243,44 @@ namespace PufferLaunch.Core
 
         public void Retry() => SceneLoader.PlayLevel(LevelIndex);
 
-        public void NextLevel() => SceneLoader.PlayLevel(LevelIndex + 1);
+        bool leaving;
+
+        /// <summary>Continue on the win card: the only place an interstitial may show (GAME_DESIGN.md §13b).</summary>
+        public void NextLevel()
+        {
+            if (leaving) return;   // a second tap while the ad opens must not load twice
+            leaving = true;
+            int cleared = 0;
+            foreach (int s in SaveSystem.Data.stars) if (s > 0) cleared++;
+            bool chapterEnd = IsChapterEnd(level);
+            AdMob.InterstitialThen(cleared, chapterEnd, () => SceneLoader.PlayLevel(LevelIndex + 1));
+        }
+
+        /// <summary>The bonus (fish) and boss levels close a chapter: no interstitial when leaving them.</summary>
+        public static bool IsChapterEnd(LevelData level)
+        {
+            foreach (var o in level.objects)
+                if (o.kind == ObjectKind.Fish || o.kind == ObjectKind.Boss) return true;
+            return false;
+        }
+
+        /// <summary>Lose card ▶: a rewarded ad buys one retry of this level with an extra pup.</summary>
+        public void RetryWithBonusPup(Action noAd)
+        {
+            if (leaving) return;
+            leaving = true;
+            AdMob.ShowRewarded(earned =>
+            {
+                leaving = false;
+                if (!earned)
+                {
+                    noAd();
+                    return;
+                }
+                AdMob.Policy.GrantBonusPup(LevelIndex);
+                Retry();
+            });
+        }
 
         public void ToMap() => SceneLoader.Load(SceneLoader.LevelMap);
 

@@ -61,7 +61,7 @@ namespace PufferLaunch.UI
             Row(panel, Loc.T("language"), -360);
             UiKit.Button(panel, Loc.T("lang_name"), ButtonStyle.Gold, UiKit.Top, new Vector2(200, -345), new Vector2(560, 100), () =>
             {
-                Loc.SetLanguage(Loc.Language == "vi" ? "en" : "vi");
+                Loc.SetLanguage(Loc.NextLanguage);
                 Rebuild();
             });
             UiKit.Button(panel, Loc.T("stats"), ButtonStyle.Teal, UiKit.Top, new Vector2(-260, -490), new Vector2(460, 100),
@@ -69,6 +69,9 @@ namespace PufferLaunch.UI
             UiKit.Button(panel, Loc.T("reset"), ButtonStyle.Warm, UiKit.Top, new Vector2(260, -490), new Vector2(460, 100), ConfirmReset);
             UiKit.Text(panel, Loc.T("credits"), 26, UiKit.Bottom, new Vector2(0, 140), new Vector2(1100, 60));
             UiKit.Button(panel, Loc.T("back"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(0, 30), new Vector2(340, 100), Close, "glyph_back");
+            // Ad consent can be changed later where UMP requires it (EU/UK; privacy.html promises this row).
+            if (Ads.AdMob.PrivacyOptionsRequired)
+                UiKit.Button(panel, Loc.T("privacy"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-420, 30), new Vector2(340, 100), Ads.AdMob.ShowPrivacyOptions);
         }
 
         static void Row(Transform panel, string label, float y) =>
