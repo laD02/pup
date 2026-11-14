@@ -116,7 +116,11 @@ namespace PufferLaunch.Ads
             if (started || consentRunning || Time.realtimeSinceStartup - lastConsentTry < ConsentRetryGap) return;
             consentRunning = true;
             lastConsentTry = Time.realtimeSinceStartup;
-            ConsentInformation.Update(new ConsentRequestParameters(), updateError => Post(() =>
+            var request = new ConsentRequestParameters();
+            // QA builds act as an EU player so the GDPR form can be checked on the emulator; release builds use real location.
+            if (Debug.isDebugBuild)
+                request.ConsentDebugSettings = new ConsentDebugSettings { DebugGeography = DebugGeography.EEA };
+            ConsentInformation.Update(request, updateError => Post(() =>
             {
                 if (updateError != null) Debug.LogWarning($"[PufferLaunch] consent update: {updateError.Message}");
                 // A player who consented last session can see ads while the form (if any) is still on its way.

@@ -66,6 +66,11 @@ frame for this build (Vulkan surface); capture through the emulator console inst
 other projects' apps, so installs fail with `INSTALL_FAILED_INSUFFICIENT_STORAGE`; QA uses the fresh AVD `Pixel_QA_34`
 (create with `avdmanager create avd -n Pixel_QA_34 -k "system-images;android-34;google_apis_playstore;arm64-v8a" -d pixel_3a`).
 
+**Ads and consent in QA:** the QA APK (development build) uses Google's test ad units and asks UMP to act as an EU
+player (`ConsentDebugSettings.DebugGeography = EEA` in `AdMob.TryConsent`), so the GDPR form and the Settings "Privacy"
+button show on the emulator; `adb shell pm clear com.pufferlaunch.game` asks again. Release builds use the real location.
+Unity's batch build restarts adb: if the emulator shows `offline` afterwards, `adb kill-server; adb start-server`.
+
 **Reaching later levels in QA:** build the debuggable QA APK
 (`-executeMethod PufferLaunch.EditorTools.ProjectBuilder.BuildApkQa` → `Builds/Android/PufferLaunch-qa.apk`, never upload
 it), launch it once, stop it, then push a save: `adb push save.json /sdcard/Android/data/com.pufferlaunch.game/files/save.json`
