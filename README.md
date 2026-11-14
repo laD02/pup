@@ -70,6 +70,10 @@ other projects' apps, so installs fail with `INSTALL_FAILED_INSUFFICIENT_STORAGE
 player (`ConsentDebugSettings.DebugGeography = EEA` in `AdMob.TryConsent`), so the GDPR form and the Settings "Privacy"
 button show on the emulator; `adb shell pm clear com.pufferlaunch.game` asks again. Release builds use the real location.
 Unity's batch build restarts adb: if the emulator shows `offline` afterwards, `adb kill-server; adb start-server`.
+Emulator gotchas (2026-11-14): after the emulator hangs and dies (QEMU "hanging thread", exit 139) the next boot comes
+from an older snapshot, so the game is gone: `monkey` says "No activities found" → `adb install -r` again. Right after
+boot Android may kill the game with `stop com.google.android.gms due to start failure` (Play Services not up yet, not a
+game crash; `adb logcat -b crash` stays empty): wait ~20 s and launch again.
 
 **Reaching later levels in QA:** build the debuggable QA APK
 (`-executeMethod PufferLaunch.EditorTools.ProjectBuilder.BuildApkQa` → `Builds/Android/PufferLaunch-qa.apk`, never upload
