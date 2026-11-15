@@ -117,7 +117,7 @@ MonoBehaviour:
     mood: 0
   objects:
   - kind: 1
-    position: {x: 9.8, y: 0.4}
+    position: {x: 2.05, y: 0.4}
     group: 0
     value: 0
   showTutorial: 0

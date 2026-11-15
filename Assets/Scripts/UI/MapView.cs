@@ -23,14 +23,24 @@ namespace PufferLaunch.UI
         };
 
 
-        TextMeshProUGUI starsLabel;
+        TextMeshProUGUI starsLabel, spendLabel;
+        Bob spendPulse;
         ShopView shop;
 
         void Start()
         {
             SaveSystem.EnsureLoaded();
-            MenuScene.Setup();
+            // map_bg covers the whole screen: no backdrop under it, and a still screen idles at half the frame rate.
+            MenuScene.Setup(backdrop: false);
+            Application.targetFrameRate = BootView.StillFps;
             Build();
+        }
+
+        /// <summary>Android Back: the shop first, then back to the main menu.</summary>
+        void Update()
+        {
+            if (!GameInput.BackPressed() || ScreenFader.LoadPending) return;
+            if (!shop.HandleBack()) SceneLoader.Load(SceneLoader.MainMenu);
         }
 
         void Build()
@@ -48,9 +58,10 @@ namespace PufferLaunch.UI
             // Top: back button left, sound/music centre (as on the reference's map).
             UiKit.Button(root, null, ButtonStyle.Teal, UiKit.TopLeft, new Vector2(24, -24), new Vector2(100, 100),
                 () => SceneLoader.Load(SceneLoader.MainMenu), "glyph_back");
-            var cluster = UiKit.Place(UiKit.Node(root, "Cluster"), UiKit.Top, new Vector2(0, -16), new Vector2(220, 100));
-            HudView.AudioButton(cluster, new Vector2(-55, 0), false);
-            HudView.AudioButton(cluster, new Vector2(55, 0), true);
+            float pitch = UiKit.MinHit;   // touch areas side by side, not overlapping
+            var cluster = UiKit.Place(UiKit.Node(root, "Cluster"), UiKit.Top, new Vector2(0, -16), new Vector2(pitch * 2f, 100));
+            HudView.AudioButton(cluster, new Vector2(-pitch * 0.5f, 0), false);
+            HudView.AudioButton(cluster, new Vector2(pitch * 0.5f, 0), true);
 
             // This game's own: stars collected (top right) pay for upgrades (bottom right).
             var stars = UiKit.Place(UiKit.Node(root, "Stars"), UiKit.TopRight, new Vector2(-24, -24), new Vector2(260, 96));
@@ -60,8 +71,15 @@ namespace PufferLaunch.UI
             UiKit.Image(stars, "star_full", new Vector2(0f, 0.5f), new Vector2(14, 2), new Vector2(70, 70));
             starsLabel = UiKit.Text(stars, "", 48, new Vector2(1f, 0.5f), new Vector2(-18, 2), new Vector2(160, 80), Color.white,
                 TextAlignmentOptions.Right, true);
-            UiKit.Button(root, Loc.T("shop"), ButtonStyle.Warm, UiKit.BottomRight, new Vector2(-24, 24), new Vector2(320, 110),
+            var upgrades = UiKit.Button(root, Loc.T("shop"), ButtonStyle.Warm, UiKit.BottomRight, new Vector2(-24, 24), new Vector2(320, 110),
                 () => shop.Open(), "glyph_shop");
+            // Stars left to spend, on the button that spends them (the pill above counts stars earned, a different
+            // number); the badge pulses while something is affordable.
+            var badge = UiKit.Image(upgrades.transform, "star_full", UiKit.TopRight, new Vector2(4, 50), new Vector2(84, 84));   // on the corner, clear of the label
+            spendLabel = UiKit.Text(badge.transform, "", 40, UiKit.Center, new Vector2(0, -4), new Vector2(70, 60));
+            spendPulse = badge.gameObject.AddComponent<Bob>();
+            spendPulse.pulse = true;
+            spendPulse.speed = 5f;
             shop = ShopView.Create(RefreshStars);
             RefreshStars();
 
@@ -73,7 +91,18 @@ namespace PufferLaunch.UI
             for (int i = 0; i < count; i++) BuildNode(trail, i, data);
         }
 
-        void RefreshStars() => starsLabel.text = $"{Shop.TotalStars(SaveSystem.Data)}/{GameDatabase.Instance.levels.Length * 3}";
+        void RefreshStars()
+        {
+            var data = SaveSystem.Data;
+            starsLabel.text = $"{Shop.TotalStars(data)}/{GameDatabase.Instance.levels.Length * 3}";
+            int spendable = Shop.AvailableStars(data);
+            spendLabel.text = spendable.ToString();
+            spendPulse.gameObject.SetActive(spendable > 0);   // nothing to spend: no badge
+            bool affordable = false;
+            foreach (var def in GameDatabase.Instance.upgrades.upgrades) affordable |= Shop.CanBuy(data, def);
+            spendPulse.enabled = affordable;
+            if (!affordable) spendPulse.transform.localScale = Vector3.one;
+        }
 
         /// <summary>Footprint trail between levels.</summary>
         static void DrawDots(Transform root, Vector2 a, Vector2 b)
@@ -138,8 +167,9 @@ namespace PufferLaunch.UI
     /// <summary>Shared camera + backdrop + music for menu scenes (same landscape framing as the game).</summary>
     public static class MenuScene
     {
-        /// <summary>Camera + backdrop for menu scenes; skyOnly when a painting covers the ground (see Backdrop.Create).</summary>
-        public static Camera Setup(bool skyOnly = false)
+        /// <summary>Camera + backdrop for menu scenes; skyOnly when a painting covers the ground (see Backdrop.Create),
+        /// no backdrop at all when a full-screen UI picture hides the world (the map).</summary>
+        public static Camera Setup(bool skyOnly = false, bool backdrop = true)
         {
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
             var cam = camGo.AddComponent<Camera>();
@@ -149,7 +179,8 @@ namespace PufferLaunch.UI
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color32(0x11, 0x28, 0x5a, 0xff);
             camGo.transform.position = new Vector3(0f, 0.1f, -10f);
-            Backdrop.Create(cam, skyOnly);
+            if (backdrop) Backdrop.Create(cam, skyOnly);
+            else cam.cullingMask = 0;
             AudioManager.Instance.PlayMusic("music_reef");
             return cam;
         }

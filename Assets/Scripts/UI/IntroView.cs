@@ -34,7 +34,21 @@ namespace PufferLaunch.UI
             var view = canvas.gameObject.AddComponent<IntroView>();
             view.onDone = onDone;
             view.Build(canvas);
+            playing = view;
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;   // 21 s without a touch: a short screen timeout dimmed the story
         }
+
+        static IntroView playing;
+
+        /// <summary>Android Back: skips the story when it is playing.</summary>
+        public static bool HandleBack()
+        {
+            if (playing == null) return false;
+            playing.Finish();
+            return true;
+        }
+
+        void OnDestroy() => Screen.sleepTimeout = SleepTimeout.SystemSetting;
 
         void Build(Canvas canvas)
         {
@@ -113,6 +127,8 @@ namespace PufferLaunch.UI
             }
             onDone?.Invoke();
             Destroy(gameObject);
+            // The five paintings (about 31 MB of texture) are only needed here.
+            Art.Release("story_");
         }
     }
 }

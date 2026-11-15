@@ -72,7 +72,9 @@ namespace PufferLaunch.Ads
             }
         }
 
-        static bool UseTestUnits => Debug.isDebugBuild || IsEmulator;
+        /// <summary>Real ad units only in a build installed from Google Play. A sideloaded APK on the developer's own
+        /// phone gets test units: tapping your own real ads gets the AdMob account banned.</summary>
+        static bool UseTestUnits => Debug.isDebugBuild || IsEmulator || Application.installerName != "com.android.vending";
 
         static bool IsEmulator
         {
@@ -144,6 +146,10 @@ namespace PufferLaunch.Ads
         {
             if (started) return;
             started = true;
+            // Test units on a Play install would earn nothing without a sound: say which ones this build uses, and why.
+            Debug.Log($"[PufferLaunch] ads: {(UseTestUnits ? "test" : "real")} units (installer '{Application.installerName}', debug {Debug.isDebugBuild}, emulator {IsEmulator})");
+            // Cartoon art draws a young audience (the listing is 13+): keep ads to general/parental-guidance content.
+            MobileAds.SetRequestConfiguration(new RequestConfiguration { MaxAdContentRating = MaxAdContentRating.PG });
             MobileAds.Initialize(_ => Post(() =>
             {
                 ApplyMuted();

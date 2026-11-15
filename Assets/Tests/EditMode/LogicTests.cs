@@ -13,6 +13,45 @@ namespace PufferLaunch.Tests
         [Test] public void LeftoverPufferAddsStar() => Assert.AreEqual(2, StarRating.Compute(true, 1, 50, 100));
         [Test] public void ScoreThresholdAddsStar() => Assert.AreEqual(2, StarRating.Compute(true, 0, 100, 100));
         [Test] public void BothBonusesGiveThreeStars() => Assert.AreEqual(3, StarRating.Compute(true, 2, 150, 100));
+
+        [Test]
+        public void EachStarBelongsToItsOwnRule()
+        {
+            // Score reached without a pup to spare: the third rule is met, the second is not (the result card shows this).
+            var rules = StarRating.Rules(true, 0, 100, 100);
+            Assert.IsTrue(rules.passed);
+            Assert.IsFalse(rules.second);
+            Assert.IsTrue(rules.third);
+            Assert.AreEqual((false, false, false), StarRating.Rules(false, 3, 9999, 100), "a loss meets no rule");
+        }
+
+        // The bonus fish run always spends every pup, so it is rated on fish: it must be able to reach 3 stars.
+        [Test] public void BonusRunAlwaysGivesOneStar() => Assert.AreEqual(1, StarRating.ComputeBonus(0, 24));
+        [Test] public void HalfTheFishGiveTwoStars() => Assert.AreEqual(2, StarRating.ComputeBonus(12, 24));
+        [Test] public void JustUnderHalfTheFishStayAtOneStar() => Assert.AreEqual(1, StarRating.ComputeBonus(11, 24));
+        [Test] public void EightyPercentOfTheFishGiveThreeStars() => Assert.AreEqual(3, StarRating.ComputeBonus(20, 24));
+        [Test] public void JustUnderEightyPercentStayAtTwoStars() => Assert.AreEqual(2, StarRating.ComputeBonus(19, 24));
+        [Test] public void BonusRunWithoutFishDoesNotDivideByZero() => Assert.AreEqual(1, StarRating.ComputeBonus(0, 0));
+    }
+
+    public class EconomyTests
+    {
+        [Test]
+        public void EveryUpgradeCanBeBoughtWithTheStarsTheLevelsGive()
+        {
+            var db = GameDatabase.Instance;
+            int price = 0;
+            foreach (var def in db.upgrades.upgrades)
+            {
+                Assert.AreEqual(UpgradeData.MaxLevel, def.costs.Length, $"{def.id}: one price per level");
+                foreach (int cost in def.costs) price += cost;
+            }
+            Assert.LessOrEqual(price, db.levels.Length * 3, "the whole shop must be within reach of the stars in the game");
+        }
+
+        [Test]
+        public void LevelCountMatchesTheSaveFormat() =>
+            Assert.AreEqual(SaveData.LevelCount, GameDatabase.Instance.levels.Length);
     }
 
     public class ShopTests
@@ -194,12 +233,12 @@ namespace PufferLaunch.Tests
     public class InAppReviewTests
     {
         [Test]
-        public void AsksOnlyOnAWinFromLevelFiveUntilPlayAccepted()
+        public void AsksOnlyOnAWinFromLevelThreeUntilPlayAccepted()
         {
             var d = new SaveData();
-            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 3, true), "level 4 is too early");
-            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 4, false), "never on a loss");
-            Assert.IsTrue(PufferLaunch.Review.InAppReview.ShouldAsk(d, 4, true));
+            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 1, true), "level 2 is too early");
+            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 2, false), "never on a loss");
+            Assert.IsTrue(PufferLaunch.Review.InAppReview.ShouldAsk(d, 2, true));
             Assert.IsTrue(PufferLaunch.Review.InAppReview.ShouldAsk(d, 9, true), "a failed ask retries on a later win");
             d.reviewAsked = true;
             Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 9, true), "asked once");

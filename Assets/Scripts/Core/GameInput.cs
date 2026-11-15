@@ -21,17 +21,34 @@ namespace PufferLaunch.Core
             if (!GameplayEnabled) return false;
             var kb = Keyboard.current;
             if (kb != null && kb.spaceKey.wasPressedThisFrame) return true;
-            if (PointerOverUi()) return false;
+            var es = EventSystem.current;
             var mouse = Mouse.current;
-            if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
+            if (mouse != null && mouse.leftButton.wasPressedThisFrame) return es == null || !es.IsPointerOverGameObject();
             var touch = Touchscreen.current;
-            return touch != null && touch.primaryTouch.press.wasPressedThisFrame;
+            if (touch == null) return false;
+            // Every finger counts, not only the first one down: a thumb resting on the screen must not block the tap.
+            var touches = touch.touches;
+            for (int i = 0; i < touches.Count; i++)
+                if (touches[i].press.wasPressedThisFrame && (es == null || !es.IsPointerOverGameObject(touches[i].touchId.ReadValue())))
+                    return true;
+            return false;
         }
 
-        public static bool PausePressed()
+        static InputAction back;
+        static int backFrame = -1;
+
+        /// <summary>Android Back (Escape on a keyboard): pause in a level, close or leave everywhere else.
+        /// An action, not a polled key: a gesture-navigation Back is a press and release in the same instant, and
+        /// polling `wasPressedThisFrame` missed it when both landed in one frame (seen on the 30 fps map, QA 15/11).</summary>
+        public static bool BackPressed()
         {
-            var kb = Keyboard.current;
-            return kb != null && kb.escapeKey.wasPressedThisFrame;
+            if (back == null)
+            {
+                back = new InputAction("Back", InputActionType.Button, "<Keyboard>/escape");
+                back.performed += _ => backFrame = Time.frameCount;
+                back.Enable();
+            }
+            return backFrame == Time.frameCount;
         }
 
         /// <summary>-1 left, +1 right, 0 none: arrow keys or a horizontal swipe.</summary>
@@ -62,16 +79,6 @@ namespace PufferLaunch.Core
                 if (Mathf.Abs(dx) > SwipeMinPixels) swipeDir = dx > 0 ? 1 : -1;
             }
             return swipeDir;
-        }
-
-        static bool PointerOverUi()
-        {
-            var es = EventSystem.current;
-            if (es == null) return false;
-            var touch = Touchscreen.current;
-            if (touch != null && touch.primaryTouch.press.isPressed)
-                return es.IsPointerOverGameObject(touch.primaryTouch.touchId.ReadValue());
-            return es.IsPointerOverGameObject();
         }
     }
 }

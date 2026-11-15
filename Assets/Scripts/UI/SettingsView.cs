@@ -36,8 +36,20 @@ namespace PufferLaunch.UI
             canvas.enabled = false;
         }
 
+        /// <summary>Android Back: the card on top (stats, erase confirm) first, then Settings itself.</summary>
+        public bool HandleBack()
+        {
+            if (!canvas.enabled) return false;
+            if (popup != null) Destroy(popup);
+            else Close();
+            return true;
+        }
+
+        GameObject popup;   // the stats card or the erase confirmation, while one is open
+
         void Rebuild()
         {
+            if (popup != null) Destroy(popup);
             if (content != null) Destroy(content.gameObject);
             var overlay = UiKit.Overlay(canvas.transform, "Overlay");
             content = overlay;
@@ -65,7 +77,7 @@ namespace PufferLaunch.UI
                 Rebuild();
             });
             UiKit.Button(panel, Loc.T("stats"), ButtonStyle.Teal, UiKit.Top, new Vector2(-260, -490), new Vector2(460, 100),
-                () => StatsPanel.Show(canvas.transform), "glyph_help");
+                () => popup = StatsPanel.Show(canvas.transform), "glyph_help");
             UiKit.Button(panel, Loc.T("reset"), ButtonStyle.Warm, UiKit.Top, new Vector2(260, -490), new Vector2(460, 100), ConfirmReset);
             UiKit.Text(panel, Loc.T("credits"), 26, UiKit.Bottom, new Vector2(0, 140), new Vector2(1100, 60));
             UiKit.Button(panel, Loc.T("back"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(0, 30), new Vector2(340, 100), Close, "glyph_back");
@@ -80,6 +92,7 @@ namespace PufferLaunch.UI
         void ConfirmReset()
         {
             var overlay = UiKit.Overlay(content, "Confirm");
+            popup = overlay.gameObject;
             var panel = UiKit.Panel(overlay, new Vector2(860, 420)).transform;
             UiKit.Text(panel, Loc.T("reset_confirm"), 52, UiKit.Top, new Vector2(0, -50), new Vector2(780, 160));
             UiKit.Button(panel, Loc.T("yes"), ButtonStyle.Warm, UiKit.Bottom, new Vector2(-180, 50), new Vector2(300, 110), () =>

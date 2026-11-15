@@ -54,10 +54,14 @@ namespace PufferLaunch.Core
             tuning = db.tuning;
             GameInput.GameplayEnabled = true;
             Time.timeScale = 1f;
+            Application.targetFrameRate = BootView.GameFps;
 
             BuildCamera();
             Backdrop.Create(Camera.main, skyOnly: true);
-            AudioManager.Instance.PlayMusic("music_reef");
+            var kept = SceneLoader.KeptExits;
+            bool quick = kept != null && kept.Length > 0;
+            // An attack-only retry starts on the arena's music: reef first restarted the track twice per retry.
+            AudioManager.Instance.PlayMusic(quick ? "music_arena" : "music_reef");
             Fx.ShakeRequested += OnShake;
 
             hud = HudView.Create(this);
@@ -69,18 +73,75 @@ namespace PufferLaunch.Core
             attack.ScoreChanged += hud.SetScore;
             attack.AmmoChanged += hud.SetPuffers;
             attack.Build(level, tuning);
+            Bear.Defeated += OnBearDown;   // after AttackPhase subscribed: BearsLeft is already counted down when this runs
+            BossBear.Beaten += OnBossDown;
 
+            int bonusPups = AdMob.Policy.TakeBonusPups(LevelIndex);
+            if (quick)
+            {
+                // Attack-only retry (the lose card): the same pups fly again, straight into the arena. No pit, no card.
+                exits = kept;
+                Current = State.Transition;
+                Vector3 arena = AttackPhase.ViewCenter;
+                focus.position = arena;
+                Camera.main.transform.position = new Vector3(arena.x, arena.y, -10f);
+                var lens = vcam.Lens;
+                lens.OrthographicSize = ViewSize(Camera.main.aspect) * AttackZoom;
+                vcam.Lens = lens;
+                vcam.PreviousStateIsValid = false;   // cut, not a pan from the pit
+                hud.SetPuffers(kept.Length + bonusPups);
+                StartCoroutine(GoAttack(kept.Length + bonusPups, quick: true));
+                return;
+            }
             launch = new GameObject("Launcher").AddComponent<LaunchPhase>();
             launch.QueueChanged += hud.SetPuffers;
-            int count = level.pufferCount + SaveSystem.Data.upgrades[(int)UpgradeId.School] + AdMob.Policy.TakeBonusPups(LevelIndex);
+            int count = level.pufferCount + SaveSystem.Data.upgrades[(int)UpgradeId.School] + bonusPups;
             Current = State.Launch;
             launch.Begin(tuning, count, OnLaunchDone, level.launcher, level.showTutorial);
             if (level.launcher == LaunchStyle.Bungee) StartCoroutine(After(2.4f, () => hud.Banner(Loc.T("bungee_tip"))));
         }
 
+        /// <summary>Exit velocity of each pup that left the pit (this attempt's, or the kept ones on an attack-only retry).</summary>
+        System.Collections.Generic.IReadOnlyList<Vector2> exits;
+        bool dipping;
+        int dipId;
+
+        /// <summary>A bear going down: a tick in the hand and a beat of hit-stop; the last bear of the level falls in slow motion.</summary>
+        void OnBearDown(Bear bear, int score)
+        {
+            if (Current != State.Attack) return;
+            Haptics.Tap();
+            StartCoroutine(TimeDip(attack.BearsLeft == 0));
+        }
+
+        /// <summary>The boss is not a Bear: its fall is the level's last blow.</summary>
+        void OnBossDown(BossBear boss)
+        {
+            if (Current != State.Attack) return;
+            Haptics.Tap();
+            StartCoroutine(TimeDip(true));
+        }
+
+        /// <summary>Slows time for a moment, in real seconds: a beat of hit-stop, or slow motion for the last blow (which
+        /// takes over a hit-stop already running: TNT can fell the last two bears in one frame). Pause owns
+        /// Time.timeScale: a dip never starts or ends over it.</summary>
+        IEnumerator TimeDip(bool last)
+        {
+            if (paused || (dipping && !last)) yield break;
+            int id = ++dipId;
+            dipping = true;
+            Time.timeScale = last ? 0.3f : 0.05f;
+            yield return new WaitForSecondsRealtime(last ? 0.45f : 0.06f);
+            if (id != dipId) yield break;   // a later dip took over and ends it
+            dipping = false;
+            if (!paused) Time.timeScale = 1f;
+        }
+
         void OnDestroy()
         {
             Fx.ShakeRequested -= OnShake;
+            Bear.Defeated -= OnBearDown;
+            BossBear.Beaten -= OnBossDown;
             Time.timeScale = 1f;
             GameInput.GameplayEnabled = true;
         }
@@ -124,7 +185,13 @@ namespace PufferLaunch.Core
 
         void Update()
         {
-            if (GameInput.PausePressed() && Current != State.Won && Current != State.Lost) TogglePause();
+            if (GameInput.BackPressed())
+            {
+                // Back pauses a running level and leaves a finished one (the result card has no pause).
+                // Not while Retry/Continue is already leaving (wipe or ad): a second load would replace that one.
+                if (Current != State.Won && Current != State.Lost) TogglePause();
+                else if (!leaving && !ScreenFader.LoadPending) ToMap();
+            }
             if (Current == State.Launch && GameInput.ActionPressed()) launch.TryFire();
             else if (Current == State.Transition && Time.time > missionShownAt + MissionTapGrace && GameInput.ActionPressed()) ContinueMission();
             // Tutorial levels always hint; later levels hint only once a pup has lapped the arena untapped.
@@ -132,6 +199,7 @@ namespace PufferLaunch.Core
             bool aimHint = level.showTutorial && Current == State.Launch && launch.CanFire;
             bool diveHint = Current == State.Attack && p != null && !p.Dived && !p.Landed && (level.showTutorial || p.NeedsNudge);
             hud.ShowHint(aimHint || diveHint);
+            ShowAim(level.showTutorial && diveHint ? p : null);
             hud.SetHintText(aimHint ? Loc.T(level.launcher == LaunchStyle.Bungee ? "hint_aim_bungee" : "hint_aim") : diveHint ? Loc.T("hint_dive") : null);
             var lens = vcam.Lens;
             bool fortressView = focus.position.x > LaunchPhase.ViewCenter.x + 1f;   // zoom starts with the pan, not before it
@@ -157,6 +225,34 @@ namespace PufferLaunch.Core
             }
         }
 
+        const int AimDots = 12;
+        const float AimStep = 0.13f;   // seconds of dive between two dots
+        Transform[] aim;
+
+        /// <summary>Tutorial levels: dots along the path a dive would take from where the pup is now, so "tap early"
+        /// can be seen (the dive goes forward at a slant, not straight down). Null hides them.</summary>
+        void ShowAim(PufferController pup)
+        {
+            if (aim == null)
+            {
+                if (pup == null) return;
+                aim = new Transform[AimDots];
+                for (int i = 0; i < AimDots; i++)
+                {
+                    var dot = Art.Spawn("powder", null, Vector2.zero, 0.42f - i * 0.015f, 30);   // 0.26 was lost against the bright sky
+                    aim[i] = dot.transform;
+                }
+            }
+            for (int i = 0; i < AimDots; i++)
+            {
+                Vector2 at = pup != null ? pup.DivePoint((i + 1) * AimStep) : default;
+                bool show = pup != null && at.y > AttackPhase.Origin.y;   // nothing drawn under the floor
+                var go = aim[i].gameObject;
+                if (go.activeSelf != show) go.SetActive(show);
+                if (show) aim[i].position = at;
+            }
+        }
+
         void OnLaunchDone(int passed)
         {
             if (passed == 0)
@@ -168,29 +264,33 @@ namespace PufferLaunch.Core
             StartCoroutine(GoAttack(passed));
         }
 
-        IEnumerator GoAttack(int ammo)
+        IEnumerator GoAttack(int ammo, bool quick = false)
         {
             Current = State.Transition;
-            // The water curtain drops over the pit, the view moves to the arena behind it, and it lifts on the mission card
-            // (reference §16.1).
-            yield return hud.Curtain(true);
-            focus.position = AttackPhase.ViewCenter;
-            yield return new WaitForSeconds(0.7f);
-            StartCoroutine(hud.Curtain(false));
-            missionGo = false;
-            missionShownAt = Time.time;
-            hud.MissionCard(LevelIndex + 1, attack.BearsRequired, SaveSystem.Data.totalBears, ammo, ContinueMission);
-            while (!missionGo) yield return null;   // the reference waits for Continue (a tap anywhere also counts)
-            hud.DismissMission();
-            hud.ShowBears(true);
+            if (!quick)
+            {
+                exits = launch.Exits;
+                // The water curtain drops over the pit, the view moves to the arena behind it, and it lifts on the mission card
+                // (reference §16.1).
+                yield return hud.Curtain(true);
+                focus.position = AttackPhase.ViewCenter;
+                yield return new WaitForSeconds(0.7f);
+                StartCoroutine(hud.Curtain(false));
+                missionGo = false;
+                missionShownAt = Time.time;
+                hud.MissionCard(LevelIndex + 1, level.kind == LevelKind.Bonus ? 0 : attack.BearsRequired, SaveSystem.Data.totalBears, ammo, ContinueMission);
+                while (!missionGo) yield return null;   // the reference waits for Continue (a tap anywhere also counts)
+                hud.DismissMission();
+            }
+            hud.ShowBears(level.kind != LevelKind.Bonus);   // the fish run has no bears to count
             yield return new WaitForSeconds(0.4f);
             Current = State.Attack;
             AudioManager.Instance.PlayMusic("music_arena");
             hud.Banner(Loc.T("attack"));
-            attack.Begin(ammo, SaveSystem.Data.upgrades, Finish, launch.Exits);   // each pup's exit sets its entry height and speed (user 13/11: keep the link)
+            attack.Begin(ammo, SaveSystem.Data.upgrades, Finish, exits);   // each pup's exit sets its entry height and speed (user 13/11: keep the link)
         }
 
-        PufferLaunch.Attack.PufferController heldFor;
+        PufferController heldFor;
         float heldLow;
         bool missionGo;
         float missionShownAt;
@@ -210,7 +310,11 @@ namespace PufferLaunch.Core
                 AdMob.Policy.RecordWin();
                 AdMob.TryConsentAgain();   // a player offline at launch gets the consent check once back online
             }
-            int stars = StarRating.Compute(won, puffersLeft, score, level.threeStarScore);
+            // The fish run ends only when the pups run out, so it is rated on the fish caught, not on pups left.
+            var rules = level.kind == LevelKind.Bonus
+                ? StarRating.BonusRules(attack.FishCollected, attack.FishTotal)
+                : StarRating.Rules(won, puffersLeft, score, level.threeStarScore);
+            int stars = (rules.passed ? 1 : 0) + (rules.second ? 1 : 0) + (rules.third ? 1 : 0);
             bool perfect = won && attack.Perfect;
             var data = SaveSystem.Data;
             int previous = data.stars[LevelIndex];
@@ -221,7 +325,9 @@ namespace PufferLaunch.Core
             foreach (int d in attack.Dives) data.AddDive(d);
             SaveSystem.Save();
             AudioManager.Sfx(won ? "win" : "lose", 0f);
-            result.Show(LevelIndex + 1, won, perfect, stars, attack.BearsDown, attack.BearsRequired, data.totalBears);
+            bool bonus = level.kind == LevelKind.Bonus;
+            result.Show(LevelIndex + 1, won, perfect, rules, bonus ? attack.FishCollected : attack.BearsDown,
+                bonus ? attack.FishTotal : attack.BearsRequired, bonus, !HasNextLevel);
             if (InAppReview.ShouldAsk(data, LevelIndex, won)) StartCoroutine(InAppReview.AskOnce());
         }
 
@@ -232,6 +338,17 @@ namespace PufferLaunch.Core
             if (goingAway && !paused && pause != null && (Current == State.Launch || Current == State.Attack || Current == State.Transition)) TogglePause();
         }
 
+        /// <summary>Losing focus without going to the background (notification shade, a system dialog) pauses too.
+        /// Not in the Editor: clicking another window would pause a play session or a test.</summary>
+        void OnApplicationFocus(bool focused)
+        {
+            if (!focused && !Application.isEditor) OnApplicationPause(true);
+        }
+
+        /// <summary>The "?" button's tip: the one that fits what the player is doing now.</summary>
+        public string HelpText => Loc.T(Current == State.Attack ? "hint_dive"
+            : level.launcher == LaunchStyle.Bungee ? "hint_aim_bungee" : "hint_aim");
+
         public void TogglePause()
         {
             if (ScreenFader.LoadPending) return;   // Back during the wipe must not unpause the level being left
@@ -241,7 +358,19 @@ namespace PufferLaunch.Core
             pause.SetVisible(paused);
         }
 
+        /// <summary>The whole level again, from the launch pit (pause menu, win card).</summary>
         public void Retry() => SceneLoader.PlayLevel(LevelIndex);
+
+        /// <summary>True when pups got out this attempt: the lose card can replay just the attack with them.</summary>
+        public bool CanRetryAttack => exits != null && exits.Count > 0;
+
+        /// <summary>The lose card's retry: the attack alone with the same pups (about a second, where the full level
+        /// meant batting every pup out again). With no pup out there is nothing to keep: the whole level.</summary>
+        public void RetryLost()
+        {
+            if (CanRetryAttack) SceneLoader.RetryAttack(LevelIndex, exits);
+            else Retry();
+        }
 
         bool leaving;
 
@@ -278,7 +407,7 @@ namespace PufferLaunch.Core
                     return;
                 }
                 AdMob.Policy.GrantBonusPup(LevelIndex);
-                Retry();
+                RetryLost();
             });
         }
 

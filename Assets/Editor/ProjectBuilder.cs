@@ -158,8 +158,17 @@ namespace PufferLaunch.EditorTools
                 importer.mipmapEnabled = false;
                 importer.alphaIsTransparency = true;
                 importer.filterMode = FilterMode.Bilinear;
-                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;   // Editor and other platforms
                 importer.wrapMode = TextureWrapMode.Clamp;
+                // Android: ASTC. Uncompressed RGBA32 was about 164 MB of texture memory and most of the APK. Full-screen
+                // paintings take the smaller 6×6 blocks; sprites and 9-slice UI keep 4×4 so edges and borders stay clean.
+                bool painting = name.StartsWith("bg_") || name.StartsWith("story_") || name == "map_bg";
+                var android = importer.GetPlatformTextureSettings("Android");
+                android.overridden = true;
+                android.format = painting ? TextureImporterFormat.ASTC_6x6 : TextureImporterFormat.ASTC_4x4;
+                android.maxTextureSize = 2048;
+                android.compressionQuality = 50;
+                importer.SetPlatformTextureSettings(android);
 
                 var settings = new TextureImporterSettings();
                 importer.ReadTextureSettings(settings);
@@ -273,11 +282,13 @@ namespace PufferLaunch.EditorTools
             var upgrades = LoadOrCreate<UpgradeData>($"{DataDir}/Upgrades.asset", out _);
             // The catalogue is code-defined: ids, icons and prices are rewritten every build (levels keep Inspector edits).
             upgrades.upgrades.Clear();
-            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.Spiky, icon = "icon_spiky", costs = new[] { 3, 6, 10 } });
-            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.PuffUp, icon = "icon_ball", costs = new[] { 2, 5, 8 } });
-            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.School, icon = "icon_pod", costs = new[] { 4, 8, 12 } });
-            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.Ninja, icon = "icon_ninja", costs = new[] { 5, 9, 14 } });
-            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.Blaze, icon = "icon_blaze", costs = new[] { 6, 10, 15 } });
+            // 32 stars buy everything; the 12 levels give 36 (an EditMode test keeps the total within reach). The old
+            // prices added up to 117, so under a third of the shop could ever be bought.
+            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.Spiky, icon = "icon_spiky", costs = new[] { 1, 2, 3 } });
+            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.PuffUp, icon = "icon_ball", costs = new[] { 1, 2, 3 } });
+            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.School, icon = "icon_pod", costs = new[] { 1, 2, 3 } });
+            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.Ninja, icon = "icon_ninja", costs = new[] { 2, 2, 3 } });
+            upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.Blaze, icon = "icon_blaze", costs = new[] { 2, 2, 3 } });
             EditorUtility.SetDirty(upgrades);
 
             var designs = LevelDesigns.All();
@@ -355,12 +366,27 @@ namespace PufferLaunch.EditorTools
             AssetDatabase.SaveAssets();
         }
 
+        /// <summary>The release version (CHANGELOG.md) and its Play version code; bump both for a release, or pass
+        /// PUFFER_VERSION_CODE for a rebuild of the same version.</summary>
+        const string Version = "0.1.0";
+        const int VersionCode = 1;
+
         static void ConfigurePlayer()
         {
             PlayerSettings.productName = "Pup Launch";
             PlayerSettings.companyName = "Puffer Launch";
-            PlayerSettings.bundleVersion = "0.1.0";
-            PlayerSettings.Android.bundleVersionCode = 1;
+            PlayerSettings.bundleVersion = Version;
+            // Play refuses a version code it has already seen: a store build can pass the next one without a code edit.
+            string asked = System.Environment.GetEnvironmentVariable("PUFFER_VERSION_CODE");
+            int code = VersionCode;
+            if (!string.IsNullOrEmpty(asked) && (!int.TryParse(asked, out code) || code <= 0))
+            {
+                // A typo must not quietly build code 1 (Play would refuse the upload after the whole build): the
+                // exception stops the build here, in the Editor and in batch mode (which then exits with an error).
+                throw new System.ArgumentException($"[PufferLaunch] PUFFER_VERSION_CODE='{asked}' is not a positive whole number.");
+            }
+            PlayerSettings.Android.bundleVersionCode = code;
+            Debug.Log($"[PufferLaunch] version {Version} (code {code})");
             PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, "com.pufferlaunch.game");
             // Android only: landscape (either way up), IL2CPP + ARM64 (required by Google Play).
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;

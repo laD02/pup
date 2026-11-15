@@ -287,6 +287,7 @@ namespace PufferLaunch.Launch
             col.sharedMaterial = pupMaterial;
             rb.linearVelocity = velocity;
             rb.freezeRotation = true;   // the art leans along the flight instead of spinning
+            var bump = pup.gameObject.AddComponent<BumpFlag>();
 
             float age = 0f, trail = 0f;
             bool escaped = false;
@@ -309,7 +310,11 @@ namespace PufferLaunch.Launch
                     escaped = true;
                     break;
                 }
-                if ((age > BumpGrace && rb.IsTouchingLayers()) || age > MaxFlightTime) break;
+                // The flag catches a graze that starts and ends between two frames (two physics steps in one frame
+                // under 50 fps), which IsTouchingLayers alone misses.
+                if (age <= BumpGrace) bump.Hit = false;
+                else if (rb.IsTouchingLayers() || bump.Hit) break;
+                if (age > MaxFlightTime) break;
                 yield return null;
             }
 
@@ -319,6 +324,7 @@ namespace PufferLaunch.Launch
                 if (great)
                 {
                     CallOut("great_hit", new Color(1f, 0.85f, 0.2f));
+                    Haptics.Tap();
                     Fx.Burst("star_full", tr.position, 10, 4f, 0.9f, 0.3f, 2f, 0.25f);
                 }
                 else CallOut("ok_hit", new Color(1f, 0.55f, 0.15f));
@@ -362,7 +368,7 @@ namespace PufferLaunch.Launch
             int n = rb.GetContacts(contactBuffer);
             if (n == 0)
             {
-                // Timed out in the air (MaxFlightTime) without touching rock: nothing to stick to, so it is a miss
+                // Timed out in the air (MaxFlightTime), or a graze that had ended by this frame: nothing to stick to, so it is a miss
                 // that drops out of the picture instead of freezing mid-air.
                 col.enabled = false;
                 CallOut("oops_hit", new Color(0.95f, 0.25f, 0.2f));
@@ -430,5 +436,12 @@ namespace PufferLaunch.Launch
             }
             tr.localScale = s0;
         }
+    }
+
+    /// <summary>Remembers that its body touched something since the flag was last cleared.</summary>
+    public class BumpFlag : MonoBehaviour
+    {
+        public bool Hit;
+        void OnCollisionEnter2D(Collision2D _) => Hit = true;
     }
 }

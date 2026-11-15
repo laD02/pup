@@ -6,7 +6,7 @@ namespace PufferLaunch.UI
     /// <summary>Statistics card (GDD §R5): totals kept in the save, shown over whatever screen opened it.</summary>
     public static class StatsPanel
     {
-        public static void Show(Transform canvas)
+        public static GameObject Show(Transform canvas)
         {
             var data = SaveSystem.Data;
             var overlay = UiKit.Overlay(canvas, "Stats");
@@ -33,6 +33,7 @@ namespace PufferLaunch.UI
             }
             UiKit.Button(panel, Loc.T("back"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(0, 40), new Vector2(280, 112),
                 () => Object.Destroy(overlay.gameObject), "glyph_back");
+            return overlay.gameObject;
         }
     }
 }

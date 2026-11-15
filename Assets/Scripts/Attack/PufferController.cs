@@ -158,10 +158,20 @@ namespace PufferLaunch.Attack
             StartCoroutine(NoseDown());
             rb.gravityScale = tuning.diveGravity;
             rb.linearDamping = tuning.airDrag;
+            rb.linearVelocity = DiveVelocity();
+        }
+
+        Vector2 DiveVelocity()
+        {
             float speed = Mathf.Max(rb.linearVelocity.magnitude, AttackPhase.SpawnVelocity.x) * tuning.diveSpeedScale;
             float a = tuning.diveAngle * Mathf.Deg2Rad;
-            rb.linearVelocity = new Vector2(Mathf.Cos(a), -Mathf.Sin(a)) * speed;
+            return new Vector2(Mathf.Cos(a), -Mathf.Sin(a)) * speed;
         }
+
+        /// <summary>Where a dive started now would be after <paramref name="t"/> seconds (air drag left out): the
+        /// tutorial's aim dots.</summary>
+        public Vector2 DivePoint(float t) =>
+            rb.position + DiveVelocity() * t + 0.5f * tuning.diveGravity * t * t * Physics2D.gravity;
 
         /// <summary>The nose-down turn (two frames) before the pup curls into a ball for the drop.</summary>
         IEnumerator NoseDown()

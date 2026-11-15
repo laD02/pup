@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Level_03
   m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.LevelData
   pufferCount: 6
-  requiredBears: 4
+  requiredBears: 3
   kind: 0
   launcher: 0
   caveFrom: 0
@@ -146,4 +146,4 @@ MonoBehaviour:
     helmet: 0
     mood: 0
   objects: []
-  showTutorial: 0
+  showTutorial: 1

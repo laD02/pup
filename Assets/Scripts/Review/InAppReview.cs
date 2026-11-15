@@ -12,7 +12,7 @@ namespace PufferLaunch.Review
     public static class InAppReview
     {
         /// <summary>First level (1-based) whose win may ask.</summary>
-        public const int AfterLevel = 5;
+        public const int AfterLevel = 3;   // before the first interstitial can show (4 wins); 5 put the ask one level after an ad
 
         const float Delay = 1.5f;      // let the win card land first
         const float Timeout = 60f;     // Play never answering must not keep the coroutine alive

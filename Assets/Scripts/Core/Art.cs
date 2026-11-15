@@ -26,6 +26,16 @@ namespace PufferLaunch.Core
             return sprite != null;
         }
 
+        /// <summary>Forgets every cached sprite whose name starts with <paramref name="prefix"/> and frees the textures
+        /// nothing shows any more (big one-off paintings such as the story).</summary>
+        public static void Release(string prefix)
+        {
+            var names = new List<string>();
+            foreach (var key in cache.Keys) if (key.StartsWith(prefix, System.StringComparison.Ordinal)) names.Add(key);
+            foreach (var name in names) cache.Remove(name);
+            if (names.Count > 0) Resources.UnloadUnusedAssets();
+        }
+
         /// <summary>Creates a sprite object sized in world units regardless of the PNG resolution.</summary>
         public static SpriteRenderer Spawn(string name, Transform parent, Vector2 position, float width, int order = 0)
         {

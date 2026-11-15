@@ -1380,6 +1380,9 @@ def main():
             for stale in (SVG_DIR / f"{name}.svg", SVG_DIR / f"{name}.svg.meta"):
                 stale.unlink(missing_ok=True)   # its painting exists; the stand-in is retired
             continue
+        if name in keep and (PNG_DIR / f"{name}.png").exists():
+            continue   # a cut tool makes this name: its PNG may be the painting even when the sheet left Reference
+            # (also under --stand-ins: delete the PNG to have the stand-in drawn again)
         if _sliced(name) and (PNG_DIR / f"{name}.png").exists() and not redraw_frames:
             continue   # may be a frame cut from a ChatGPT sheet; --stand-ins redraws the placeholders on purpose
         src = SVG_DIR / f"{name}.svg"

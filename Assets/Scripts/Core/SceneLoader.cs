@@ -19,9 +19,24 @@ namespace PufferLaunch.Core
         /// water (the wipe runs on unscaled time) and GameManager.Start/OnDestroy reset it.</summary>
         public static void Load(string scene) => ScreenFader.Instance.FadeTo(scene);
 
+        /// <summary>Exit velocities of the pups kept for an attack-only retry of <see cref="CurrentLevel"/>; null means
+        /// the level starts in the launch pit.</summary>
+        public static Vector2[] KeptExits { get; private set; }
+
         public static void PlayLevel(int index)
         {
             CurrentLevel = index;
+            KeptExits = null;
+            Load(Game);
+        }
+
+        /// <summary>Replays only the attack with the pups that got out last time (the lose card's retry).</summary>
+        public static void RetryAttack(int index, System.Collections.Generic.IReadOnlyList<Vector2> exits)
+        {
+            CurrentLevel = index;
+            var kept = new Vector2[exits.Count];
+            for (int i = 0; i < kept.Length; i++) kept[i] = exits[i];
+            KeptExits = kept;
             Load(Game);
         }
     }
@@ -140,6 +155,7 @@ namespace PufferLaunch.Core
         IEnumerator Run(string scene)
         {
             busy = true;
+            group.alpha = 1f;   // visible from the first frame: at 0 the water rose unseen behind blocked input
             group.blocksRaycasts = true;
             AudioManager.Sfx("splash", 0f, 0.8f);
             for (float t = 0f; t < OutTime; t += Time.unscaledDeltaTime)
@@ -148,7 +164,6 @@ namespace PufferLaunch.Core
                 yield return null;
             }
             SetWater(1f);
-            group.alpha = 1f;
             runner.gameObject.SetActive(true);
             float covered = 0f;
             var load = SceneManager.LoadSceneAsync(scene);

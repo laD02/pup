@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+- The phone's Back button now works everywhere: it pauses a level, closes the shop, settings and info pages, goes from the map to the menu and leaves the game from the menu.
+- A new player's Play starts level 1 right away. Levels 1 to 3 teach: dots show where a dive will go, and level 3 asks for 3 bears.
+- Upgrades are much cheaper: every upgrade can now be bought with the stars in the game. The price button shows what is missing when you cannot afford it, and the map shows how many stars you can spend.
+- The result card says what each star is for. The fish bonus level can now give 3 stars. Beating the boss ends with a closing line.
+- On the failed card, Retry is the big button; the optional video for an extra pup is clearly marked as an ad.
+- A second finger now counts as a tap, so a thumb resting on the screen no longer blocks a launch or a dive.
+- Level 7's TNT crate is back in the open where it can be hit.
+- Smaller download and less memory; the map screen runs cooler. The water wipe between screens is visible again.
+- Tidier screens: buttons are spaced so a near miss no longer hits the wrong one, long words fit their buttons, the volume sliders are redrawn, the shop fits tablets, and info pages fit wide phones.
+- A pup's dropped hat can no longer press a floor button.
+- After a failed attack, "Attack again" sends the same pups straight back at the fortress, without the launch pit.
+- Hits feel heavier: a beat of hit-stop and a light buzz when a bear goes down, and the last bear of a level falls in slow motion.
 - The game now speaks German, French, Spanish, Italian and Polish, picked from the phone's language or in Settings; long texts shrink to fit.
 - A new painted app icon. After a few wins the game may ask once for a Google Play rating.
 - Light ads: an occasional ad between levels (at most one every 4 wins, never mid-level), and an optional video on the lose card for one retry with an extra pup. Ads stay silent when the game's sound is off; EU players are asked for consent and can change it in Settings.
@@ -66,7 +78,7 @@
 - Launch pit: a shot at the bottom of the swing is "GREAT!", any pup out is "OK!", and a pup that hits the rock calls "OOPS!" and stays stuck upside down in the icicles or on its back on the floor, kicking. Each pup in the queue swings a little wider. A missed snowball can startle a waiting pup. Pups now reach down and grab the rope.
 - Arena pups keep flying round until you tap; a hand hint appears after two laps.
 - Every bear keeps its own antic: shadow-boxing, sitting hugging its knees, a smug nod or eating from a bowl.
-- Failed missions show the bear that is still standing, how many you knocked out and three empty stars. New statistics page (total bears, 2/3/4-bear dives, perfect missions) from the failed card and Settings; win cards show your total bears.
+- Failed missions show the bear that is still standing, how many you knocked out and three empty stars. New statistics page (total bears, 2/3/4-bear dives, perfect missions) in Settings.
 - Call-outs and pop-up text now burst in with a bounce.
 - The whole game is now played in landscape, laid out like a classic catapult game: pups queue on a long bridge on the left, the whacker bats them out through the top-right gap, and they glide in from the left across the whole bear fortress. Island level map, menu, shop, pause and result screens redesigned for the wide screen.
 - Phase 2 is now a wide arena under a sunset sky over the pack ice: cobble ramps, plateaus and pillars across the screen, ice cubes stacked on them and bears standing exposed on top; pups fly in level from the left and dive on a slow diagonal when tapped.

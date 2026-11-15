@@ -36,7 +36,9 @@ not open, download the newest big `main img` with a `fetch` + `<a download>` fro
 
 ## Menu: Puffer Launch
 
-- **2. Build Project** – sprite import settings, TMP font, data assets, scenes. Keeps edited data.
+- **2. Build Project** – sprite import settings (Android: ASTC, paintings 6×6, sprites/UI 4×4), TMP font, data assets
+  (upgrade prices are rewritten from code), scenes. Keeps edited level data. It rewrites the four scene files with new
+  fileIDs only: `git checkout -- Assets/Scenes` unless a scene really changed.
 - **Rebuild Levels** – rewrites `Level_XX.asset` from `LevelDesigns.cs` (overwrites Inspector edits).
 - **3. Build Android APK (test)** – `Builds/Android/PufferLaunch.apk`, debug-signed, for sideloading.
 - **4. Build Android AAB (Play Store)** – `Builds/Android/PufferLaunch.aab`, needs a keystore (below).
@@ -88,8 +90,11 @@ Rules: `GAME_DESIGN.md` §13b. Plugin: Google Mobile Ads Unity `com.google.ads.m
 (`AdPolicy` pure rules + EditMode tests, `AdMob` SDK calls, `AdsConfig` ids). The app id is written into
 `Assets/GoogleMobileAds/Resources/GoogleMobileAdsSettings.asset` by `ProjectBuilder.ConfigurePlayer`; the plugin's
 build step enables the custom gradle templates in `Assets/Plugins/Android` and adds `play-services-ads` there.
-Debug/QA builds and emulators always request Google's **test** units; only a release build on a real phone uses the
-real units. The Editor never starts the SDK. Never tap real ads on your own phone (AdMob bans the account).
+Debug/QA builds, emulators and every build not installed from Google Play (a sideloaded `PufferLaunch.apk`) request
+Google's **test** units; only a release build installed from Play uses the real units (`AdMob.UseTestUnits`). Ad content
+is capped at PG (`MobileAds.SetRequestConfiguration`). Real ads can therefore only be confirmed on a build installed from
+Play (internal testing); logcat prints `[PufferLaunch] ads: test units` or `real units` with the installer name at start.
+Phones without ASTC support (some old GPUs) decompress the textures at load: correct picture, more memory. The Editor never starts the SDK. Never tap real ads on your own phone (AdMob bans the account).
 
 ## Release on Google Play
 
@@ -103,7 +108,8 @@ real units. The Editor never starts the SDK. Never tap real ads on your own phon
    export PUFFER_KEYSTORE_PASS='…' PUFFER_KEY_PASS='…'
    $U -batchmode -quit -projectPath . -buildTarget Android -executeMethod PufferLaunch.EditorTools.ProjectBuilder.BuildAab -logFile Logs/aab.log
    ```
-3. Bump `PlayerSettings.Android.bundleVersionCode` / `bundleVersion` in `ProjectBuilder.ConfigurePlayer` for every upload.
+3. Every upload needs a new version code: bump `Version` / `VersionCode` at the top of `ProjectBuilder.ConfigurePlayer`
+   for a release, or `export PUFFER_VERSION_CODE=<n>` to rebuild the same version (Play refuses a code it has seen).
 4. Play Console: create the app (package `com.pufferlaunch.game`), upload the AAB to internal testing first.
 
 ## Credits

@@ -27,6 +27,12 @@ roles, camera size) that every new screen follows.
 
 **Accessibility is not optional.** Tap targets ≥48dp; colour is never the only signal.
 
+**Android Back works on every screen** (audit 2026-11-15: it only worked inside a level). A new screen or popup gets a
+`HandleBack()` called from its scene's root view; `GAME_DESIGN.md` §R9 lists what Back does where.
+
+**Level content is checked by physics, not by eye.** Anything placed in `LevelDesigns.cs` must stay put in the PlayMode
+settle test (blocks, bears, TNT): a TNT crate sat buried inside a ramp in level 7 until that test covered it.
+
 **Performance.** Mobile players complain about heat and battery: a change that adds continuous
 per-frame work needs a reason. Do not allocate per frame.
 
@@ -55,7 +61,7 @@ Follow `~/.claude/rules/ship-push-deploy-qa.md` (applies to every project). Proj
   UI/art/sound: install the APK on the emulator `Pixel_PlayStore_34` and play it.
 - Reviewers: `csharp-reviewer` for C#, `python-reviewer` for `Tools/*.py`, `silent-failure-hunter` for
   catch/fallback paths, `performance-optimizer` for per-frame cost.
-- Version: `bundleVersion` + `bundleVersionCode` in `ProjectBuilder.ConfigurePlayer`.
+- Version: `Version` + `VersionCode` in `ProjectBuilder` (`PUFFER_VERSION_CODE` overrides the code for a rebuild).
 - Deploy: `ProjectBuilder.BuildAab` signed from env vars, Play internal testing track first.
 - QA on the shipped build: one full level (launch + attack), win and lose, retry, pause, level map,
   shop/upgrades, sound/music, EN/VI, kill + reopen (progress kept). Game is landscape: rotate the emulator

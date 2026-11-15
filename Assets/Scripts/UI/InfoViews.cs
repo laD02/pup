@@ -21,13 +21,30 @@ namespace PufferLaunch.UI
 
         void Close() => canvas.enabled = false;
 
+        /// <summary>Android Back: closes the page when one is open (the same as its Back button).</summary>
+        public bool HandleBack()
+        {
+            if (!canvas.enabled) return false;
+            Close();
+            return true;
+        }
+
+        /// <summary>Panel plus the ribbon overhanging its top: on 20:9 and wider the canvas is shorter than this.</summary>
+        const float PageHeight = 940f + 140f;
+
         Transform Open(string title, System.Action onContinue = null)
         {
             if (content != null) Destroy(content.gameObject);
             canvas.enabled = true;
             var overlay = UiKit.Overlay(canvas.transform, "Overlay");
             content = overlay;
-            var panel = UiKit.Panel(overlay, new Vector2(1600, 940)).transform;
+            // A holder scaled to the canvas height keeps the ribbon on screen on wide phones (it was cut by a third on 21:9);
+            // the panel inside keeps its own pop-in.
+            var holder = UiKit.Place(UiKit.Node(overlay, "Fit"), UiKit.Center, Vector2.zero, Vector2.zero);
+            float height = ((RectTransform)canvas.transform).rect.height;
+            float fit = height > 1f ? Mathf.Min(1f, height / PageHeight) : 1f;   // no size yet: never scale the page to nothing
+            holder.localScale = new Vector3(fit, fit, 1f);
+            var panel = UiKit.Panel(holder, new Vector2(1600, 940)).transform;
             panel.gameObject.AddComponent<PopIn>();
             var ribbon = UiKit.Image(panel, "ribbon", UiKit.Top, new Vector2(0, 70), new Vector2(860, 200));
             var t = UiKit.Text(ribbon.transform, title, 64, UiKit.Center, new Vector2(0, 8), new Vector2(640, 100), Color.white,

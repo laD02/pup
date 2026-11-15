@@ -27,7 +27,7 @@ namespace PufferLaunch.Core
         public int combo3;
         public int combo4;
         public bool seenIntro;                         // the opening story played once already
-        public bool seenHowTo;                         // the instructions card was shown on the first Play
+        public bool seenHowTo;                         // unused since 15/11 (the first Play starts level 1); kept so old saves still load
         public bool reviewAsked;                       // Play took the one in-app review request (kept by Erase)
 
         /// <summary>Repairs data from older or hand-edited files so the game never indexes out of range.</summary>
@@ -141,7 +141,14 @@ namespace PufferLaunch.Core
             try
             {
                 string temp = path + ".tmp";
-                File.WriteAllText(temp, JsonUtility.ToJson(data, true));
+                // Flushed to the disk before the swap: a rename can outlive a power cut that its data blocks did not,
+                // which would leave an empty save.
+                byte[] bytes = System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(data, true));
+                using (var stream = new FileStream(temp, FileMode.Create, FileAccess.Write))
+                {
+                    stream.Write(bytes, 0, bytes.Length);
+                    stream.Flush(true);
+                }
                 if (File.Exists(path))
                 {
                     try { File.Replace(temp, path, null); }

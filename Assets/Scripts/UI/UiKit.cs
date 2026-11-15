@@ -91,6 +91,9 @@ namespace PufferLaunch.UI
             return (RectTransform)go.transform;
         }
 
+        /// <summary>Space kept free at each end of a button label: 12 px let long words (German) run onto the rounded caps.</summary>
+        const float LabelPad = 20f;
+
         /// <summary>Smallest touch area in reference pixels: about 48dp on a 2400×1080 phone at 480 dpi (scale ~1.1).</summary>
         public const float MinHit = 130f;
 
@@ -222,7 +225,7 @@ namespace PufferLaunch.UI
             }
             if (!string.IsNullOrEmpty(label))
             {
-                var t = Text(rt, label, size.y * 0.42f, Center, new Vector2(textLeft * 0.5f, 4), new Vector2(size.x - textLeft - 24, size.y),
+                var t = Text(rt, label, size.y * 0.42f, Center, new Vector2(textLeft * 0.5f, 4), new Vector2(size.x - textLeft - LabelPad * 2f, size.y),
                     White, TextAlignmentOptions.Center, true);
                 t.textWrappingMode = TextWrappingModes.NoWrap;
                 t.enableAutoSizing = true;
@@ -255,15 +258,20 @@ namespace PufferLaunch.UI
             var root = Place(Node(parent, "Slider"), anchor, position, size);
             var track = Stretch(Node(root, "Track"));
             var trackImg = track.gameObject.AddComponent<Image>();
-            trackImg.sprite = Art.Get("ui_panel");
+            // ui_bar (a plain rounded bar) for both: the snow-capped ui_panel and a square fill read as a glitch (QA 15/11).
+            trackImg.sprite = Art.Get("ui_bar");
             trackImg.type = UnityEngine.UI.Image.Type.Sliced;
-            trackImg.color = new Color(0.75f, 0.9f, 0.95f);
+            trackImg.color = new Color32(0x1b, 0x2a, 0x49, 0x66);
+            track.offsetMin = new Vector2(0, size.y * 0.25f);
+            track.offsetMax = new Vector2(0, -size.y * 0.25f);
 
             var fillArea = Stretch(Node(root, "Fill Area"));
-            fillArea.offsetMin = new Vector2(10, 10);
-            fillArea.offsetMax = new Vector2(-10, -10);
+            fillArea.offsetMin = new Vector2(0, size.y * 0.25f);
+            fillArea.offsetMax = new Vector2(0, -size.y * 0.25f);
             var fill = Stretch(Node(fillArea, "Fill"));
             var fillImg = fill.gameObject.AddComponent<Image>();
+            fillImg.sprite = Art.Get("ui_bar");
+            fillImg.type = UnityEngine.UI.Image.Type.Sliced;
             fillImg.color = new Color32(0x2e, 0xc4, 0xb6, 0xff);
 
             var handleArea = Stretch(Node(root, "Handle Area"));
@@ -291,6 +299,7 @@ namespace PufferLaunch.UI
         public void OnPointerDown(PointerEventData e) => target = 0.9f;
         public void OnPointerUp(PointerEventData e) => target = 1f;
         public void OnPointerExit(PointerEventData e) => target = 1f;
+        void OnDisable() => target = 1f;   // hidden while held: no pointer-up follows, and it would come back squashed
 
         void Update()
         {
@@ -344,6 +353,9 @@ namespace PufferLaunch.UI
         System.Collections.IEnumerator Start()
         {
             var t = transform;
+            // ButtonJuice also drives the scale: left on, it grew the button during the delay before the pop restarted it.
+            var juice = GetComponent<ButtonJuice>();
+            if (juice != null) juice.enabled = false;
             t.localScale = Vector3.zero;
             for (float w = 0f; w < delay; w += Time.unscaledDeltaTime) yield return null;
             for (float time = 0f; time < duration; time += Time.unscaledDeltaTime)
@@ -356,6 +368,16 @@ namespace PufferLaunch.UI
                 yield return null;
             }
             t.localScale = Vector3.one;
+            if (juice != null) juice.enabled = true;
+        }
+
+        /// <summary>Hidden mid-pop (a pause menu closed at once): the coroutine dies and Start never runs again, so
+        /// finish the pop here or the button stays tiny with its press animation off.</summary>
+        void OnDisable()
+        {
+            transform.localScale = Vector3.one;
+            var juice = GetComponent<ButtonJuice>();
+            if (juice != null) juice.enabled = true;
         }
     }
 

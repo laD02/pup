@@ -52,7 +52,7 @@ trong ≥ 14 ngày** cho mỗi app mới trước khi được phát hành công
 ## 5. 🤖 Build production + nộp lên Play
 1. ✋ Tạo upload keystore một lần, giữ ngoài git (`README.md` "Release on Google Play").
 2. 🤖 Khi đã có ID AdMob thật (bước 3): đổi `[Unreleased]` trong `CHANGELOG.md` thành `## [x.y.z] — <ngày>`, tăng
-   `bundleVersion` + `bundleVersionCode` trong `ProjectBuilder.ConfigurePlayer`, build AAB bằng
+   `Version` + `VersionCode` trong `ProjectBuilder` (hoặc biến môi trường `PUFFER_VERSION_CODE`), build AAB bằng
    `ProjectBuilder.BuildAab` với biến môi trường `PUFFER_KEYSTORE*` (`README.md`).
 3. 🤖 Cài đúng bản đó lên emulator và chơi thử theo `CLAUDE.md` "QA on the shipped build".
 4. ✋ Lần đầu: tạo app trong Play Console (tên mặc định `Pup Launch: Seal Catapult`, ngôn ngữ mặc định en-US, Game, Miễn

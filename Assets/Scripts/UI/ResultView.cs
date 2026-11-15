@@ -6,10 +6,13 @@ using UnityEngine.UI;
 namespace PufferLaunch.UI
 {
     /// <summary>End of mission, laid out like the reference (report §15): "Mission N" over "Congratulations!" (or
-    /// "Mission failed!"), the hero standing on a knocked-out bear, "Bears hit: d/r", "Total bears: N", Continue.
-    /// No score, as in the reference; this game adds its three stars (the shop's currency) and the Retry/Map buttons.</summary>
+    /// "Mission failed!"), the hero standing on a knocked-out bear, "Bears hit: d/r", Continue.
+    /// No score, as in the reference; this game adds its three stars (the shop's currency), each with a line saying
+    /// what earns it, and the Retry/Map buttons. The all-time bear total lives on the mission card and the stats page.</summary>
     public class ResultView : MonoBehaviour
     {
+        const float StarPitch = 380f;   // room under each star for its rule in the longest language
+
         GameManager game;
         Canvas canvas;
 
@@ -23,7 +26,11 @@ namespace PufferLaunch.UI
             return view;
         }
 
-        public void Show(int levelNumber, bool won, bool perfect, int stars, int bearsDown, int bearsRequired, int totalBears)
+        /// <param name="down">Bears knocked out (fish caught on the bonus level) out of <paramref name="required"/>.</param>
+        /// <param name="lastLevel">The boss is beaten: the card closes the story instead of counting bears.</param>
+        /// <param name="rules">Which star rules were met; each star sits over its own rule, so the middle one can
+        /// stay empty while the third is earned.</param>
+        public void Show(int levelNumber, bool won, bool perfect, (bool passed, bool second, bool third) rules, int down, int required, bool bonus, bool lastLevel)
         {
             canvas.enabled = true;
             var overlay = UiKit.Overlay(canvas.transform, "Overlay");
@@ -57,14 +64,22 @@ namespace PufferLaunch.UI
                 UiKit.Image(panel, "pup_stuck_0", UiKit.Top, new Vector2(-160, -300), new Vector2(170, 170));
             }
 
-            UiKit.Text(panel, Loc.T("bears_hit", bearsDown, bearsRequired), 44, UiKit.Top, new Vector2(0, -470), new Vector2(1000, 60), UiKit.Ink);
-            UiKit.Text(panel, Loc.T("bears_all_time", totalBears), 40, UiKit.Top, new Vector2(0, -530), new Vector2(1000, 56), new Color32(0x2a, 0x6f, 0xb0, 0xff));
+            string line = won && lastLevel ? Loc.T("ending") : Loc.T(bonus ? "fish_got" : "bears_hit", down, required);
+            UiKit.Text(panel, line, 44, UiKit.Top, new Vector2(0, -462), new Vector2(1100, 60), UiKit.Ink);
 
-            // This game's own: the stars earned (they pay for upgrades). No score, as in the reference.
-            var slots = new Image[3];
+            // This game's own: the stars earned (they pay for upgrades), each over the rule that earns it, so a missing
+            // star explains itself. No score, as in the reference.
+            bool[] earned = { rules.passed, rules.second, rules.third };
+            int shown = 0;
             for (int i = 0; i < 3; i++)
-                slots[i] = UiKit.Image(panel, i < stars ? "star_full" : "star_empty", UiKit.Top, new Vector2((i - 1) * 130, -585 + (i == 1 ? 10 : 0)), new Vector2(96, 96));
-            for (int i = 0; i < stars; i++) slots[i].gameObject.AddComponent<PopIn>().delay = 0.4f + 0.25f * i;
+            {
+                var at = new Vector2((i - 1) * StarPitch, -528);
+                var star = UiKit.Image(panel, earned[i] ? "star_full" : "star_empty", UiKit.Top, at, new Vector2(96, 96));
+                if (earned[i]) star.gameObject.AddComponent<PopIn>().delay = 0.4f + 0.25f * shown++;
+                var rule = UiKit.Text(panel, Loc.T((bonus ? "star_fish_" : "star_rule_") + (i + 1)), 30, UiKit.Top,
+                    at + new Vector2(0, -98), new Vector2(StarPitch - 20, 72), UiKit.Ink);
+                if (!earned[i]) rule.alpha = 0.7f;   // with the empty star above it: shape, not only colour
+            }
             if (won)
             {
                 if (perfect)
@@ -80,12 +95,28 @@ namespace PufferLaunch.UI
             }
             else
             {
-                UiKit.Button(panel, Loc.T("map"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-430, 36), new Vector2(300, 108), game.ToMap, "glyph_map");
-                UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-90, 36), new Vector2(340, 108), game.Retry, "glyph_retry");
-                // Opt-in rewarded ad (GAME_DESIGN.md §13b): the ▶ glyph marks it; no ad means a note, never a free pup.
-                var noAd = UiKit.Text(panel, "", 34, UiKit.Bottom, new Vector2(330, 172), new Vector2(520, 50), UiKit.Ink);
-                UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(330, 36), new Vector2(460, 108),
-                    () => game.RetryWithBonusPup(() => noAd.text = Loc.T("ad_none")), "glyph_play");
+                // The free retry is the main button, where Continue sits on the win card. The opt-in rewarded ad
+                // (GAME_DESIGN.md §13b) is a smaller one and says "Ad" in its label; no ad means the label turns
+                // into a note, never a free pup.
+                TMPro.TextMeshProUGUI adLabel = null;
+                System.Action showAd = () => game.RetryWithBonusPup(() => adLabel.text = Loc.T("ad_none"));
+                Button ad;
+                if (game.CanRetryAttack)
+                {
+                    // Pups got out: "Attack again" keeps them. The whole level stays one tap away (plain Retry), or a
+                    // player with too few pups could never redo the pit from here; Map shrinks to its icon for room.
+                    UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.Bottom, new Vector2(-542, 36), new Vector2(120, 108), game.ToMap, "glyph_map");
+                    UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-332, 36), new Vector2(270, 108), game.Retry, "glyph_retry");
+                    ad = UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Warm, UiKit.Bottom, new Vector2(3, 36), new Vector2(370, 108), showAd, "glyph_play");
+                    UiKit.Button(panel, Loc.T("retry_attack"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(403, 36), new Vector2(400, 108), game.RetryLost, "glyph_next");
+                }
+                else
+                {
+                    UiKit.Button(panel, Loc.T("map"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-480, 36), new Vector2(240, 108), game.ToMap, "glyph_map");
+                    ad = UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Warm, UiKit.Bottom, new Vector2(-135, 36), new Vector2(410, 108), showAd, "glyph_play");
+                    UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(345, 36), new Vector2(490, 108), game.RetryLost, "glyph_retry");
+                }
+                adLabel = ad.GetComponentInChildren<TMPro.TextMeshProUGUI>();
             }
         }
 

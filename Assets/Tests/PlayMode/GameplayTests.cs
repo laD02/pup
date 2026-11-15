@@ -53,7 +53,17 @@ namespace PufferLaunch.Tests
                 var bearStart = bears.Select(b => (Vector2)b.transform.position).ToArray();
                 // Bears start asleep; wake them as a first nudge would, so a wedged or overhanging bear shows itself.
                 foreach (var bear in bears) bear.GetComponent<Rigidbody2D>().WakeUp();
+                // TNT too: a crate placed inside terrain sleeps there unseen until physics throws it out.
+                var crates = Object.FindObjectsByType<Tnt>(FindObjectsSortMode.None);
+                var crateStart = crates.Select(c => (Vector2)c.transform.position).ToArray();
+                foreach (var crate in crates) crate.GetComponent<Rigidbody2D>().WakeUp();
                 yield return new WaitForSeconds(SettleSeconds);
+                for (int c = 0; c < crates.Length; c++)
+                {
+                    Assert.IsTrue(crates[c] != null, $"level {i + 1}: TNT at {crateStart[c]} blew up at rest");
+                    float drift = Vector2.Distance(crateStart[c], crates[c].transform.position);
+                    Assert.Less(drift, MaxRestDrift, $"level {i + 1}: TNT at {crateStart[c]} moved {drift:0.00} at rest");
+                }
                 Assert.AreEqual(levels[i].blocks.Count, blocks.Length, $"level {i + 1}: block count");
                 Assert.AreEqual(levels[i].bears.Count, bears.Length, $"level {i + 1}: bear count");
                 for (int b = 0; b < blocks.Length; b++)
@@ -68,6 +78,27 @@ namespace PufferLaunch.Tests
                     Assert.Less(drift, MaxRestDrift, $"level {i + 1}: bear at {bearStart[b]} slid {drift:0.00} at rest");
                 }
             }
+        }
+
+        /// <summary>The lose card's "Attack again": the level starts in the arena with the kept pups, no launch pit.</summary>
+        [UnityTest]
+        public IEnumerator AttackOnlyRetryStartsInTheArenaWithTheKeptPups()
+        {
+            int before = SceneManager.GetActiveScene().handle;
+            SceneLoader.RetryAttack(0, new[] { new Vector2(6f, 4f), new Vector2(6f, 4f) });
+            yield return new WaitUntil(() => SceneManager.GetActiveScene().handle != before
+                                             && SceneManager.GetActiveScene().name == SceneLoader.Game);
+            var game = Object.FindFirstObjectByType<GameManager>();
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while (game.Current != GameManager.State.Attack && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.AreEqual(GameManager.State.Attack, game.Current, "the attack starts by itself");
+            Assert.IsNull(Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>(), "no launch pit on an attack-only retry");
+            var attack = Object.FindFirstObjectByType<AttackPhase>();
+            Assert.AreEqual(1, attack.Ammo, "two kept pups: one flying, one waiting");
+            Assert.IsNotNull(attack.Current);
+            // The next ordinary start of the level is a full one again.
+            yield return LoadLevel(0);
+            Assert.IsNotNull(Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>(), "PlayLevel forgets the kept pups");
         }
 
         [UnityTest]

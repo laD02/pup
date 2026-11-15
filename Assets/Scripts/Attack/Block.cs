@@ -172,6 +172,9 @@ namespace PufferLaunch.Attack
             Fx.Puff(at, 6);
             Fx.Shake(tuning.shakeOnBreak);
             Broken?.Invoke(this, score);
+            // Destroy waits for the end of the frame: without this a second physics step in the same frame (under 50 fps)
+            // still collides with the broken block and stops a pierce or glide-through.
+            foreach (var c in GetComponents<Collider2D>()) c.enabled = false;
             Destroy(gameObject);
         }
     }

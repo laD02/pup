@@ -58,6 +58,7 @@ namespace PufferLaunch.Attack
 
         Action<bool, int, int> onEnd;   // won, pups left, score
         bool ended;
+        bool winPending;   // the last bear or the boss is down; End(true) follows after its delay
         int[] upgrades;
         GameTuning tuning;
 
@@ -388,7 +389,7 @@ namespace PufferLaunch.Attack
 
         void SpawnNext()
         {
-            if (ended) return;
+            if (ended || winPending) return;   // a win already decided must not spend another pup (it cost the "pup left" star)
             if (Ammo <= 0)
             {
                 StartCoroutine(WaitForSettleThenJudge());
@@ -435,12 +436,14 @@ namespace PufferLaunch.Attack
 
         void OnBlockBroken(Block block, int score)
         {
+            if (ended) return;   // the result is already saved and shown
             Score += score;
             ScoreChanged?.Invoke(Score);
         }
 
         void OnFish(Fish fish)
         {
+            if (ended) return;
             fishGot++;
             Score += tuning.fishScore;
             ScoreChanged?.Invoke(Score);
@@ -456,6 +459,7 @@ namespace PufferLaunch.Attack
         {
             if (b != boss || ended) return;
             bossBeaten = true;
+            winPending = true;
             StartCoroutine(BossFinale());
         }
 
@@ -484,7 +488,11 @@ namespace PufferLaunch.Attack
                 Fx.FloatingText($"×{hits}", ViewCenter + new Vector2(0f, 0.6f), new Color(0.55f, 0.32f, 0.1f), 16f, 1.3f);
                 AudioManager.Sfx("combo", 0.1f);
             }
-            if (BearsLeft == 0 && !ended && kind != LevelKind.Boss) StartCoroutine(After(WinDelay, () => End(true)));
+            if (BearsLeft == 0 && !ended && kind != LevelKind.Boss)
+            {
+                winPending = true;
+                StartCoroutine(After(WinDelay, () => End(true)));
+            }
         }
 
         void End(bool won)

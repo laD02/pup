@@ -209,7 +209,7 @@ def main() -> None:
     for entry in SHEETS:
         try:
             cut_sheet(entry)
-        except (ValueError, OSError, KeyError, IndexError) as e:
+        except (ValueError, OSError, KeyError, IndexError, ZeroDivisionError) as e:   # a row that measures 0 (no beanie found) fails alone
             failed.append(f"{entry[0]}: {e}")
             print(f"{entry[0]}: FAILED, {e}")
     for alias, source in ALIASES.items():

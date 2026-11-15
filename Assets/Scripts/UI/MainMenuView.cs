@@ -9,7 +9,7 @@ namespace PufferLaunch.UI
     /// Main menu (landscape), laid out like the reference's title (report §15): the logo across the top, a big Play in
     /// the middle, sound/music/help buttons top-centre above the logo; the cast on stage along the bottom — a pup
     /// sailing up and to the right with a star trail, the whacker with its operator, a smug snow bear on an ice block.
-    /// How to play / Settings / About sit in a row under Play; the first Play shows the instructions card first.
+    /// How to play / Settings / About sit in a row under Play; a new player's Play goes straight into level 1.
     /// </summary>
     public class MainMenuView : MonoBehaviour
     {
@@ -32,6 +32,7 @@ namespace PufferLaunch.UI
             // The ChatGPT menu painting (bg_menu) covers the screen; the cast stands on its snowy shelf.
             bool painted = Art.Has("bg_menu");
             var cam = MenuScene.Setup(skyOnly: painted);
+            Application.targetFrameRate = BootView.GameFps;   // the flyer and its star trail animate all the time
             float ground = Backdrop.GroundY;
             if (painted)
             {
@@ -69,12 +70,13 @@ namespace PufferLaunch.UI
             canvas = UiKit.CreateCanvas("MainMenu");
             var root = UiKit.SafeRoot(canvas);
             // Top: sound / music / help, then the logo and tagline across the middle of the sky.
-            var cluster = UiKit.Place(UiKit.Node(root, "Cluster"), UiKit.Top, new Vector2(0, -16), new Vector2(330, 100));
-            HudView.AudioButton(cluster, new Vector2(-110, 0), false);
+            float pitch = UiKit.MinHit;   // touch areas side by side, not overlapping
+            var cluster = UiKit.Place(UiKit.Node(root, "Cluster"), UiKit.Top, new Vector2(0, -16), new Vector2(pitch * 3f, 100));
+            HudView.AudioButton(cluster, new Vector2(-pitch, 0), false);
             HudView.AudioButton(cluster, new Vector2(0, 0), true);
             if (settings == null) settings = SettingsView.Create();   // survive language-change rebuilds
             if (info == null) info = InfoView.Create();
-            UiKit.Button(cluster, null, ButtonStyle.Teal, UiKit.Center, new Vector2(110, 0), new Vector2(96, 96), () => info.ShowHowTo(), "glyph_help");
+            UiKit.Button(cluster, null, ButtonStyle.Teal, UiKit.Center, new Vector2(pitch, 0), new Vector2(96, 96), () => info.ShowHowTo(), "glyph_help");
             var title = UiKit.Logo(root, Loc.T("title"), 150, UiKit.Top, new Vector2(0, -110), new Vector2(1300, 200));
             title.enableAutoSizing = true;
             title.fontSizeMin = 70;
@@ -90,30 +92,30 @@ namespace PufferLaunch.UI
             UiKit.Button(root, Loc.T("settings"), ButtonStyle.Teal, UiKit.Center, new Vector2(0, -200), size, () => settings.Open(), "glyph_gear");
             UiKit.Button(root, Loc.T("about"), ButtonStyle.Teal, UiKit.Center, new Vector2(420, -200), size, () => info.ShowAbout(), "glyph_map");
             // The story replays from a small button in the bottom-left corner.
-            UiKit.Button(root, Loc.T("story"), ButtonStyle.Warm, Vector2.zero, new Vector2(40, 40), new Vector2(300, 96),
+            UiKit.Button(root, Loc.T("story"), ButtonStyle.Warm, Vector2.zero, new Vector2(40, 40), new Vector2(340, 96),
                 () => IntroView.Play(null), "glyph_play");
             if (Application.isEditor)
                 UiKit.Button(root, Loc.T("quit"), ButtonStyle.Warm, UiKit.BottomRight, new Vector2(-40, 40), new Vector2(300, 96), Application.Quit, "glyph_back");
         }
 
-        /// <summary>The reference shows its instructions card once after the first Play; after that, straight to the map.</summary>
+        /// <summary>A new player's Play starts level 1 at once: it teaches by doing (tap glyph + hint bar), where a
+        /// four-paragraph card and the map were two more stops before the first launch. After that, the map.</summary>
         void Play()
         {
-            if (SaveSystem.Data.seenHowTo)
-            {
-                SceneLoader.Load(SceneLoader.LevelMap);
-                return;
-            }
-            info.ShowHowTo(() =>
-            {
-                SaveSystem.Data.seenHowTo = true;
-                SaveSystem.Save();
-                SceneLoader.Load(SceneLoader.LevelMap);
-            });
+            if (SaveSystem.Data.stars[0] > 0) SceneLoader.Load(SceneLoader.LevelMap);
+            else SceneLoader.PlayLevel(0);
+        }
+
+        /// <summary>Android Back: the story, then an open page, then out of the game (the root screen).</summary>
+        void HandleBack()
+        {
+            if (ScreenFader.LoadPending || IntroView.HandleBack() || settings.HandleBack() || info.HandleBack()) return;
+            Application.Quit();
         }
 
         void Update()
         {
+            if (GameInput.BackPressed()) HandleBack();
             // The flyer sails up and to the right along a gentle arc, trailing stars, fades out and starts over.
             flyerT += Time.deltaTime / FlightSeconds;
             if (flyerT >= 1f) flyerT = 0f;

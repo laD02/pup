@@ -9,11 +9,13 @@ namespace PufferLaunch.Core
     public class BootView : MonoBehaviour
     {
         const float LogoTime = 1.4f;
+        /// <summary>Frame caps: 60 while playing; still screens (the map and its shop) idle at 30 (heat, battery).</summary>
+        public const int GameFps = 60, StillFps = 30;
 
         IEnumerator Start()
         {
             QualitySettings.vSyncCount = 0;   // vSync would override the cap and render 90/120 fps on fast panels (heat, battery)
-            Application.targetFrameRate = 60;
+            Application.targetFrameRate = GameFps;
             SaveSystem.Load();
             Ads.AdMob.Create();   // consent form (if required) shows over the logo, then ads preload in the background
             var cam = new GameObject("Main Camera") { tag = "MainCamera" }.AddComponent<Camera>();

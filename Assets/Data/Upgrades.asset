@@ -15,16 +15,16 @@ MonoBehaviour:
   upgrades:
   - id: 0
     icon: icon_spiky
-    costs: 03000000060000000a000000
+    costs: 010000000200000003000000
   - id: 1
     icon: icon_ball
-    costs: 020000000500000008000000
+    costs: 010000000200000003000000
   - id: 2
     icon: icon_pod
-    costs: 04000000080000000c000000
+    costs: 010000000200000003000000
   - id: 3
     icon: icon_ninja
-    costs: 05000000090000000e000000
+    costs: 020000000200000003000000
   - id: 4
     icon: icon_blaze
-    costs: 060000000a0000000f000000
+    costs: 020000000200000003000000

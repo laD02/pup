@@ -109,7 +109,7 @@ namespace PufferLaunch.Attack
         }
     }
 
-    /// <summary>Floor button: pressed by a pup (or anything heavy) landing on it. Raises Pressed(group) once.</summary>
+    /// <summary>Floor button: pressed by a pup landing on it. Raises Pressed(group) once.</summary>
     public class FloorButton : MonoBehaviour
     {
         public static event Action<int> Pressed;
@@ -153,6 +153,7 @@ namespace PufferLaunch.Attack
         {
             if (!Block.Armed || down) return;
             if (c.contactCount == 0 || c.GetContact(0).normal.y > -0.3f) return;   // pressed from above only
+            if (!c.collider.TryGetComponent(out PufferController _)) return;       // a pup's dropped hat or debris must not press it
             Press();
         }
 

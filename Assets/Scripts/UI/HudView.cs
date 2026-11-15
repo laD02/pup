@@ -43,18 +43,21 @@ namespace PufferLaunch.UI
                 TextAlignmentOptions.Left, true);
 
             // Centre: sound, music, help, pause.
-            var cluster = UiKit.Place(UiKit.Node(root, "Cluster"), UiKit.Top, new Vector2(0, -16), new Vector2(430, 100));
-            AudioButton(cluster, new Vector2(-165, 0), false);
-            AudioButton(cluster, new Vector2(-55, 0), true);
-            UiKit.Button(cluster, null, ButtonStyle.Teal, UiKit.Center, new Vector2(55, 0), new Vector2(96, 96), hud.ToggleHelp, "glyph_help");
-            UiKit.Button(cluster, null, ButtonStyle.Warm, UiKit.Center, new Vector2(165, 0), new Vector2(96, 96), game.TogglePause, "glyph_pause");
+            // One MinHit apart, so the padded touch areas do not overlap (at 110 a miss next to Pause fired a pup).
+            float pitch = UiKit.MinHit;
+            var cluster = UiKit.Place(UiKit.Node(root, "Cluster"), UiKit.Top, new Vector2(0, -16), new Vector2(pitch * 4f, 100));
+            AudioButton(cluster, new Vector2(-pitch * 1.5f, 0), false);
+            AudioButton(cluster, new Vector2(-pitch * 0.5f, 0), true);
+            UiKit.Button(cluster, null, ButtonStyle.Teal, UiKit.Center, new Vector2(pitch * 0.5f, 0), new Vector2(96, 96), hud.ToggleHelp, "glyph_help");
+            UiKit.Button(cluster, null, ButtonStyle.Warm, UiKit.Center, new Vector2(pitch * 1.5f, 0), new Vector2(96, 96), game.TogglePause, "glyph_pause");
+            hud.game = game;
 
             // Right (arena only): the bear's face, the all-time total above the mission counter.
             var right = UiKit.Place(UiKit.Node(root, "Bears"), UiKit.TopRight, new Vector2(-24, -20), new Vector2(360, Portrait));
             hud.bearBadge = Badge(right, "hud_bear", UiKit.TopRight, Vector2.zero);
-            hud.totalBears = UiKit.Text(right, "", 30, UiKit.TopRight, new Vector2(-(Portrait + 14), -6), new Vector2(230, 40), Color.white,
-                TextAlignmentOptions.Right, true);
-            hud.bears = UiKit.Text(right, "0/0", 60, UiKit.TopRight, new Vector2(-(Portrait + 14), -40), new Vector2(230, 80), Color.white,
+            hud.totalBears = UiKit.Text(right, "", 36, UiKit.TopRight, new Vector2(-(Portrait + 14), 0), new Vector2(230, 46), Color.white,
+                TextAlignmentOptions.Right, true);   // 30 px was about 11sp on a phone
+            hud.bears = UiKit.Text(right, "0/0", 60, UiKit.TopRight, new Vector2(-(Portrait + 14), -42), new Vector2(230, 80), Color.white,
                 TextAlignmentOptions.Right, true);
             right.gameObject.SetActive(false);
 
@@ -63,6 +66,10 @@ namespace PufferLaunch.UI
             var hb = hud.hintBar.gameObject.AddComponent<Image>();
             hb.sprite = Art.Get("ui_pill");
             hb.type = Image.Type.Sliced;
+            // The pill is translucent: a second one under the text keeps the hint readable over the catapult and the rocks.
+            var backing = UiKit.Image(hud.hintBar, "ui_pill", UiKit.Center, Vector2.zero, new Vector2(900, 90));
+            backing.preserveAspect = false;
+            backing.type = Image.Type.Sliced;
             hud.hintText = UiKit.Text(hud.hintBar, "", 34, UiKit.Center, new Vector2(0, 2), new Vector2(860, 80), Color.white,
                 TextAlignmentOptions.Center, true);
             hud.hintText.enableAutoSizing = true;   // long Vietnamese hints shrink instead of wrapping out of the bar
@@ -165,13 +172,16 @@ namespace PufferLaunch.UI
             if (icon != null) icon.color = off ? new Color(1f, 1f, 1f, 0.55f) : Color.white;
         }
 
-        /// <summary>The ? button: shows the two one-line tips in the caption bar for a few seconds.</summary>
+        /// <summary>The ? button: shows the tip for the current phase in the caption bar for a few seconds (both tips
+        /// at once shrank to about 9sp in German).</summary>
         public void ToggleHelp()
         {
+            helpUntil = 0f;
+            SetHintText(game.HelpText);
             helpUntil = Time.unscaledTime + 4f;
-            SetHintText(Loc.T("hint_aim") + "  ·  " + Loc.T("hint_dive"));
         }
         float helpUntil;
+        GameManager game;
 
         public void SetPuffers(int n)
         {
@@ -251,7 +261,7 @@ namespace PufferLaunch.UI
             if (Art.Has("pup_salute_3") && Art.Has("pup_leap_0")) hero.gameObject.AddComponent<FrameLoop>().Set(5f, ("pup_leap_", 1), ("pup_leap_", 1), ("pup_salute_", 4), ("pup_salute_", 4));   // a crouch, then the salute (the grab frames show the rope)
             else if (Art.Has("pup_salute_0")) hero.gameObject.AddComponent<FrameLoop>().Set("pup_salute_", 4, 5f);
             else hero.gameObject.AddComponent<Spin>();
-            UiKit.Text(card, Loc.T("hit_bears", required), 46, UiKit.Top, new Vector2(0, -340), new Vector2(900, 110), Color.white, TextAlignmentOptions.Center, true);
+            UiKit.Text(card, required > 0 ? Loc.T("hit_bears", required) : Loc.T("collect_fish"), 46, UiKit.Top, new Vector2(0, -340), new Vector2(900, 110), Color.white, TextAlignmentOptions.Center, true);
             UiKit.Text(card, Loc.T("bears_all_time", total), 40, UiKit.Top, new Vector2(0, -455), new Vector2(900, 60), new Color32(0x2a, 0x6f, 0xb0, 0xff), TextAlignmentOptions.Center, true);
             UiKit.Text(card, pups == 1 ? Loc.T("through_one") : Loc.T("through", pups), 32, UiKit.Top, new Vector2(-170, -530), new Vector2(560, 60), new Color32(0x56, 0x63, 0x7b, 0xff), TextAlignmentOptions.Left);
             UiKit.Button(card, Loc.T("continue"), ButtonStyle.Gold, UiKit.BottomRight, new Vector2(-30, 30), new Vector2(320, 104), onContinue, "glyph_next");

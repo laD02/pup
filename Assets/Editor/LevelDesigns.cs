@@ -176,11 +176,13 @@ namespace PufferLaunch.EditorTools
                     .Bear(6.2f, 0f, mood: Eat).Bear(7.5f, 0f).Bear(3.4f, 0f).EdgePerch(3.6f).Need(3),
                 // 3 · the tower and the T (mission 3): a 6-cube column, a beam off its middle with two bears, an ice step
                 // down to the right with a lookout, three bears on the floor
-                new Design(6)
+                // Still a teaching level (GAME_DESIGN §R5: 1–3): hints and the easier launch stay on, 3 of 7 bears pass.
+                // Without them it asked 4 bears of 6 pups in the same level the help switched off (the steepest step of the game).
+                new Design(6, tutorial: true)
                     .Cubes(4.4f, 0f, 6).Row(5.2f, C3, 3).Row(7.6f, C2, 3)
                     .Wedge(3.6f, 0f, true).Wedge(5.2f, 0f, false).Wedge(7.6f, C3, false).Wedge(10f, C2, false)
                     .Bear(5.6f, C3 + Cube, mood: Sleep).Bear(6.8f, C3 + Cube).Bear(9f, C2 + Cube)
-                    .Bear(2.8f, 0f).Bear(6.4f, 0f).Bear(10.8f, 0f, mood: Eat).EdgePerch(4.2f).Need(4),
+                    .Bear(2.8f, 0f).Bear(6.4f, 0f).Bear(10.8f, 0f, mood: Eat).EdgePerch(4.2f).Need(3),
                 // 4 · shell-helmet bear on a pillar, a bear on cubes and one on the plateau
                 new Design(6)
                     .Pillar(3f, 2.6f).Bear(3f, 2.6f, helmet: true)
@@ -211,7 +213,7 @@ namespace PufferLaunch.EditorTools
                     // an arch on the right floor roofs the sleeping bear
                     .Cubes(10.7f, 0f, 2).Cubes(12.5f, 0f, 2).Row(10.9f, C2, 3).Wedge(10.1f, C2, true)
                     // the arch's gap (11.1..12.1) clears the sleeper's 0.84 collider; 10.9 left only 0.8 and wedged it
-                    .Cubes(1.2f, 0f, 1).Bear(1.2f, Cube).Bear(11.6f, 0f, mood: Sleep).Bear(11.7f, C2 + Cube).Tnt(9.8f, 0f).EdgePerch(4.6f, helmet: true).Need(4),
+                    .Cubes(1.2f, 0f, 1).Bear(1.2f, Cube).Bear(11.6f, 0f, mood: Sleep).Bear(11.7f, C2 + Cube).Tnt(2.05f, 0f).EdgePerch(4.6f, helmet: true).Need(4),   // TNT on the open floor beside the left cube (at 9.8 it was buried inside the right ramp)
                 // 8 · three pillars of different heights, cube columns between
                 new Design(7)
                     .Pillar(2.5f, 1.4f).Bear(2.5f, 1.4f)
