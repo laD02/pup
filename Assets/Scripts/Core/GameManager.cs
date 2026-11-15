@@ -190,7 +190,7 @@ namespace PufferLaunch.Core
                 // Back pauses a running level and leaves a finished one (the result card has no pause).
                 // Not while Retry/Continue is already leaving (wipe or ad): a second load would replace that one.
                 if (Current != State.Won && Current != State.Lost) TogglePause();
-                else if (!leaving && !ScreenFader.LoadPending) ToMap();
+                else if (!ScreenFader.LoadPending) ToMap();
             }
             if (Current == State.Launch && GameInput.ActionPressed()) launch.TryFire();
             else if (Current == State.Transition && Time.time > missionShownAt + MissionTapGrace && GameInput.ActionPressed()) ContinueMission();
@@ -312,7 +312,7 @@ namespace PufferLaunch.Core
             }
             // The fish run ends only when the pups run out, so it is rated on the fish caught, not on pups left.
             var rules = level.kind == LevelKind.Bonus
-                ? StarRating.BonusRules(attack.FishCollected, attack.FishTotal)
+                ? StarRating.BonusRules(won, attack.FishCollected, attack.FishTotal)   // not won: no pup left the pit
                 : StarRating.Rules(won, puffersLeft, score, level.threeStarScore);
             int stars = (rules.passed ? 1 : 0) + (rules.second ? 1 : 0) + (rules.third ? 1 : 0);
             bool perfect = won && attack.Perfect;
@@ -359,7 +359,11 @@ namespace PufferLaunch.Core
         }
 
         /// <summary>The whole level again, from the launch pit (pause menu, win card).</summary>
-        public void Retry() => SceneLoader.PlayLevel(LevelIndex);
+        public void Retry()
+        {
+            if (leaving) return;   // an ad is opening for this card: its callback decides where to go
+            SceneLoader.PlayLevel(LevelIndex);
+        }
 
         /// <summary>True when pups got out this attempt: the lose card can replay just the attack with them.</summary>
         public bool CanRetryAttack => exits != null && exits.Count > 0;
@@ -368,6 +372,7 @@ namespace PufferLaunch.Core
         /// meant batting every pup out again). With no pup out there is nothing to keep: the whole level.</summary>
         public void RetryLost()
         {
+            if (leaving) return;
             if (CanRetryAttack) SceneLoader.RetryAttack(LevelIndex, exits);
             else Retry();
         }
@@ -400,6 +405,7 @@ namespace PufferLaunch.Core
             leaving = true;
             AdMob.ShowRewarded(earned =>
             {
+                if (this == null) return;   // the level was left while the ad was up: nothing here to retry or relabel
                 leaving = false;
                 if (!earned)
                 {
@@ -411,7 +417,11 @@ namespace PufferLaunch.Core
             });
         }
 
-        public void ToMap() => SceneLoader.Load(SceneLoader.LevelMap);
+        public void ToMap()
+        {
+            if (leaving) return;
+            SceneLoader.Load(SceneLoader.LevelMap);
+        }
 
         static IEnumerator After(float seconds, Action action)
         {

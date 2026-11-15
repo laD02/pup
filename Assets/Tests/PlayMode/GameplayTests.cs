@@ -96,6 +96,10 @@ namespace PufferLaunch.Tests
             var attack = Object.FindFirstObjectByType<AttackPhase>();
             Assert.AreEqual(1, attack.Ammo, "two kept pups: one flying, one waiting");
             Assert.IsNotNull(attack.Current);
+            // The kept exit decides how the pup flies in (not the default entry).
+            var entry = AttackPhase.Entry(new Vector2(6f, 4f));
+            Assert.AreNotEqual(AttackPhase.SpawnPoint.y, entry.at.y, "the test exit must differ from the default entry");
+            Assert.AreEqual(entry.at.y, attack.Current.transform.position.y, 0.3f, "the pup enters at its kept exit's height");
             // The next ordinary start of the level is a full one again.
             yield return LoadLevel(0);
             Assert.IsNotNull(Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>(), "PlayLevel forgets the kept pups");

@@ -37,6 +37,15 @@ namespace PufferLaunch.Core
         static InputAction back;
         static int backFrame = -1;
 
+        /// <summary>The Editor can enter play mode without reloading statics: start each session without a stale,
+        /// disabled action or an old frame number.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            back = null;   // not disposed: the Input System has already torn the old session's actions down
+            backFrame = -1;
+        }
+
         /// <summary>Android Back (Escape on a keyboard): pause in a level, close or leave everywhere else.
         /// An action, not a polled key: a gesture-navigation Back is a press and release in the same instant, and
         /// polling `wasPressedThisFrame` missed it when both landed in one frame (seen on the 30 fps map, QA 15/11).</summary>

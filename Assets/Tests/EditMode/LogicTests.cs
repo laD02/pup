@@ -26,12 +26,14 @@ namespace PufferLaunch.Tests
         }
 
         // The bonus fish run always spends every pup, so it is rated on fish: it must be able to reach 3 stars.
-        [Test] public void BonusRunAlwaysGivesOneStar() => Assert.AreEqual(1, StarRating.ComputeBonus(0, 24));
-        [Test] public void HalfTheFishGiveTwoStars() => Assert.AreEqual(2, StarRating.ComputeBonus(12, 24));
-        [Test] public void JustUnderHalfTheFishStayAtOneStar() => Assert.AreEqual(1, StarRating.ComputeBonus(11, 24));
-        [Test] public void EightyPercentOfTheFishGiveThreeStars() => Assert.AreEqual(3, StarRating.ComputeBonus(20, 24));
-        [Test] public void JustUnderEightyPercentStayAtTwoStars() => Assert.AreEqual(2, StarRating.ComputeBonus(19, 24));
-        [Test] public void BonusRunWithoutFishDoesNotDivideByZero() => Assert.AreEqual(1, StarRating.ComputeBonus(0, 0));
+        [Test] public void BonusRunAlwaysGivesOneStar() => Assert.AreEqual(1, StarRating.ComputeBonus(true, 0, 24));
+        [Test] public void HalfTheFishGiveTwoStars() => Assert.AreEqual(2, StarRating.ComputeBonus(true, 12, 24));
+        [Test] public void JustUnderHalfTheFishStayAtOneStar() => Assert.AreEqual(1, StarRating.ComputeBonus(true, 11, 24));
+        [Test] public void EightyPercentOfTheFishGiveThreeStars() => Assert.AreEqual(3, StarRating.ComputeBonus(true, 20, 24));
+        [Test] public void JustUnderEightyPercentStayAtTwoStars() => Assert.AreEqual(2, StarRating.ComputeBonus(true, 19, 24));
+        // No pup left the pit: the run was never played (it used to be saved as cleared with one star).
+        [Test] public void BonusRunWithNoPupOutEarnsNothing() => Assert.AreEqual(0, StarRating.ComputeBonus(false, 24, 24));
+        [Test] public void BonusRunWithoutFishDoesNotDivideByZero() => Assert.AreEqual(1, StarRating.ComputeBonus(true, 0, 0));
     }
 
     public class EconomyTests
