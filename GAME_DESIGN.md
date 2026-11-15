@@ -99,9 +99,9 @@ Chỉ học **nhịp, bố cục, cách phản hồi** của thể loại.
 ### R5. Kết quả, thua, thống kê
 - **Thắng:** panel "Màn N" + "Thắng rồi!" (đủ chỉ tiêu) hoặc **"Hoàn hảo!"** (hạ hết gấu). Tranh: bầy hải cẩu nhảy múa quanh
   gấu nằm ngửa mắt xoáy. Dòng "Gấu đã hạ X/Y", "Tổng gấu T", sao 1–3 bay vào, nút Bản đồ · Chơi lại · Tiếp.
-- **Thua:** panel **"Thất bại!"** + mặt gấu + số đã hạ + 3 sao rỗng. Nút **Chơi lại**, **Bản đồ**, **Thống kê**. Sau khi
+- **Thua:** panel **"Thất bại!"** + mặt gấu + số đã hạ + 3 sao rỗng. Nút theo R9 (Bản đồ · Chơi lại · Quảng cáo: +1 hải cẩu · Tấn công lại); Thống kê không nằm trên thẻ thua. Sau khi
   đóng panel: cảnh ngắn gấu xách lồng có hải cẩu chạy ngang (đã có ở màn tải).
-- **Thống kê** (panel, mở từ thẻ thua và từ Cài đặt): tổng gấu đã hạ, số lần ×2, ×3, ×4 trở lên, màn Hoàn hảo. Lưu trong
+- **Thống kê** (panel, mở từ Cài đặt): tổng gấu đã hạ, số lần ×2, ×3, ×4 trở lên, màn Hoàn hảo. Lưu trong
   save, kiểm tra từng trường.
 - Màn 1–3 là màn dạy: rộng tay, gần như không thua. Từ màn 4 siết lại để thua là có thể xảy ra.
 
@@ -267,7 +267,7 @@ Luật áp dụng cho mọi màn hình và màn chơi từ nay:
 - **Cụm nút tròn trên-giữa** cách nhau đúng `UiKit.MinHit` (130) để vùng chạm không chồng nhau. Nhãn nút chừa 20 px mỗi đầu.
 - **Shop**: 3 thẻ nằm trong ±800 (vừa 4:3), dùng safe area; nút giá chỉ ghi số + sao; chưa đủ sao thì nút xám + ổ khóa, bấm vào
   hiện "Cần thêm N sao". Nút Nâng cấp trên bản đồ có huy hiệu sao ghi số sao còn tiêu được, nhấp nháy khi mua được gì đó.
-- **Thẻ kết quả**: bỏ dòng "Tổng gấu" (vẫn có ở thẻ nhiệm vụ và trang Thống kê) để lấy chỗ ghi luật dưới 3 sao; mỗi sao nằm trên đúng luật của nó (sao giữa có thể trống khi sao thứ ba đạt). Thắng màn boss
+- **Thẻ kết quả**: bỏ dòng "Tổng gấu" (vẫn có ở thẻ nhiệm vụ và trang Thống kê) để lấy chỗ ghi luật dưới 3 sao; mỗi sao nằm trên đúng luật của nó (sao giữa có thể trống khi sao thứ ba đạt; ở màn boss luật sao giữa ghi "Hạ trùm khi còn dư hải cẩu"). Thắng màn boss
   ghi câu kết. Màn bonus ghi "Cá đã gom x/y".
 - **Màn 1–3 là màn dạy** (`tutorial: true`): màn 3 cần 3 gấu (trước là 4 và tắt trợ giúp). Màn dạy vẽ 8 chấm theo đường lao
   chéo từ chỗ hải cẩu đang bay; chữ gợi ý là "Chạm sớm! Hải cẩu lao chéo về phía trước".
@@ -284,6 +284,8 @@ Luật áp dụng cho mọi màn hình và màn chơi từ nay:
 - **Cảm giác đánh trúng**: mỗi gấu ngã có một nhịp khựng (thời gian ×0,05 trong 0,06 s thực) và một rung nhẹ; con gấu cuối
   của màn (hoặc trùm) ngã chậm (×0,3 trong 0,45 s). Tạm dừng luôn thắng: nhịp khựng không bắt đầu hay kết thúc đè lên nó
   (`GameManager.TimeDip`). Rung dùng phản hồi chạm của Android (`Haptics.Tap`, không cần quyền, theo cài đặt máy); cũng rung khi bắn "TUYỆT!".
+- **Phần thưởng quảng cáo**: sau khi quảng cáo đóng, game chờ 1 giây cho callback thưởng (trước là 0,3 s: callback chậm thì xem
+  xong mà không được hải cẩu).
 - Chưa làm, chờ người dùng: analytics (cần tạo project Firebase và sửa Data safety + chính sách riêng tư), thêm màn sau boss
   (cần tranh bản đồ trang 2).
 
@@ -523,7 +525,7 @@ Giá (sao) cấp 1/2/3: Gai 1/2/3 · Cuộn 1/2/3 · Bầy 1/2/3 · Ninja 2/2/3 
 
 | Vật thể | Mô tả | Trạng thái |
 |---|---|---|
-| Cá giấu 🆕 | 3 con cá mỗi màn đặt ở chỗ khó (sau cột, trên cao); bay/lăn qua là nhặt; nhặt đủ 3 + hạ hết gấu = **Hoàn hảo** | 🆕 |
+| Cá giấu 🆕 | **Chưa làm** (15/11: code chỉ có cá ở màn bonus; Hoàn hảo = hạ hết gấu, và gom đủ cá ở màn bonus). Ý tưởng cũ: 3 con cá mỗi màn đặt ở chỗ khó (sau cột, trên cao); bay/lăn qua là nhặt | 🆕 |
 | Vòng băng 🆕 | xem §6 | 🆕 |
 | Thùng gỗ 🆕 | khối nặng (`stoneHp` 22), không vỡ dễ, dùng làm bệ như ảnh #12 | 🆕 (sprite có `block_stone`) |
 | Lồng băng 🆕 | ở màn boss, treo cạnh boss; thắng boss thì mở, hải cẩu con nhảy ra | 🆕 |
@@ -656,7 +658,7 @@ chen giữa màn, mỗi quy tắc chặn đúng một lời chê hay gặp ở t
 |---|---|---|
 | Banner | **Không có.** Game ngang, hành động: banner che sân chơi và gây chạm nhầm | Banner che, chạm nhầm |
 | Interstitial | Chỉ khi bấm **Tiếp tục** trên thẻ thắng, trước khi sang màn sau. Tối đa **1 lần mỗi 4 màn thắng**; cách mọi quảng cáo toàn màn **≥ 180 giây**; chưa có khi người chơi mới qua dưới **3 màn**; không có sau màn thưởng và màn boss (thẻ kết thúc chặng), không có khi bấm Chơi lại hay Bản đồ | "Quảng cáo sau mỗi màn", quảng cáo ngay sau phần hướng dẫn |
-| Rewarded | Chỉ khi người chơi tự bấm nút có huy hiệu ▶: trên **thẻ thua**, nút phụ "Quảng cáo: +1 hải cẩu ▶" (chữ "Quảng cáo" nằm ngay trên nút; Chơi lại miễn phí là nút chính, R9) — chơi lại đúng màn đó với thêm 1 hải cẩu, dùng **một lần** (màn kế hay lần chơi lại sau đó trở lại bình thường) | Ép xem video; thua mãi là kẹt |
+| Rewarded | Chỉ khi người chơi tự bấm nút có huy hiệu ▶: trên **thẻ thua**, nút "QC: +1 hải cẩu ▶" (tiếng Việt viết tắt cho vừa nút; ngôn ngữ khác ghi đủ chữ quảng cáo, vd. "Ad: +1 pup"); nút vàng chính luôn là lượt chơi lại miễn phí (R9) — chơi lại đúng màn đó với thêm 1 hải cẩu, dùng **một lần** (màn kế hay lần chơi lại sau đó trở lại bình thường) | Ép xem video; thua mãi là kẹt |
 | Khi quảng cáo lỗi / không mạng | Rewarded: hiện "Chưa có quảng cáo", **không tặng gì**. Interstitial: bỏ qua, sang màn luôn | Tắt mạng để lấy quà miễn phí; game treo chờ quảng cáo |
 | Âm thanh | Âm thanh game tắt (nút loa, menu tạm dừng, Cài đặt) thì quảng cáo cũng tắt tiếng (`MobileAds.SetApplicationMuted`) | Quảng cáo kêu to khi đã tắt âm |
 | Đồng ý (GDPR) | Google UMP hỏi khi mở game, **trước** `MobileAds.Initialize`; không được phép thì chơi không quảng cáo. Cài đặt có dòng **Quyền riêng tư** khi UMP yêu cầu | Luật EU, chính sách Play |

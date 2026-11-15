@@ -27,7 +27,8 @@ namespace PufferLaunch.UI
         }
 
         /// <param name="down">Bears knocked out (fish caught on the bonus level) out of <paramref name="required"/>.</param>
-        /// <param name="lastLevel">The boss is beaten: the card closes the story instead of counting bears.</param>
+        /// <param name="lastLevel">The boss level: a win closes the story instead of counting bears, and the second
+        /// star's rule names the boss.</param>
         /// <param name="rules">Which star rules were met; each star sits over its own rule, so the middle one can
         /// stay empty while the third is earned.</param>
         public void Show(int levelNumber, bool won, bool perfect, (bool passed, bool second, bool third) rules, int down, int required, bool bonus, bool lastLevel)
@@ -76,7 +77,9 @@ namespace PufferLaunch.UI
                 var at = new Vector2((i - 1) * StarPitch, -528);
                 var star = UiKit.Image(panel, earned[i] ? "star_full" : "star_empty", UiKit.Top, at, new Vector2(96, 96));
                 if (earned[i]) star.gameObject.AddComponent<PopIn>().delay = 0.4f + 0.25f * shown++;
-                var rule = UiKit.Text(panel, Loc.T((bonus ? "star_fish_" : "star_rule_") + (i + 1)), 30, UiKit.Top,
+                // On the boss level the second star is for beating the boss with a pup left, not for every bear.
+                string key = bonus ? "star_fish_" + (i + 1) : lastLevel && i == 1 ? "star_boss_2" : "star_rule_" + (i + 1);
+                var rule = UiKit.Text(panel, Loc.T(key), 30, UiKit.Top,
                     at + new Vector2(0, -98), new Vector2(StarPitch - 20, 72), UiKit.Ink);
                 if (!earned[i]) rule.alpha = 0.7f;   // with the empty star above it: shape, not only colour
             }
@@ -107,8 +110,8 @@ namespace PufferLaunch.UI
                     // player with too few pups could never redo the pit from here; Map shrinks to its icon for room.
                     UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.Bottom, new Vector2(-542, 36), new Vector2(120, 108), game.ToMap, "glyph_map");
                     UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-332, 36), new Vector2(270, 108), game.Retry, "glyph_retry");
-                    ad = UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Warm, UiKit.Bottom, new Vector2(3, 36), new Vector2(370, 108), showAd, "glyph_play");
-                    UiKit.Button(panel, Loc.T("retry_attack"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(403, 36), new Vector2(400, 108), game.RetryLost, "glyph_next");
+                    ad = UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Warm, UiKit.Bottom, new Vector2(13, 36), new Vector2(390, 108), showAd, "glyph_play");   // the longest label of the row
+                    UiKit.Button(panel, Loc.T("retry_attack"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(413, 36), new Vector2(380, 108), game.RetryLost, "glyph_next");
                 }
                 else
                 {

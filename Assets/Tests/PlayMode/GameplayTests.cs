@@ -489,6 +489,69 @@ namespace PufferLaunch.Tests
             Assert.AreEqual(0, boss.Lives, "out cold after its lives are gone");
         }
 
+        /// <summary>Starts a level in the arena with <paramref name="pups"/> kept pups and waits for the attack.</summary>
+        static IEnumerator StartAttackOnly(int level, int pups)
+        {
+            int before = SceneManager.GetActiveScene().handle;
+            var exits = new Vector2[pups];
+            for (int i = 0; i < pups; i++) exits[i] = new Vector2(6f, 4f);
+            SceneLoader.RetryAttack(level, exits);
+            yield return new WaitUntil(() => SceneManager.GetActiveScene().handle != before
+                                             && SceneManager.GetActiveScene().name == SceneLoader.Game);
+            var game = Object.FindFirstObjectByType<GameManager>();
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while (game.Current != GameManager.State.Attack && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.AreEqual(GameManager.State.Attack, game.Current);
+        }
+
+        static IEnumerator WaitForState(GameManager game, GameManager.State state, float seconds)
+        {
+            float deadline = Time.realtimeSinceStartup + seconds;
+            while (game.Current != state && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.AreEqual(state, game.Current);
+        }
+
+        /// <summary>Beating the boss in the arena wins the last level and shows the closing card (captured for review).</summary>
+        [UnityTest]
+        public IEnumerator BeatingTheBossShowsTheEndingCard()
+        {
+            int last = GameDatabase.Instance.levels.Length - 1;
+            yield return StartAttackOnly(last, 3);
+            var game = Object.FindFirstObjectByType<GameManager>();
+            Assert.IsFalse(game.HasNextLevel);
+            var boss = Object.FindFirstObjectByType<BossBear>();
+            for (int n = 0; boss.Lives > 0 && n < 10; n++) { boss.Hit(); yield return new WaitForSeconds(0.6f); }   // past the per-dive hit cooldown
+            Assert.AreEqual(0, boss.Lives);
+            yield return WaitForState(game, GameManager.State.Won, 15f);
+            Assert.AreEqual(1f, Time.timeScale, 0.001f, "the last blow's slow motion has ended");
+            yield return new WaitForSecondsRealtime(1.6f);   // the card pops in and its stars land
+            var texts = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None).Select(t => t.text).ToArray();
+            CollectionAssert.Contains(texts, Loc.T("ending"), "the last level's win card closes the story");
+            CaptureWithUi("result_boss_win");
+        }
+
+        /// <summary>A lost attack offers both retries: "Attack again" keeps the pups, plain Retry replays the launch pit.</summary>
+        [UnityTest]
+        public IEnumerator LostAttackOffersAttackAgainAndAFullRetry()
+        {
+            yield return StartAttackOnly(2, 1);
+            var game = Object.FindFirstObjectByType<GameManager>();
+            Object.FindFirstObjectByType<AttackPhase>().Current.Dive();   // one pup, dived at once: it lands on the cliff
+            yield return WaitForState(game, GameManager.State.Lost, 25f);
+            Assert.IsTrue(game.CanRetryAttack);
+            yield return new WaitForSecondsRealtime(1.2f);
+            var texts = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None).Select(t => t.text).ToArray();
+            CollectionAssert.Contains(texts, Loc.T("retry_attack"));
+            CollectionAssert.Contains(texts, Loc.T("retry"));
+            CaptureWithUi("result_lose_retry");
+            int before = SceneManager.GetActiveScene().handle;
+            game.Retry();
+            yield return new WaitUntil(() => SceneManager.GetActiveScene().handle != before
+                                             && SceneManager.GetActiveScene().name == SceneLoader.Game);
+            yield return null;
+            Assert.IsNotNull(Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>(), "plain Retry goes back to the launch pit");
+        }
+
         /// <summary>Boss level: the king's angry steam, then the cage bursting open (captured for review).</summary>
         [UnityTest]
         public IEnumerator BossCageBursts()

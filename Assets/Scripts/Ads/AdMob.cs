@@ -22,7 +22,7 @@ namespace PufferLaunch.Ads
 
         const float RetryFirst = 30f, RetryMax = 300f;     // a failed load retries after 30 s, doubling up to 5 min
         const float MaxAge = 55f * 60f;                    // AdMob ads expire after about an hour
-        const float RewardGrace = 0.3f;                    // the reward callback may land just after the close callback
+        const float RewardGrace = 1f;                     // the reward callback may land after the close callback; 0.3 s lost the pup when it came late
         const float OpenTimeout = 5f;                      // an ad that never opens must not hold the game
         const float ConsentRetryGap = 60f;                 // offline at launch: ask UMP again, at most once a minute
 

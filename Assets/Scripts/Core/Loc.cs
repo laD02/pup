@@ -109,7 +109,7 @@ namespace PufferLaunch.Core
                                          "Bären gesamt: {0}", "Total d'ours : {0}", "Osos en total: {0}", "Orsi in totale: {0}", "Niedźwiedzie łącznie: {0}" },
             ["stats"]          = new[] { "Stats",                                   "Thống kê",
                                          "Statistik", "Statistiques", "Estadísticas", "Statistiche", "Statystyki" },
-            ["ad_bonus_pup"] = new[] { "Ad: +1 pup", "Quảng cáo: +1 hải cẩu", "Werbung: +1 Robbe", "Pub : +1 phoque", "Anuncio: +1 foca", "Annuncio: +1 foca", "Reklama: +1 foka" },
+            ["ad_bonus_pup"] = new[] { "Ad: +1 pup", "QC: +1 hải cẩu", "Werbung: +1 Robbe", "Pub : +1 phoque", "Anuncio: +1 foca", "Annuncio: +1 foca", "Reklama: +1 foka" },
             ["ad_none"] = new[] { "No ad right now", "Chưa có quảng cáo", "Keine Werbung da", "Pas de pub", "Sin anuncios ahora", "Nessun annuncio ora", "Brak reklamy" },
             ["privacy"]        = new[] { "Privacy",                                 "Quyền riêng tư",
                                          "Datenschutz", "Confidentialité", "Privacidad", "Privacy", "Prywatność" },
@@ -215,6 +215,7 @@ namespace PufferLaunch.Core
             ["star_fish_2"] = new[] { "Half of the fish", "Gom nửa số cá", "Die Hälfte der Fische", "La moitié des poissons", "La mitad de los peces", "Metà dei pesci", "Połowa ryb" },
             ["star_fish_3"] = new[] { "80% of the fish", "Gom 80% số cá", "80 % der Fische", "80 % des poissons", "El 80 % de los peces", "L'80% dei pesci", "80% ryb" },
             ["retry_attack"] = new[] { "Attack again", "Tấn công lại", "Nochmal angreifen", "Réattaquer", "Atacar de nuevo", "Attacca di nuovo", "Atakuj ponownie" },
+            ["star_boss_2"] = new[] { "Boss down with a pup to spare", "Hạ trùm khi còn dư hải cẩu", "Boss besiegt, eine Robbe übrig", "Boss vaincu, un phoque en réserve", "Jefe derrotado y una foca de sobra", "Boss sconfitto, una foca di scorta", "Boss pokonany, foka w zapasie" },
         };
 
         /// <summary>Language codes in table-column order; also the values stored in the save.</summary>
