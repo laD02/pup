@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     public static class SceneLoader
     {
@@ -170,7 +170,7 @@ namespace PufferLaunch.Core
             if (load == null)
             {
                 // Scene missing from the build: Unity has logged why. Drain the water so the old screen stays usable.
-                Debug.LogError($"[PufferLaunch] Could not load scene '{scene}'.");
+                Debug.LogError($"[SealCatapult] Could not load scene '{scene}'.");
                 runner.gameObject.SetActive(false);
                 SetWater(0f);
                 SetAlpha(0f);

@@ -1,7 +1,7 @@
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>Statistics card (GDD §R5): totals kept in the save, shown over whatever screen opened it.</summary>
     public static class StatsPanel

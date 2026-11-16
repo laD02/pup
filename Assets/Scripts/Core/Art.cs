@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>Sprites by file name from Resources/Art. Swap a PNG, keep the name, and the game updates.</summary>
     public static class Art
@@ -12,7 +12,7 @@ namespace PufferLaunch.Core
         {
             if (cache.TryGetValue(name, out var sprite)) return sprite;
             sprite = Resources.Load<Sprite>("Art/" + name);
-            if (sprite == null) Debug.LogWarning($"[PufferLaunch] Missing sprite Resources/Art/{name}");
+            if (sprite == null) Debug.LogWarning($"[SealCatapult] Missing sprite Resources/Art/{name}");
             cache[name] = sprite;
             return sprite;
         }

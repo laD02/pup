@@ -60,7 +60,7 @@ mô tả ngắn.
 
 ## 3. Nội dung trang Play (dán vào Play Console)
 
-Tên trong máy (launcher, `PlayerSettings.productName` trong `ProjectBuilder.ConfigurePlayer`) vẫn là "Pup Launch"; tên
+Tên trong máy (launcher, `PlayerSettings.productName` trong `ProjectBuilder.ConfigurePlayer`) vẫn là "Seal Catapult"; tên
 trên Play dài hơn để chứa từ khoá. Đã đếm ký tự (2026-11-13). Sửa chữ thì đếm lại:
 `python3 -c 'import sys; print(len(sys.argv[1]))' "<chữ>"`.
 
@@ -99,14 +99,34 @@ từ khoá ở mục "Châu Âu" bên dưới):
 Dự phòng nếu muốn có gấu trong tên: de `Pup Launch: Eisbären-Katapult` (29), fr `Pup Launch: Phoques vs Ours` (27), es
 `Pup Launch: Focas vs Osos` (25), it `Pup Launch: Foche vs Orsi` (25), pl `Pup Launch: Foki kontra Misie` (29).
 
-**Tên trên màn hình chính** (`PlayerSettings.productName`, Android hiện khoảng 12 ký tự dưới icon): giữ `Pup Launch`
-(10 ký tự, đọc trọn, không bị cắt). Không đổi theo ngôn ngữ (Unity chỉ có một `productName`).
-**Tên trong game** (`Loc.cs` `title`: "Pup Launch" / "Hải Cẩu Bay"): giữ nguyên. Hai tên Play ở trên đều bắt đầu bằng đúng
+### 3b. Đổi thương hiệu thành "Seal Catapult" (user 2026-11-16: "trên ggdich là phóng cún con mà"; "làm SEO thật tốt nhé")
+
+"Pup" trước hết nghĩa là **cún con**; nghĩa "hải cẩu con" là nghĩa phụ. Người chơi tiếng Anh và Google Dịch đọc "Pup
+Launch" thành "phóng cún con", và không ai tìm game loại này bằng "pup launch". Thương hiệu mới **Seal Catapult** đặt hai
+từ khoá mạnh nhất của thể loại ("seal" 🟡 ít đối thủ, "catapult" 🟢) ngay trong tên; phần sau ":" dùng cho từ khoá thứ ba
+("polar bear" 🟢) hoặc từ bản địa. Package `com.sealcatapult.game` (kiểu one-fill-line `com.onelinefill.game`), site
+`https://lad02.github.io/seal-catapult/`. Tiếng Việt giữ "Hải Cẩu Bay" (đúng nghĩa, có "hải cẩu").
+
+| Listing | Tên | Ký tự |
+|---|---|---|
+| en-US, en-GB | `Seal Catapult: Polar Bear Game` | 30 |
+| vi | `Hải Cẩu Bay: Game Bắn Gấu Băng` | 30 |
+| de-DE | `Seal Catapult: Robben-Katapult` | 30 |
+| fr-FR | `Seal Catapult: Phoques et Ours` | 30 |
+| es-ES | `Seal Catapult: Focas y Osos` | 27 |
+| it-IT | `Seal Catapult: Foche e Orsi` | 27 |
+| pl-PL | `Seal Catapult: Foki i Misie` | 27 |
+
+Bảng §3a phía trên là lựa chọn ngày 13/11 với thương hiệu cũ, giữ lại làm lịch sử.
+
+**Tên trên màn hình chính** (`PlayerSettings.productName`, Android hiện khoảng 12 ký tự dưới icon): là `Seal Catapult`
+(13 ký tự; vài launcher cắt còn "Seal Catapu…", vẫn đọc ra). Không đổi theo ngôn ngữ (Unity chỉ có một `productName`).
+**Tên trong game** (`Loc.cs` `title`: "Seal Catapult" / "Hải Cẩu Bay"): giữ nguyên. Hai tên Play ở trên đều bắt đầu bằng đúng
 tên trong game của ngôn ngữ đó, nên không cần sửa code.
 
 ### en-US (mặc định)
 
-**App name (25/30):** `Pup Launch: Seal Catapult` (chọn 2026-11-13, user: "tên phải đổi để SEO tốt nhất"; so sánh ở
+**App name (30/30):** `Seal Catapult: Polar Bear Game` (16/11: thương hiệu đổi từ "Seal Catapult", Google Dịch đọc thành "phóng cún con"; xem §3b. Trước đó so sánh ở
 §3a)
 
 **Short description (79/80):** `Launch seal pups from a catapult, dive onto polar bears and smash the ice fort.`
@@ -114,7 +134,7 @@ tên trong game của ngôn ngữ đó, nên không cần sửa code.
 **Full description:**
 
 ```
-Launch seal pups over the ice and knock out the polar bears! Pup Launch is a one-tap catapult arcade game: time your tap to whack each swinging pup up through the ice gap, then tap again to send it diving onto the bears' fortress.
+Launch seal pups over the ice and knock out the polar bears! Seal Catapult is a one-tap catapult arcade game: time your tap to whack each swinging pup up through the ice gap, then tap again to send it diving onto the bears' fortress.
 
 The polar bears stole the seal village's winter fish and locked the pups in cages. Only Pip got away. Time to launch a rescue.
 
@@ -125,7 +145,7 @@ How it plays
 • Real physics: blocks shatter, bears tumble, and no two dives play out the same
 
 What's inside
-• 12 levels in Frost Bay: 10 fortress levels, a bonus fish level and a boss level with caged pups to free
+• 18 levels in two areas: Frost Bay (10 fortress levels, a bonus fish level and a boss level with caged pups to free) and the Glacier River (6 harder fortresses)
 • Up to 3 stars per level, and a Perfect badge for knocking out every bear
 • 5 seal upgrades bought with stars, 3 levels each: Ice Spikes, Bouncy Ball, Pod, Ninja Pup and Blazing Pup
 • Floor buttons, ice gates, bumpers and TNT in later levels
@@ -138,7 +158,7 @@ Play your way
 • English, German, French, Spanish, Italian, Polish and Vietnamese
 • Landscape, with sound and music switches
 
-Pup Launch is free to play with ads: an occasional ad between levels, and optional rewarded ads you choose to watch.
+Seal Catapult is free to play with ads: an occasional ad between levels, and optional rewarded ads you choose to watch.
 
 Ready? Load the catapult and launch your first seal pup.
 ```
@@ -153,7 +173,7 @@ Ready? Load the catapult and launch your first seal pup.
 **Mô tả đầy đủ:**
 
 ```
-Phóng hải cẩu con qua khe băng và hạ gục bầy gấu bắc cực! Pup Launch là game bắn một chạm: chạm đúng lúc để máy bắn đập hải cẩu đang đu dây bay vọt qua khe thoát, rồi chạm lần nữa để nó cắm đầu lao xuống pháo đài của gấu.
+Phóng hải cẩu con qua khe băng và hạ gục bầy gấu bắc cực! Seal Catapult là game bắn một chạm: chạm đúng lúc để máy bắn đập hải cẩu đang đu dây bay vọt qua khe thoát, rồi chạm lần nữa để nó cắm đầu lao xuống pháo đài của gấu.
 
 Bầy gấu bắc cực cướp kho cá mùa đông của làng hải cẩu và nhốt bầy hải cẩu con vào lồng. Chỉ có Pip thoát được. Đến lúc phóng đi giải cứu.
 
@@ -164,7 +184,7 @@ Cách chơi
 • Vật lý thật: khối vỡ vụn, gấu lộn nhào, không cú lao nào giống cú nào
 
 Có gì trong game
-• 12 màn ở Vịnh Băng Giá: 10 màn pháo đài, một màn thưởng nhặt cá và một màn boss có lồng nhốt hải cẩu con
+• 18 màn ở hai vùng: Vịnh Băng Giá (10 màn pháo đài, một màn thưởng nhặt cá và một màn boss có lồng nhốt hải cẩu con) và Sông Băng (6 pháo đài khó hơn)
 • Tối đa 3 sao mỗi màn, và huy hiệu Hoàn hảo khi hạ hết gấu
 • 5 nâng cấp hải cẩu mua bằng sao, mỗi cái 3 cấp: Gai băng, Cuộn tròn, Bầy hải cẩu, Hải cẩu ninja và Hải cẩu lửa
 • Nút sàn, cổng băng, vòng bật và thùng TNT ở các màn sau
@@ -177,7 +197,7 @@ Chơi theo cách của bạn
 • Tiếng Việt, tiếng Anh, Đức, Pháp, Tây Ban Nha, Ý và Ba Lan
 • Màn hình ngang, bật/tắt âm thanh và nhạc
 
-Pup Launch chơi miễn phí, có quảng cáo: thỉnh thoảng một quảng cáo giữa các màn, và quảng cáo có thưởng do bạn tự chọn xem.
+Seal Catapult chơi miễn phí, có quảng cáo: thỉnh thoảng một quảng cáo giữa các màn, và quảng cáo có thưởng do bạn tự chọn xem.
 
 Sẵn sàng chưa? Nạp máy bắn và phóng hải cẩu con đầu tiên.
 ```
@@ -203,6 +223,7 @@ lại**: nhờ một người đọc trước khi dán, nhất là `pl-PL`.
 | en (`Loc.cs`) | de | fr | es | it | pl |
 |---|---|---|---|---|---|
 | Frost Bay | Frostbucht | Baie Gelée | Bahía Helada | Baia Gelata | Mroźna Zatoka |
+| Glacier River | Gletscherfluss | Rivière Glacée | Río Glaciar | Fiume Glaciale | Lodowa Rzeka |
 | Ice Spikes | Eisstacheln | Pics de glace | Púas de hielo | Punte di ghiaccio | Lodowe kolce |
 | Bouncy Ball | Hüpfball | Boule rebondissante | Bola saltarina | Palla rimbalzante | Skacząca piłka |
 | Pod | Rudel | Bande | Manada | Branco | Stado |
@@ -246,14 +267,14 @@ Giống en-US (tên, mô tả ngắn, mô tả đầy đủ); mô tả không c�
 
 #### de-DE
 
-**App-Name (27/30):** `Pup Launch: Robben-Katapult`
+**App-Name (30/30):** `Seal Catapult: Robben-Katapult`
 
 **Kurzbeschreibung (78/80):** `Robben per Katapult starten, auf Eisbären stürzen und die Eisburg zerschlagen.`
 
 **Ausführliche Beschreibung:**
 
 ```
-Schieß Robbenbabys über das Eis und hau die Eisbären um! Pup Launch ist ein Katapult-Arcadespiel für nur einen Finger: Tippe im richtigen Moment, damit die schwingende Robbe durch die Eisspalte fliegt, und tippe noch einmal, damit sie im Sturzflug auf die Festung der Eisbären stürzt.
+Schieß Robbenbabys über das Eis und hau die Eisbären um! Seal Catapult ist ein Katapult-Arcadespiel für nur einen Finger: Tippe im richtigen Moment, damit die schwingende Robbe durch die Eisspalte fliegt, und tippe noch einmal, damit sie im Sturzflug auf die Festung der Eisbären stürzt.
 
 Die Eisbären haben den Fischvorrat des Robbendorfs für den Winter gestohlen und die Robbenbabys in Käfige gesperrt. Nur Pip ist entkommen. Zeit für eine Rettung per Katapult.
 
@@ -264,7 +285,7 @@ So wird gespielt
 • Echte Physik: Blöcke zersplittern, Bären purzeln, kein Sturzflug gleicht dem anderen
 
 Das steckt drin
-• 12 Level in der Frostbucht: 10 Festungslevel, ein Bonuslevel mit Fischen und ein Bosslevel mit gefangenen Robbenbabys
+• 18 Level in zwei Gebieten: die Frostbucht (10 Festungslevel, ein Bonuslevel mit Fischen und ein Bosslevel mit gefangenen Robbenbabys) und der Gletscherfluss (6 schwerere Festungen)
 • Bis zu 3 Sterne pro Level und ein Perfekt-Abzeichen, wenn alle Bären fallen
 • 5 Robben-Upgrades für Sterne, je 3 Stufen: Eisstacheln, Hüpfball, Rudel, Ninja-Robbe und Feuer-Robbe
 • Bodenschalter, Eistore, Bumper und TNT in späteren Leveln
@@ -277,21 +298,21 @@ Spiel, wie du willst
 • Deutsch, Englisch, Französisch, Spanisch, Italienisch, Polnisch und Vietnamesisch
 • Querformat, Ton und Musik einzeln abschaltbar
 
-Pup Launch ist kostenlos spielbar und enthält Werbung: gelegentlich eine Anzeige zwischen den Leveln und freiwillige Belohnungsvideos, die du selbst startest.
+Seal Catapult ist kostenlos spielbar und enthält Werbung: gelegentlich eine Anzeige zwischen den Leveln und freiwillige Belohnungsvideos, die du selbst startest.
 
 Bereit? Lade das Katapult und schick deine erste Robbe los.
 ```
 
 #### fr-FR
 
-**Nom de l'app (30/30) :** `Pup Launch: Catapulte à Phoque`
+**Nom de l'app (30/30) :** `Seal Catapult: Phoques et Ours`
 
 **Description courte (79/80) :** `Lance des phoques à la catapulte, plonge sur les ours polaires, brise la glace.`
 
 **Description complète :**
 
 ```
-Lance des bébés phoques par-dessus la glace et mets K.O. les ours polaires ! Pup Launch est un jeu d'arcade à la catapulte qui se joue d'un seul doigt : touche l'écran au bon moment pour envoyer chaque phoque qui se balance à travers la faille de glace, puis touche encore pour le faire plonger sur la forteresse des ours.
+Lance des bébés phoques par-dessus la glace et mets K.O. les ours polaires ! Seal Catapult est un jeu d'arcade à la catapulte qui se joue d'un seul doigt : touche l'écran au bon moment pour envoyer chaque phoque qui se balance à travers la faille de glace, puis touche encore pour le faire plonger sur la forteresse des ours.
 
 Les ours polaires ont volé les réserves de poisson d'hiver du village des phoques et enfermé les bébés phoques dans des cages. Seul Pip s'est échappé. À la catapulte, pour le sauvetage !
 
@@ -302,7 +323,7 @@ Comment jouer
 • Vraie physique : les blocs volent en éclats, les ours culbutent, aucun plongeon ne se ressemble
 
 Au programme
-• 12 niveaux dans la Baie Gelée : 10 niveaux de forteresse, un niveau bonus de poissons et un niveau de boss avec des bébés phoques en cage à libérer
+• 18 niveaux dans deux zones : la Baie Gelée (10 niveaux de forteresse, un niveau bonus de poissons et un niveau de boss avec des bébés phoques en cage) et la Rivière Glacée (6 forteresses plus dures)
 • Jusqu'à 3 étoiles par niveau, et un badge Parfait quand tous les ours tombent
 • 5 améliorations achetées avec des étoiles, 3 niveaux chacune : Pics de glace, Boule rebondissante, Bande, Phoque ninja et Phoque de feu
 • Interrupteurs au sol, portes de glace, bumpers et TNT dans les niveaux suivants
@@ -315,21 +336,21 @@ Joue à ta façon
 • Français, anglais, allemand, espagnol, italien, polonais et vietnamien
 • Écran paysage, son et musique réglables séparément
 
-Pup Launch est gratuit avec des publicités : de temps en temps une publicité entre les niveaux, et des vidéos récompensées que tu choisis de regarder.
+Seal Catapult est gratuit avec des publicités : de temps en temps une publicité entre les niveaux, et des vidéos récompensées que tu choisis de regarder.
 
 Prêt ? Charge la catapulte et lance ton premier bébé phoque.
 ```
 
 #### es-ES
 
-**Nombre de la app (30/30):** `Pup Launch: Catapulta de Focas`
+**Nombre de la app (27/30):** `Seal Catapult: Focas y Osos`
 
 **Descripción breve (74/80):** `Lanza focas con la catapulta, cae sobre los osos polares y rompe el hielo.`
 
 **Descripción completa:**
 
 ```
-¡Lanza crías de foca por encima del hielo y tumba a los osos polares! Pup Launch es un juego arcade de catapulta que se juega con un solo dedo: toca en el momento justo para que cada foca que se balancea salga volando por la grieta del hielo, y vuelve a tocar para que caiga en picado sobre la fortaleza de los osos.
+¡Lanza crías de foca por encima del hielo y tumba a los osos polares! Seal Catapult es un juego arcade de catapulta que se juega con un solo dedo: toca en el momento justo para que cada foca que se balancea salga volando por la grieta del hielo, y vuelve a tocar para que caiga en picado sobre la fortaleza de los osos.
 
 Los osos polares han robado el pescado para el invierno de la aldea de las focas y han encerrado a las crías en jaulas. Solo Pip ha escapado. ¡Hora de un rescate a golpe de catapulta!
 
@@ -340,7 +361,7 @@ Cómo se juega
 • Física real: los bloques estallan, los osos dan volteretas y ningún picado es igual a otro
 
 Qué incluye
-• 12 niveles en la Bahía Helada: 10 niveles de fortaleza, un nivel extra de peces y un nivel de jefe con crías enjauladas que liberar
+• 18 niveles en dos zonas: la Bahía Helada (10 niveles de fortaleza, un nivel extra de peces y un nivel de jefe con crías enjauladas) y el Río Glaciar (6 fortalezas más difíciles)
 • Hasta 3 estrellas por nivel y una insignia Perfecto si caen todos los osos
 • 5 mejoras que se compran con estrellas, 3 niveles cada una: Púas de hielo, Bola saltarina, Manada, Foca ninja y Foca de fuego
 • Interruptores en el suelo, puertas de hielo, rebotadores y TNT en los niveles posteriores
@@ -353,21 +374,21 @@ Juega a tu manera
 • Español, inglés, alemán, francés, italiano, polaco y vietnamita
 • Pantalla horizontal, sonido y música por separado
 
-Pup Launch es gratis y contiene anuncios: de vez en cuando un anuncio entre niveles y vídeos con recompensa que tú eliges ver.
+Seal Catapult es gratis y contiene anuncios: de vez en cuando un anuncio entre niveles y vídeos con recompensa que tú eliges ver.
 
 ¿Listo? Carga la catapulta y lanza tu primera cría de foca.
 ```
 
 #### it-IT
 
-**Nome dell'app (30/30):** `Pup Launch: Catapulta di Foche`
+**Nome dell'app (27/30):** `Seal Catapult: Foche e Orsi`
 
 **Descrizione breve (76/80):** `Lancia foche con la catapulta, piomba sugli orsi polari e rompi il ghiaccio.`
 
 **Descrizione completa:**
 
 ```
-Lancia cuccioli di foca oltre il ghiaccio e metti KO gli orsi polari! Pup Launch è un gioco arcade con la catapulta che si gioca con un dito solo: tocca al momento giusto per far volare ogni foca che dondola attraverso la fessura nel ghiaccio, poi tocca di nuovo per farla piombare in picchiata sulla fortezza degli orsi.
+Lancia cuccioli di foca oltre il ghiaccio e metti KO gli orsi polari! Seal Catapult è un gioco arcade con la catapulta che si gioca con un dito solo: tocca al momento giusto per far volare ogni foca che dondola attraverso la fessura nel ghiaccio, poi tocca di nuovo per farla piombare in picchiata sulla fortezza degli orsi.
 
 Gli orsi polari hanno rubato il pesce per l'inverno al villaggio delle foche e hanno chiuso i cuccioli in gabbia. Solo Pip è scappato. È ora di una missione di salvataggio a colpi di catapulta!
 
@@ -378,7 +399,7 @@ Come si gioca
 • Fisica vera: i blocchi vanno in frantumi, gli orsi capitombolano, nessuna picchiata è uguale all'altra
 
 Cosa c'è dentro
-• 12 livelli nella Baia Gelata: 10 livelli fortezza, un livello bonus con i pesci e un livello boss con cuccioli in gabbia da liberare
+• 18 livelli in due zone: la Baia Gelata (10 livelli fortezza, un livello bonus con i pesci e un livello boss con cuccioli in gabbia) e il Fiume Glaciale (6 fortezze più difficili)
 • Fino a 3 stelle per livello e un distintivo Perfetto quando cadono tutti gli orsi
 • 5 potenziamenti da comprare con le stelle, 3 livelli ciascuno: Punte di ghiaccio, Palla rimbalzante, Branco, Foca ninja e Foca di fuoco
 • Pulsanti a terra, cancelli di ghiaccio, respingenti e TNT nei livelli successivi
@@ -391,21 +412,21 @@ Gioca come vuoi
 • Italiano, inglese, tedesco, francese, spagnolo, polacco e vietnamita
 • Schermo orizzontale, suono e musica regolabili separatamente
 
-Pup Launch è gratis con pubblicità: ogni tanto un annuncio tra un livello e l'altro, e video con premio che scegli tu di guardare.
+Seal Catapult è gratis con pubblicità: ogni tanto un annuncio tra un livello e l'altro, e video con premio che scegli tu di guardare.
 
 Pronto? Carica la catapulta e lancia il tuo primo cucciolo di foca.
 ```
 
 #### pl-PL
 
-**Nazwa aplikacji (28/30):** `Pup Launch: Foki z Katapulty`
+**Nazwa aplikacji (27/30):** `Seal Catapult: Foki i Misie`
 
 **Krótki opis (73/80):** `Wystrzel foki z katapulty, zanurkuj na niedźwiedzie polarne i rozbij lód.`
 
 **Pełny opis:**
 
 ```
-Wystrzel małe foki nad lodem i znokautuj niedźwiedzie polarne! Pup Launch to zręcznościowa gra z katapultą na jeden palec: dotknij ekranu we właściwej chwili, aby kołysząca się foka przeleciała przez szczelinę w lodzie, a potem dotknij jeszcze raz, by zanurkowała na fortecę niedźwiedzi.
+Wystrzel małe foki nad lodem i znokautuj niedźwiedzie polarne! Seal Catapult to zręcznościowa gra z katapultą na jeden palec: dotknij ekranu we właściwej chwili, aby kołysząca się foka przeleciała przez szczelinę w lodzie, a potem dotknij jeszcze raz, by zanurkowała na fortecę niedźwiedzi.
 
 Niedźwiedzie polarne ukradły zimowy zapas ryb z wioski fok i zamknęły małe foki w klatkach. Uciekł tylko Pip. Czas na akcję ratunkową z katapulty!
 
@@ -416,7 +437,7 @@ Jak grać
 • Prawdziwa fizyka: bloki pękają, niedźwiedzie koziołkują, żadne nurkowanie nie jest takie samo
 
 Co jest w grze
-• 12 poziomów w Mroźnej Zatoce: 10 poziomów z fortecami, poziom bonusowy z rybami i poziom z bossem, gdzie trzeba uwolnić małe foki z klatek
+• 18 poziomów w dwóch krainach: Mroźna Zatoka (10 poziomów z fortecami, poziom bonusowy z rybami i poziom z bossem, gdzie trzeba uwolnić małe foki z klatek) oraz Lodowa Rzeka (6 trudniejszych fortec)
 • Do 3 gwiazdek na poziom i odznaka Perfekcyjnie, gdy padną wszystkie niedźwiedzie
 • 5 ulepszeń za gwiazdki, każde po 3 poziomy: Lodowe kolce, Skacząca piłka, Stado, Foka ninja i Ognista foka
 • Przyciski w podłodze, lodowe bramy, odbijacze i TNT w dalszych poziomach
@@ -429,7 +450,7 @@ Graj po swojemu
 • Polski, angielski, niemiecki, francuski, hiszpański, włoski i wietnamski
 • Tryb poziomy, osobno wyłączany dźwięk i muzyka
 
-Pup Launch jest darmowy i zawiera reklamy: od czasu do czasu reklama między poziomami oraz filmy z nagrodą, które oglądasz tylko wtedy, gdy chcesz.
+Seal Catapult jest darmowy i zawiera reklamy: od czasu do czasu reklama między poziomami oraz filmy z nagrodą, które oglądasz tylko wtedy, gdy chcesz.
 
 Gotowy? Załaduj katapultę i wystrzel swoją pierwszą fokę.
 ```
@@ -456,7 +477,7 @@ Gotowy? Załaduj katapultę i wystrzel swoją pierwszą fokę.
 | 3 | Combo: chữ "×2"/"×3" lớn giữa màn, gấu lộn nhào | Bounce for big combos | Nảy liên tiếp, combo cực đã |
 | 4 | Thẻ kết quả thắng: 3 sao + "Nhiệm vụ hoàn hảo!" | Earn 3 stars and Perfect badges | Giành 3 sao và huy hiệu Hoàn hảo |
 | 5 | Cửa hàng Nâng cấp: thẻ 5 nâng cấp | 5 upgrades for your pups | 5 nâng cấp cho hải cẩu |
-| 6 | Bản đồ Vịnh Băng Giá với nút boss có lồng | 12 levels, a bonus and a boss | 12 màn, màn thưởng và boss |
+| 6 | Bản đồ Vịnh Băng Giá với nút boss có lồng | 18 levels in two areas, a bonus and a boss | 18 màn ở hai vùng, màn thưởng và boss |
 | 7 | Màn boss: gấu boss trên bệ, lồng nhốt hải cẩu con | Free the caged pups | Giải cứu hải cẩu bị nhốt |
 | 8 | Tranh truyện mở đầu (story_5: Pip thoát) | Plays offline, no account | Chơi không cần mạng |
 
@@ -496,7 +517,7 @@ Gotowy? Załaduj katapultę i wystrzel swoją pierwszą fokę.
 trang của One Line Fill). Chép nội dung `site/` của repo này vào `pup/` của repo Pages rồi push.
 - **`app-ads.txt` không nằm ở đây.** AdMob chỉ đọc `app-ads.txt` ở **gốc tên miền** ghi trong ô "Website" của tài khoản
   nhà phát triển trên Play. Tài khoản Play "Le Hoang Games" đã ghi `https://lad02.github.io/`, và
-  `https://lad02.github.io/app-ads.txt` đã có `google.com, pub-5420799226073285, DIRECT, f08c47fec0942fa0`. Pup Launch dùng
+  `https://lad02.github.io/app-ads.txt` đã có `google.com, pub-5420799226073285, DIRECT, f08c47fec0942fa0`. Seal Catapult dùng
   cùng tài khoản AdMob (cùng publisher `pub-5420799226073285`) nên file đó đã phủ app này; không tạo file thứ hai. Đổi sang
   tài khoản AdMob khác thì phải thêm dòng của publisher mới vào file ở gốc.
 - `robots.txt` cũng chỉ được Google đọc ở gốc tên miền: file ở gốc (của One Line Fill) đang `Allow: /` nên `pup/` được

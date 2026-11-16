@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>
     /// A short tick through Android's own haptic feedback. It needs no permission and follows the phone's "touch
@@ -25,7 +25,7 @@ namespace PufferLaunch.Core
             catch (Exception e)
             {
                 broken = true;
-                Debug.LogWarning($"[PufferLaunch] haptics off: {e.Message}");
+                Debug.LogWarning($"[SealCatapult] haptics off: {e.Message}");
             }
         }
 #endif
@@ -50,7 +50,7 @@ namespace PufferLaunch.Core
             catch (Exception e)
             {
                 broken = true;   // a phone without the call must not log on every hit
-                Debug.LogWarning($"[PufferLaunch] haptics off: {e.Message}");
+                Debug.LogWarning($"[SealCatapult] haptics off: {e.Message}");
             }
 #endif
         }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Firebase Analytics starts switched off; Analytics.cs turns it on once the player's consent allows (GAME_DESIGN.md §13d). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.sealcatapult.firebaseconfig">
+  <application>
+    <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+    <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
+    <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
+  </application>
+</manifest>

@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using UnityEngine;
 
-namespace PufferLaunch.Attack
+namespace SealCatapult.Attack
 {
     /// <summary>
     /// Phase-2 pup, modelled on the genre's level screens: glides level across the arena and wraps from the right

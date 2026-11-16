@@ -1,4 +1,4 @@
-namespace PufferLaunch.Ads
+namespace SealCatapult.Ads
 {
     /// <summary>
     /// When an ad may show (GAME_DESIGN.md §13b). Pure C#, no Unity calls, so EditMode tests cover every rule.

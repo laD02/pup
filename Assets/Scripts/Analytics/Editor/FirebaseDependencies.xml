@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read by the External Dependency Manager (installed with the AdMob plugin); see GAME_DESIGN.md §13d. -->
+<dependencies>
+  <androidPackages>
+    <androidPackage spec="com.google.firebase:firebase-analytics:24.0.0">
+      <repositories>
+        <repository>https://maven.google.com/</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+</dependencies>

@@ -1,9 +1,9 @@
 using System;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using UnityEngine;
 
-namespace PufferLaunch.Attack
+namespace SealCatapult.Attack
 {
     /// <summary>Fortress block: HP by material, damaged by collision impulse, breaks with juice and score.</summary>
     [RequireComponent(typeof(Rigidbody2D))]

@@ -1,7 +1,7 @@
 using System.Linq;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 
-namespace PufferLaunch.Progress
+namespace SealCatapult.Progress
 {
     /// <summary>Star wallet and upgrade purchases. Stars are earned, never consumed from levels.</summary>
     public static class Shop

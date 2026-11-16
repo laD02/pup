@@ -1,6 +1,6 @@
 {
-    "name": "PufferLaunch",
-    "rootNamespace": "PufferLaunch",
+    "name": "SealCatapult",
+    "rootNamespace": "SealCatapult",
     "references": [
         "Unity.InputSystem",
         "Unity.Cinemachine",

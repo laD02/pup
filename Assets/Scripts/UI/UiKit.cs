@@ -1,12 +1,12 @@
 using System;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     public enum ButtonStyle { Teal, Warm, Gold }
 
@@ -33,7 +33,7 @@ namespace PufferLaunch.UI
                 if (font == null)
                 {
                     font = Resources.Load<TMP_FontAsset>("Fonts/Baloo2 SDF");
-                    if (font == null) Debug.LogError("[PufferLaunch] Missing Resources/Fonts/Baloo2 SDF");
+                    if (font == null) Debug.LogError("[SealCatapult] Missing Resources/Fonts/Baloo2 SDF");
                 }
                 return font;
             }
@@ -48,7 +48,7 @@ namespace PufferLaunch.UI
                 if (outlineMaterial == null)
                 {
                     outlineMaterial = Resources.Load<Material>("Fonts/Baloo2 SDF Outline");
-                    if (outlineMaterial == null) Debug.LogWarning("[PufferLaunch] Missing Resources/Fonts/Baloo2 SDF Outline.mat");
+                    if (outlineMaterial == null) Debug.LogWarning("[SealCatapult] Missing Resources/Fonts/Baloo2 SDF Outline.mat");
                 }
                 return outlineMaterial;
             }

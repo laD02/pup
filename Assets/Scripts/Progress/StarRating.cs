@@ -1,4 +1,4 @@
-namespace PufferLaunch.Progress
+namespace SealCatapult.Progress
 {
     public static class StarRating
     {

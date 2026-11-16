@@ -7,18 +7,18 @@ import html
 import json
 import pathlib
 
-ROOT = "https://lad02.github.io/pup/"
-PLAY = "https://play.google.com/store/apps/details?id=com.pufferlaunch.game"
+ROOT = "https://lad02.github.io/seal-catapult/"
+PLAY = "https://play.google.com/store/apps/details?id=com.sealcatapult.game"
 EMAIL = "lehoang10112002@gmail.com"
 SITE = pathlib.Path(__file__).resolve().parent
-UPDATED = "2026-11-13"
+UPDATED = "2026-11-16"
 
 PAGES = {
     "en": dict(
-        name="Pup Launch: Seal Catapult",
-        title="Pup Launch: Seal Catapult Game for Android",
+        name="Seal Catapult: Polar Bear Game",
+        title="Seal Catapult: Polar Bear Catapult Game for Android",
         short="Launch seal pups from a catapult, dive onto polar bears and smash the ice fort.",
-        desc="Launch seal pups from a catapult, dive onto polar bears and smash the ice fortress. A one-tap physics arcade game for Android: 12 levels, a boss, upgrades, plays offline.",
+        desc="Launch seal pups from a catapult, dive onto polar bears and smash the ice fortress. A one-tap physics arcade game for Android: 18 levels, a boss, upgrades, plays offline.",
         tagline="Launch seal pups, knock out the polar bears",
         get="Get it on Google Play",
         h2="A one-tap seal catapult game",
@@ -26,21 +26,21 @@ PAGES = {
         items=[
             "Two phases in every level: launch from the catapult, then dive onto the polar bears",
             "Bounce from bear to bear for combos, break ice and snow blocks so the bears tumble",
-            "12 levels in Frost Bay: 10 fortress levels, a bonus fish level and a boss level with caged pups",
+            "18 levels in two areas: Frost Bay (10 fortresses, a bonus fish level, a boss with caged pups) and the Glacier River (6 harder fortresses)",
             "3 stars and a Perfect badge per level, 5 seal upgrades bought with stars",
             "Hand-painted cartoon art, quick levels of about a minute",
             "Plays offline, no account; English, German, French, Spanish, Italian, Polish and Vietnamese",
         ],
         ads="Free to play with ads: an occasional ad between levels and optional rewarded ads.",
         privacy="Privacy Policy", contact="Contact", langs="Languages",
-        icon_alt="Pup Launch: a seal pup curled into a ball",
+        icon_alt="Seal Catapult: a seal pup curled into a ball",
         og="en_US",
     ),
     "vi": dict(
         name="Hải Cẩu Bay: Game Bắn Gấu Băng",
         title="Hải Cẩu Bay: Game Bắn Gấu Băng cho Android",
         short="Đập hải cẩu bay qua khe băng, lao xuống hạ gấu bắc cực. Game bắn không cần mạng.",
-        desc="Hải Cẩu Bay (Pup Launch): game bắn một chạm cho Android. Phóng hải cẩu con bằng máy bắn, lao xuống hạ gấu bắc cực, phá pháo đài băng. 12 màn, boss, nâng cấp, chơi không cần mạng.",
+        desc="Hải Cẩu Bay (Seal Catapult): game bắn một chạm cho Android. Phóng hải cẩu con bằng máy bắn, lao xuống hạ gấu bắc cực, phá pháo đài băng. 18 màn, boss, nâng cấp, chơi không cần mạng.",
         tagline="Phóng hải cẩu, hạ gấu bắc cực",
         get="Tải trên Google Play",
         h2="Hải Cẩu Bay – game bắn gấu băng",
@@ -48,21 +48,21 @@ PAGES = {
         items=[
             "Mỗi màn hai pha: phóng từ máy bắn, rồi lao xuống hạ gấu bắc cực",
             "Nảy từ gấu này sang gấu khác để ghi combo, phá khối băng và khối tuyết cho gấu lộn nhào",
-            "12 màn ở Vịnh Băng Giá: 10 màn pháo đài, một màn thưởng nhặt cá và một màn boss có lồng nhốt hải cẩu",
+            "18 màn ở hai vùng: Vịnh Băng Giá (10 màn pháo đài, một màn thưởng nhặt cá, một màn boss có lồng nhốt hải cẩu) và Sông Băng (6 pháo đài khó hơn)",
             "3 sao và huy hiệu Hoàn hảo mỗi màn, 5 nâng cấp hải cẩu mua bằng sao",
             "Tranh hoạt hình vẽ tay, mỗi màn khoảng một phút",
             "Chơi không cần mạng, không cần tài khoản; tiếng Việt, Anh, Đức, Pháp, Tây Ban Nha, Ý và Ba Lan",
         ],
         ads="Chơi miễn phí, có quảng cáo: thỉnh thoảng một quảng cáo giữa các màn và quảng cáo có thưởng tự chọn.",
         privacy="Chính sách quyền riêng tư", contact="Liên hệ", langs="Ngôn ngữ",
-        icon_alt="Pup Launch: hải cẩu con cuộn tròn",
+        icon_alt="Seal Catapult: hải cẩu con cuộn tròn",
         og="vi_VN",
     ),
     "de": dict(
-        name="Pup Launch: Robben-Katapult",
-        title="Pup Launch: Robben-Katapult – Arcade-Spiel für Android",
+        name="Seal Catapult: Robben-Katapult",
+        title="Seal Catapult: Robben-Katapult – Eisbär-Spiel für Android",
         short="Robben per Katapult starten, auf Eisbären stürzen und die Eisburg zerschlagen.",
-        desc="Robben per Katapult starten, im Sturzflug auf Eisbären stürzen und die Eisburg zerschlagen. Ein Physik-Arcadespiel für einen Finger auf Android: 12 Level, ein Boss, Upgrades, offline spielbar.",
+        desc="Robben per Katapult starten, im Sturzflug auf Eisbären stürzen und die Eisburg zerschlagen. Ein Physik-Arcadespiel für einen Finger auf Android: 18 Level, ein Boss, Upgrades, offline spielbar.",
         tagline="Robben starten, Eisbären umhauen",
         get="Jetzt bei Google Play",
         h2="Ein Katapult-Spiel mit Robben, für einen Finger",
@@ -70,21 +70,21 @@ PAGES = {
         items=[
             "Zwei Phasen pro Level: Abschuss mit dem Katapult, dann Sturzflug auf die Eisbären",
             "Von Bär zu Bär springen für Kombos, Eis- und Schneeblöcke zerschlagen",
-            "12 Level in der Frostbucht: 10 Festungslevel, ein Bonuslevel mit Fischen und ein Bosslevel mit gefangenen Robbenbabys",
+            "18 Level in zwei Gebieten: die Frostbucht (10 Festungslevel, ein Bonuslevel mit Fischen, ein Bosslevel mit gefangenen Robbenbabys) und der Gletscherfluss (6 schwerere Festungen)",
             "3 Sterne und ein Perfekt-Abzeichen pro Level, 5 Robben-Upgrades für Sterne",
             "Handgemalte Cartoon-Grafik, kurze Level von etwa einer Minute",
             "Offline spielbar, kein Konto; Deutsch, Englisch, Französisch, Spanisch, Italienisch, Polnisch und Vietnamesisch",
         ],
         ads="Kostenlos spielbar, mit Werbung: gelegentlich eine Anzeige zwischen den Leveln und freiwillige Belohnungsvideos.",
         privacy="Datenschutzerklärung", contact="Kontakt", langs="Sprachen",
-        icon_alt="Pup Launch: ein zusammengerolltes Robbenbaby",
+        icon_alt="Seal Catapult: ein zusammengerolltes Robbenbaby",
         og="de_DE",
     ),
     "fr": dict(
-        name="Pup Launch: Catapulte à Phoque",
-        title="Pup Launch : catapulte à phoque, jeu d'arcade Android",
+        name="Seal Catapult: Phoques et Ours",
+        title="Seal Catapult : phoques contre ours polaires, jeu Android",
         short="Lance des phoques à la catapulte, plonge sur les ours polaires, brise la glace.",
-        desc="Lance des bébés phoques à la catapulte, plonge sur les ours polaires et brise leur forteresse de glace. Un jeu d'arcade physique à un doigt sur Android : 12 niveaux, un boss, des améliorations, hors ligne.",
+        desc="Lance des bébés phoques à la catapulte, plonge sur les ours polaires et brise leur forteresse de glace. Un jeu d'arcade physique à un doigt sur Android : 18 niveaux, un boss, des améliorations, hors ligne.",
         tagline="Lance les phoques, mets K.O. les ours polaires",
         get="Disponible sur Google Play",
         h2="Un jeu de catapulte à phoques, à un seul doigt",
@@ -92,21 +92,21 @@ PAGES = {
         items=[
             "Deux phases par niveau : lancer à la catapulte, puis plonger sur les ours polaires",
             "Rebondis d'ours en ours pour enchaîner les combos, brise les blocs de glace et de neige",
-            "12 niveaux dans la Baie Gelée : 10 forteresses, un niveau bonus de poissons et un boss avec des bébés phoques en cage",
+            "18 niveaux dans deux zones : la Baie Gelée (10 forteresses, un niveau bonus de poissons, un boss avec des bébés phoques en cage) et la Rivière Glacée (6 forteresses plus dures)",
             "3 étoiles et un badge Parfait par niveau, 5 améliorations achetées avec des étoiles",
             "Dessins peints à la main, niveaux rapides d'environ une minute",
             "Fonctionne hors ligne, sans compte ; français, anglais, allemand, espagnol, italien, polonais et vietnamien",
         ],
         ads="Gratuit avec des publicités : une publicité de temps en temps entre les niveaux et des vidéos récompensées au choix.",
         privacy="Politique de confidentialité", contact="Contact", langs="Langues",
-        icon_alt="Pup Launch : un bébé phoque roulé en boule",
+        icon_alt="Seal Catapult : un bébé phoque roulé en boule",
         og="fr_FR",
     ),
     "es": dict(
-        name="Pup Launch: Catapulta de Focas",
-        title="Pup Launch: catapulta de focas, juego arcade para Android",
+        name="Seal Catapult: Focas y Osos",
+        title="Seal Catapult: focas contra osos polares, juego Android",
         short="Lanza focas con la catapulta, cae sobre los osos polares y rompe el hielo.",
-        desc="Lanza crías de foca con la catapulta, cae en picado sobre los osos polares y rompe su fortaleza de hielo. Un juego arcade de física con un solo dedo para Android: 12 niveles, un jefe, mejoras, sin internet.",
+        desc="Lanza crías de foca con la catapulta, cae en picado sobre los osos polares y rompe su fortaleza de hielo. Un juego arcade de física con un solo dedo para Android: 18 niveles, un jefe, mejoras, sin internet.",
         tagline="Lanza focas, tumba a los osos polares",
         get="Disponible en Google Play",
         h2="Un juego de catapulta de focas con un solo dedo",
@@ -114,21 +114,21 @@ PAGES = {
         items=[
             "Dos fases en cada nivel: lanzar con la catapulta y caer en picado sobre los osos polares",
             "Rebota de oso en oso para hacer combos, rompe bloques de hielo y nieve",
-            "12 niveles en la Bahía Helada: 10 fortalezas, un nivel extra de peces y un jefe con crías enjauladas",
+            "18 niveles en dos zonas: la Bahía Helada (10 fortalezas, un nivel extra de peces, un jefe con crías enjauladas) y el Río Glaciar (6 fortalezas más difíciles)",
             "3 estrellas y una insignia Perfecto por nivel, 5 mejoras que se compran con estrellas",
             "Dibujos pintados a mano, niveles rápidos de un minuto más o menos",
             "Funciona sin internet, sin cuenta; español, inglés, alemán, francés, italiano, polaco y vietnamita",
         ],
         ads="Gratis con anuncios: de vez en cuando un anuncio entre niveles y vídeos con recompensa opcionales.",
         privacy="Política de privacidad", contact="Contacto", langs="Idiomas",
-        icon_alt="Pup Launch: una cría de foca hecha una bola",
+        icon_alt="Seal Catapult: una cría de foca hecha una bola",
         og="es_ES",
     ),
     "it": dict(
-        name="Pup Launch: Catapulta di Foche",
-        title="Pup Launch: catapulta di foche, gioco arcade per Android",
+        name="Seal Catapult: Foche e Orsi",
+        title="Seal Catapult: foche contro orsi polari, gioco Android",
         short="Lancia foche con la catapulta, piomba sugli orsi polari e rompi il ghiaccio.",
-        desc="Lancia cuccioli di foca con la catapulta, piomba in picchiata sugli orsi polari e distruggi la fortezza di ghiaccio. Un gioco arcade di fisica con un dito per Android: 12 livelli, un boss, potenziamenti, offline.",
+        desc="Lancia cuccioli di foca con la catapulta, piomba in picchiata sugli orsi polari e distruggi la fortezza di ghiaccio. Un gioco arcade di fisica con un dito per Android: 18 livelli, un boss, potenziamenti, offline.",
         tagline="Lancia le foche, metti KO gli orsi polari",
         get="Disponibile su Google Play",
         h2="Un gioco di catapulta con le foche, con un dito solo",
@@ -136,21 +136,21 @@ PAGES = {
         items=[
             "Due fasi in ogni livello: lancio con la catapulta, poi picchiata sugli orsi polari",
             "Rimbalza da un orso all'altro per fare combo, rompi blocchi di ghiaccio e neve",
-            "12 livelli nella Baia Gelata: 10 fortezze, un livello bonus con i pesci e un boss con cuccioli in gabbia",
+            "18 livelli in due zone: la Baia Gelata (10 fortezze, un livello bonus con i pesci, un boss con cuccioli in gabbia) e il Fiume Glaciale (6 fortezze più difficili)",
             "3 stelle e un distintivo Perfetto per livello, 5 potenziamenti da comprare con le stelle",
             "Grafica dipinta a mano, livelli veloci di circa un minuto",
             "Si gioca offline, senza account; italiano, inglese, tedesco, francese, spagnolo, polacco e vietnamita",
         ],
         ads="Gratis con pubblicità: ogni tanto un annuncio tra i livelli e video con premio facoltativi.",
         privacy="Informativa sulla privacy", contact="Contatti", langs="Lingue",
-        icon_alt="Pup Launch: un cucciolo di foca raggomitolato",
+        icon_alt="Seal Catapult: un cucciolo di foca raggomitolato",
         og="it_IT",
     ),
     "pl": dict(
-        name="Pup Launch: Foki z Katapulty",
-        title="Pup Launch: foki z katapulty – gra zręcznościowa na Androida",
+        name="Seal Catapult: Foki i Misie",
+        title="Seal Catapult: foki kontra misie polarne – gra na Androida",
         short="Wystrzel foki z katapulty, zanurkuj na niedźwiedzie polarne i rozbij lód.",
-        desc="Wystrzel małe foki z katapulty, zanurkuj na niedźwiedzie polarne i rozbij lodową fortecę. Zręcznościowa gra z fizyką na jeden palec na Androida: 12 poziomów, boss, ulepszenia, działa offline.",
+        desc="Wystrzel małe foki z katapulty, zanurkuj na niedźwiedzie polarne i rozbij lodową fortecę. Zręcznościowa gra z fizyką na jeden palec na Androida: 18 poziomów, boss, ulepszenia, działa offline.",
         tagline="Wystrzel foki, znokautuj niedźwiedzie polarne",
         get="Pobierz z Google Play",
         h2="Gra z katapultą i fokami na jeden palec",
@@ -158,14 +158,14 @@ PAGES = {
         items=[
             "Dwie fazy w każdym poziomie: start z katapulty, potem nurkowanie na niedźwiedzie polarne",
             "Odbijaj się od niedźwiedzia do niedźwiedzia po combo, rozbijaj bloki lodu i śniegu",
-            "12 poziomów w Mroźnej Zatoce: 10 fortec, poziom bonusowy z rybami i boss z fokami w klatkach",
+            "18 poziomów w dwóch krainach: Mroźna Zatoka (10 fortec, poziom bonusowy z rybami, boss z fokami w klatkach) oraz Lodowa Rzeka (6 trudniejszych fortec)",
             "3 gwiazdki i odznaka Perfekcyjnie na poziom, 5 ulepszeń za gwiazdki",
             "Ręcznie malowana grafika, krótkie poziomy po około minucie",
             "Działa offline, bez konta; polski, angielski, niemiecki, francuski, hiszpański, włoski i wietnamski",
         ],
         ads="Darmowa gra z reklamami: od czasu do czasu reklama między poziomami i opcjonalne filmy z nagrodą.",
         privacy="Polityka prywatności", contact="Kontakt", langs="Języki",
-        icon_alt="Pup Launch: zwinięta w kłębek mała foka",
+        icon_alt="Seal Catapult: zwinięta w kłębek mała foka",
         og="pl_PL",
     ),
 }
@@ -182,7 +182,7 @@ def page(lang, p):
     alternates = "\n".join(f'<link rel="alternate" hreflang="{l}" href="{url(l)}">' for l in PAGES)
     ld = {
         "@context": "https://schema.org", "@type": "MobileApplication", "name": p["name"],
-        "alternateName": sorted({q["name"] for q in PAGES.values()} - {p["name"]}) + ["Pup Launch", "Hải Cẩu Bay"],
+        "alternateName": sorted({q["name"] for q in PAGES.values()} - {p["name"]}) + ["Seal Catapult", "Hải Cẩu Bay"],
         "description": p["short"], "operatingSystem": "ANDROID", "applicationCategory": "GameApplication",
         "applicationSubCategory": "Arcade", "inLanguage": list(PAGES), "image": f"{ROOT}icon.png", "url": url(lang),
         "installUrl": PLAY, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
@@ -236,7 +236,7 @@ def page(lang, p):
 <body>
 <main>
   <img class="icon" src="{up}icon.png" alt="{e(p["icon_alt"])}" width="112" height="105">
-  <h1>Pup Launch</h1>
+  <h1>Seal Catapult</h1>
   <p>{e(p["tagline"])}</p>
   <a class="play" href="{PLAY}">{e(p["get"])}</a>
 

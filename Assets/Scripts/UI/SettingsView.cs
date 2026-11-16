@@ -1,7 +1,7 @@
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>Settings: music/SFX volume, language, erase save (with confirmation), credits.</summary>
     public class SettingsView : MonoBehaviour

@@ -1,9 +1,9 @@
 using System.Collections;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>End of mission, laid out like the reference (report §15): "Mission N" over "Congratulations!" (or
     /// "Mission failed!"), the hero standing on a knocked-out bear, "Bears hit: d/r", Continue.
@@ -27,11 +27,11 @@ namespace PufferLaunch.UI
         }
 
         /// <param name="down">Bears knocked out (fish caught on the bonus level) out of <paramref name="required"/>.</param>
-        /// <param name="lastLevel">The boss level: a win closes the story instead of counting bears, and the second
+        /// <param name="boss">The boss level: a win closes Frost Bay's story instead of counting bears, and the second
         /// star's rule names the boss.</param>
         /// <param name="rules">Which star rules were met; each star sits over its own rule, so the middle one can
         /// stay empty while the third is earned.</param>
-        public void Show(int levelNumber, bool won, bool perfect, (bool passed, bool second, bool third) rules, int down, int required, bool bonus, bool lastLevel)
+        public void Show(int levelNumber, bool won, bool perfect, (bool passed, bool second, bool third) rules, int down, int required, bool bonus, bool boss)
         {
             canvas.enabled = true;
             var overlay = UiKit.Overlay(canvas.transform, "Overlay");
@@ -65,7 +65,7 @@ namespace PufferLaunch.UI
                 UiKit.Image(panel, "pup_stuck_0", UiKit.Top, new Vector2(-160, -300), new Vector2(170, 170));
             }
 
-            string line = won && lastLevel ? Loc.T("ending") : Loc.T(bonus ? "fish_got" : "bears_hit", down, required);
+            string line = won && boss ? Loc.T("ending") : Loc.T(bonus ? "fish_got" : "bears_hit", down, required);
             UiKit.Text(panel, line, 44, UiKit.Top, new Vector2(0, -462), new Vector2(1100, 60), UiKit.Ink);
 
             // This game's own: the stars earned (they pay for upgrades), each over the rule that earns it, so a missing
@@ -78,7 +78,7 @@ namespace PufferLaunch.UI
                 var star = UiKit.Image(panel, earned[i] ? "star_full" : "star_empty", UiKit.Top, at, new Vector2(96, 96));
                 if (earned[i]) star.gameObject.AddComponent<PopIn>().delay = 0.4f + 0.25f * shown++;
                 // On the boss level the second star is for beating the boss with a pup left, not for every bear.
-                string key = bonus ? "star_fish_" + (i + 1) : lastLevel && i == 1 ? "star_boss_2" : "star_rule_" + (i + 1);
+                string key = bonus ? "star_fish_" + (i + 1) : boss && i == 1 ? "star_boss_2" : "star_rule_" + (i + 1);
                 var rule = UiKit.Text(panel, Loc.T(key), 30, UiKit.Top,
                     at + new Vector2(0, -98), new Vector2(StarPitch - 20, 72), UiKit.Ink);
                 if (!earned[i]) rule.alpha = 0.7f;   // with the empty star above it: shape, not only colour

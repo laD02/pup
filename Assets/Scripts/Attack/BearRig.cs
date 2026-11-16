@@ -1,7 +1,7 @@
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 
-namespace PufferLaunch.Attack
+namespace SealCatapult.Attack
 {
     /// <summary>
     /// Frame-by-frame polar bear (Resources/Art/bear_&lt;anim&gt;_&lt;i&gt;: the ChatGPT sheet cut by Tools/slice_sheets.py,

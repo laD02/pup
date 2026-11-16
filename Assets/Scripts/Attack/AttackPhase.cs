@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using UnityEngine;
 
-namespace PufferLaunch.Attack
+namespace SealCatapult.Attack
 {
     /// <summary>
     /// The arena (phase 2, landscape, fixed view, laid out like the genre's level screens): dusk sky and pack ice behind,

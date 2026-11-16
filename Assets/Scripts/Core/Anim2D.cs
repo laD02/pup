@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>
     /// Lightweight character animation for a SpriteRenderer: blink/taunt (swap to an alternate frame now and then),

@@ -3,7 +3,7 @@
 Done 2026-11-11: `pup_sheet_e.png` sliced into pup_fly_0..7, pup_dive_0..1, pup_ninja_0, pup_getup_0..3.
 
 Same pipeline as the other pup sheets: 4×4 sheet on white → `Assets/Art/Reference/pup_sheet_e.png` →
-`python3 -I Tools/slice_sheets.py` → **Puffer Launch → 2. Build Project**. Use **Edit** on `pup_sheet_a.png` in ChatGPT and
+`python3 -I Tools/slice_sheets.py` → **Seal Catapult → 2. Build Project**. Use **Edit** on `pup_sheet_a.png` in ChatGPT and
 ask it to replace the rows (a fresh image drifts in style). Until this sheet exists the game uses older sets instead
 (fly = glide, dive = launch, getup = dizzy, ninja = flail), so nothing breaks.
 

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- The game is now called Seal Catapult in English (Hải Cẩu Bay in Vietnamese).
+- A second area, the Glacier River: 6 new, harder levels on a new map page, opened by beating the boss.
+- Anonymous play statistics (which levels are started and finished) help balance the levels; they are only sent with your consent.
 - The phone's Back button now works everywhere: it pauses a level, closes the shop, settings and info pages, goes from the map to the menu and leaves the game from the menu.
 - A new player's Play starts level 1 right away. Levels 1 to 3 teach: dots show where a dive will go, and level 3 asks for 3 bears.
 - Upgrades are much cheaper: every upgrade can now be bought with the stars in the game. The price button shows what is missing when you cannot afford it, and the map shows how many stars you can spend.

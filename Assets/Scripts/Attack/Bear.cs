@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using UnityEngine;
 
-namespace PufferLaunch.Attack
+namespace SealCatapult.Attack
 {
     /// <summary>
     /// Polar bear guard: stands, eats from a bowl or sleeps until a diving pup lands on it (ice-helmet bears take two

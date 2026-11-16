@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41a4f671a5ebe40ef98a08b1663c5f28, type: 3}
   m_Name: GameDatabase
-  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.GameDatabase
+  m_EditorClassIdentifier: SealCatapult::SealCatapult.Progress.GameDatabase
   levels:
   - {fileID: 11400000, guid: f0315adf850294225abf21b3c46eb004, type: 2}
   - {fileID: 11400000, guid: 7bcbf54614fee417ba1ace5285aaea68, type: 2}
@@ -25,5 +25,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3557a7d5a595d4e759e30d834ff7cf39, type: 2}
   - {fileID: 11400000, guid: 3935e0d3bcd9a44aea85bb182f993500, type: 2}
   - {fileID: 11400000, guid: ada4f80c2f4554a178b287541000410b, type: 2}
+  - {fileID: 11400000, guid: 71334cbbf6d614b4aa20f55a669012d8, type: 2}
+  - {fileID: 11400000, guid: 7013e7d57b9f54f90ba0c82c9c526b49, type: 2}
+  - {fileID: 11400000, guid: 9792c20c56022441a97738b1ab78f1bd, type: 2}
+  - {fileID: 11400000, guid: 44d160b4c54ed4698b36871234324ac0, type: 2}
+  - {fileID: 11400000, guid: 8854ce44d7dcb41c0a59d2682d2077ca, type: 2}
+  - {fileID: 11400000, guid: cc1743fccdbc24257a75390d8fa631ea, type: 2}
   upgrades: {fileID: 11400000, guid: 2a8b928b3c9ce47cd868f97b432c48a8, type: 2}
   tuning: {fileID: 11400000, guid: 97d8b265ac43e4c97a46b6a8f569f1e5, type: 2}

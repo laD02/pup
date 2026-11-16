@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d21b630a227c42c18bb45999ebe6cad, type: 3}
   m_Name: Upgrades
-  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.UpgradeData
+  m_EditorClassIdentifier: SealCatapult::SealCatapult.Progress.UpgradeData
   upgrades:
   - id: 0
     icon: icon_spiky

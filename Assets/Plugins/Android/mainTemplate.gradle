@@ -12,6 +12,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:25.5.0' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleMobileAdsDependencies.xml:7
     implementation 'com.google.android.play:review:2.0.2' // Assets/Scripts/Review/Editor/PlayReviewDependencies.xml:9
     implementation 'com.google.android.ump:user-messaging-platform:4.0.0' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleUmpDependencies.xml:7
+    implementation 'com.google.firebase:firebase-analytics:24.0.0' // Assets/Scripts/Analytics/Editor/FirebaseDependencies.xml:9
 // Android Resolver Dependencies End
 **DEPS**}
 

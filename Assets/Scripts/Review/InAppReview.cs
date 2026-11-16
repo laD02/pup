@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 
-namespace PufferLaunch.Review
+namespace SealCatapult.Review
 {
     /// <summary>
     /// Google Play In-App Review, asked once (GAME_DESIGN §13c). Calls the Play review library straight through JNI;
@@ -87,7 +87,7 @@ namespace PufferLaunch.Review
 
         static void Fail(string why)
         {
-            Debug.LogWarning($"[PufferLaunch] In-app review not shown: {why}");
+            Debug.LogWarning($"[SealCatapult] In-app review not shown: {why}");
             state = Failed;
         }
 

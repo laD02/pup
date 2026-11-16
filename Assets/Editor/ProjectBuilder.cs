@@ -1,8 +1,8 @@
 using System.IO;
 using System.Linq;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
-using PufferLaunch.UI;
+using SealCatapult.Core;
+using SealCatapult.Progress;
+using SealCatapult.UI;
 using TMPro;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
@@ -11,12 +11,12 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TextCore.LowLevel;
 
-namespace PufferLaunch.EditorTools
+namespace SealCatapult.EditorTools
 {
     /// <summary>
     /// Builds everything that would otherwise be clicked together in the Editor:
     /// sprite import settings, the TMP font, data assets, the four scenes and the Mac build.
-    /// Menu: Puffer Launch/… · Batch: -executeMethod PufferLaunch.EditorTools.ProjectBuilder.BuildAll
+    /// Menu: Seal Catapult/… · Batch: -executeMethod SealCatapult.EditorTools.ProjectBuilder.BuildAll
     /// </summary>
     public static class ProjectBuilder
     {
@@ -26,8 +26,8 @@ namespace PufferLaunch.EditorTools
         const string FontAsset = "Assets/Resources/Fonts/Baloo2 SDF.asset";
         const string OutlineMat = "Assets/Resources/Fonts/Baloo2 SDF Outline.mat";
         const string TmpEssentials = "Packages/com.unity.ugui/Package Resources/TMP Essential Resources.unitypackage";
-        const string ApkBuild = "Builds/Android/PufferLaunch.apk";
-        const string AabBuild = "Builds/Android/PufferLaunch.aab";
+        const string ApkBuild = "Builds/Android/SealCatapult.apk";
+        const string AabBuild = "Builds/Android/SealCatapult.aab";
         const float PixelsPerUnit = 100f;
         const float PaintedBlockPixelsPerUnit = 300f;
 
@@ -39,7 +39,7 @@ namespace PufferLaunch.EditorTools
             (SceneLoader.Game, typeof(GameManager)),
         };
 
-        [MenuItem("Puffer Launch/1. Import TMP Essentials")]
+        [MenuItem("Seal Catapult/1. Import TMP Essentials")]
         public static void ImportTmpEssentials()
         {
             if (AssetDatabase.IsValidFolder("Assets/TextMesh Pro")) return;
@@ -47,7 +47,7 @@ namespace PufferLaunch.EditorTools
             AssetDatabase.Refresh();
         }
 
-        [MenuItem("Puffer Launch/2. Build Project (keeps edited data)")]
+        [MenuItem("Seal Catapult/2. Build Project (keeps edited data)")]
         public static void BuildAll()
         {
             ConfigureSprites();
@@ -56,10 +56,10 @@ namespace PufferLaunch.EditorTools
             CreateScenes();
             ConfigurePlayer();
             AssetDatabase.SaveAssets();
-            Debug.Log("[PufferLaunch] Project built.");
+            Debug.Log("[SealCatapult] Project built.");
         }
 
-        [MenuItem("Puffer Launch/Rebuild Levels (overwrites Level_XX)")]
+        [MenuItem("Seal Catapult/Rebuild Levels (overwrites Level_XX)")]
         public static void RebuildLevels()
         {
             CreateData(true);
@@ -67,18 +67,18 @@ namespace PufferLaunch.EditorTools
         }
 
         /// <summary>Test build: debug-signed APK to sideload on a phone.</summary>
-        [MenuItem("Puffer Launch/3. Build Android APK (test)")]
+        [MenuItem("Seal Catapult/3. Build Android APK (test)")]
         public static void BuildApk() => BuildAndroid(false);
 
-        /// <summary>QA build: a debuggable development APK (Builds/Android/PufferLaunch-qa.apk) so QA can seed
+        /// <summary>QA build: a debuggable development APK (Builds/Android/SealCatapult-qa.apk) so QA can seed
         /// save.json with `adb shell run-as` to reach later levels. Never upload it.</summary>
         public static void BuildApkQa() => BuildAndroid(false, true);
 
         /// <summary>
         /// Store build: signed AAB for Google Play. Keystore comes from environment variables, never from the repo:
-        /// PUFFER_KEYSTORE (path), PUFFER_KEYSTORE_PASS, PUFFER_KEY_ALIAS, PUFFER_KEY_PASS.
+        /// SEAL_KEYSTORE (path), SEAL_KEYSTORE_PASS, SEAL_KEY_ALIAS, SEAL_KEY_PASS.
         /// </summary>
-        [MenuItem("Puffer Launch/4. Build Android AAB (Play Store)")]
+        [MenuItem("Seal Catapult/4. Build Android AAB (Play Store)")]
         public static void BuildAab() => BuildAndroid(true);
 
         static void BuildAndroid(bool appBundle, bool qa = false)
@@ -114,21 +114,21 @@ namespace PufferLaunch.EditorTools
                     PlayerSettings.Android.useCustomKeystore = false;
                 }
             }
-            Debug.Log($"[PufferLaunch] Build {report.summary.result}: {report.summary.totalSize / (1024 * 1024)} MB, " +
+            Debug.Log($"[SealCatapult] Build {report.summary.result}: {report.summary.totalSize / (1024 * 1024)} MB, " +
                       $"{report.summary.totalErrors} errors → {path}");
             if (Application.isBatchMode && report.summary.result != BuildResult.Succeeded) EditorApplication.Exit(1);
         }
 
         static bool ConfigureSigning()
         {
-            string keystore = System.Environment.GetEnvironmentVariable("PUFFER_KEYSTORE");
-            string storePass = System.Environment.GetEnvironmentVariable("PUFFER_KEYSTORE_PASS");
-            string alias = System.Environment.GetEnvironmentVariable("PUFFER_KEY_ALIAS");
-            string keyPass = System.Environment.GetEnvironmentVariable("PUFFER_KEY_PASS");
+            string keystore = System.Environment.GetEnvironmentVariable("SEAL_KEYSTORE");
+            string storePass = System.Environment.GetEnvironmentVariable("SEAL_KEYSTORE_PASS");
+            string alias = System.Environment.GetEnvironmentVariable("SEAL_KEY_ALIAS");
+            string keyPass = System.Environment.GetEnvironmentVariable("SEAL_KEY_PASS");
             if (string.IsNullOrEmpty(keystore) || !File.Exists(keystore) || string.IsNullOrEmpty(storePass) ||
                 string.IsNullOrEmpty(alias) || string.IsNullOrEmpty(keyPass))
             {
-                Debug.LogError("[PufferLaunch] AAB needs PUFFER_KEYSTORE, PUFFER_KEYSTORE_PASS, PUFFER_KEY_ALIAS, PUFFER_KEY_PASS.");
+                Debug.LogError("[SealCatapult] AAB needs SEAL_KEYSTORE, SEAL_KEYSTORE_PASS, SEAL_KEY_ALIAS, SEAL_KEY_PASS.");
                 if (Application.isBatchMode) EditorApplication.Exit(1);
                 return false;
             }
@@ -162,7 +162,7 @@ namespace PufferLaunch.EditorTools
                 importer.wrapMode = TextureWrapMode.Clamp;
                 // Android: ASTC. Uncompressed RGBA32 was about 164 MB of texture memory and most of the APK. Full-screen
                 // paintings take the smaller 6×6 blocks; sprites and 9-slice UI keep 4×4 so edges and borders stay clean.
-                bool painting = name.StartsWith("bg_") || name.StartsWith("story_") || name == "map_bg";
+                bool painting = name.StartsWith("bg_") || name.StartsWith("story_") || name.StartsWith("map_bg");
                 var android = importer.GetPlatformTextureSettings("Android");
                 android.overridden = true;
                 android.format = painting ? TextureImporterFormat.ASTC_6x6 : TextureImporterFormat.ASTC_4x4;
@@ -243,7 +243,7 @@ namespace PufferLaunch.EditorTools
             var font = AssetDatabase.LoadAssetAtPath<Font>(FontTtf);
             if (font == null)
             {
-                Debug.LogError($"[PufferLaunch] Missing {FontTtf}");
+                Debug.LogError($"[SealCatapult] Missing {FontTtf}");
                 return;
             }
             Directory.CreateDirectory(Path.GetDirectoryName(FontAsset));
@@ -282,7 +282,7 @@ namespace PufferLaunch.EditorTools
             var upgrades = LoadOrCreate<UpgradeData>($"{DataDir}/Upgrades.asset", out _);
             // The catalogue is code-defined: ids, icons and prices are rewritten every build (levels keep Inspector edits).
             upgrades.upgrades.Clear();
-            // 32 stars buy everything; the 12 levels give 36 (an EditMode test keeps the total within reach). The old
+            // 32 stars buy everything; the 18 levels give 54 (an EditMode test keeps the total within reach). The old
             // prices added up to 117, so under a third of the shop could ever be bought.
             upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.Spiky, icon = "icon_spiky", costs = new[] { 1, 2, 3 } });
             upgrades.upgrades.Add(new UpgradeDef { id = UpgradeId.PuffUp, icon = "icon_ball", costs = new[] { 1, 2, 3 } });
@@ -318,6 +318,7 @@ namespace PufferLaunch.EditorTools
             level.gapFrom = d.gapFrom;
             level.gapTo = d.gapTo;
             level.kind = d.kind;
+            level.zone = d.zone;
             level.showTutorial = d.tutorial;
             level.terrain = d.terrain.ToList();
             level.blocks = d.blocks.ToList();
@@ -353,7 +354,7 @@ namespace PufferLaunch.EditorTools
                 var type = System.Type.GetType("GoogleMobileAds.Editor.GoogleMobileAdsSettings, GoogleMobileAds.Editor");
                 if (type == null)
                 {
-                    Debug.LogError("[PufferLaunch] Google Mobile Ads plugin missing (Packages/manifest.json com.google.ads.mobile)");
+                    Debug.LogError("[SealCatapult] Google Mobile Ads plugin missing (Packages/manifest.json com.google.ads.mobile)");
                     return;
                 }
                 Directory.CreateDirectory(Path.GetDirectoryName(AdMobSettingsPath));
@@ -361,33 +362,33 @@ namespace PufferLaunch.EditorTools
                 AssetDatabase.CreateAsset(settings, AdMobSettingsPath);
             }
             var so = new SerializedObject(settings);
-            so.FindProperty("adMobAndroidAppId").stringValue = PufferLaunch.Ads.AdsConfig.AppId;
+            so.FindProperty("adMobAndroidAppId").stringValue = SealCatapult.Ads.AdsConfig.AppId;
             so.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.SaveAssets();
         }
 
         /// <summary>The release version (CHANGELOG.md) and its Play version code; bump both for a release, or pass
-        /// PUFFER_VERSION_CODE for a rebuild of the same version.</summary>
+        /// SEAL_VERSION_CODE for a rebuild of the same version.</summary>
         const string Version = "0.1.0";
         const int VersionCode = 1;
 
         static void ConfigurePlayer()
         {
-            PlayerSettings.productName = "Pup Launch";
-            PlayerSettings.companyName = "Puffer Launch";
+            PlayerSettings.productName = "Seal Catapult";
+            PlayerSettings.companyName = "Seal Catapult";
             PlayerSettings.bundleVersion = Version;
             // Play refuses a version code it has already seen: a store build can pass the next one without a code edit.
-            string asked = System.Environment.GetEnvironmentVariable("PUFFER_VERSION_CODE");
+            string asked = System.Environment.GetEnvironmentVariable("SEAL_VERSION_CODE");
             int code = VersionCode;
             if (!string.IsNullOrEmpty(asked) && (!int.TryParse(asked, out code) || code <= 0))
             {
                 // A typo must not quietly build code 1 (Play would refuse the upload after the whole build): the
                 // exception stops the build here, in the Editor and in batch mode (which then exits with an error).
-                throw new System.ArgumentException($"[PufferLaunch] PUFFER_VERSION_CODE='{asked}' is not a positive whole number.");
+                throw new System.ArgumentException($"[SealCatapult] SEAL_VERSION_CODE='{asked}' is not a positive whole number.");
             }
             PlayerSettings.Android.bundleVersionCode = code;
-            Debug.Log($"[PufferLaunch] version {Version} (code {code})");
-            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, "com.pufferlaunch.game");
+            Debug.Log($"[SealCatapult] version {Version} (code {code})");
+            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, "com.sealcatapult.game");
             // Android only: landscape (either way up), IL2CPP + ARM64 (required by Google Play).
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
             PlayerSettings.allowedAutorotateToPortrait = false;

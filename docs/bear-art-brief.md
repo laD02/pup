@@ -5,7 +5,7 @@ scar, big belly). Redraw with the same prompts if the style must change; keep th
 
 Same pipeline as the seal pup (`docs/hero-art-brief.md`, `Tools/slice_sheets.py`): one 4×4 sheet made in ChatGPT,
 dropped into `Assets/Art/Reference/bear_sheet.png`, cut by `python3 -I Tools/slice_sheets.py`, then
-**Puffer Launch → 2. Build Project**. Keep the seal's drawing style: start from the Edit tool on `pup_sheet_a.png`
+**Seal Catapult → 2. Build Project**. Keep the seal's drawing style: start from the Edit tool on `pup_sheet_a.png`
 (same line weight, shading and palette) and ask for the content below, instead of a fresh image.
 
 ## Prompt (paste into ChatGPT, attach `Assets/Art/Reference/pup_sheet_a.png` as the style reference)

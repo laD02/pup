@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PufferLaunch.Progress
+namespace SealCatapult.Progress
 {
     /// <summary>Order matters: it is the index into SaveData.upgrades.</summary>
     public enum UpgradeId { Spiky = 0, PuffUp = 1, School = 2, Ninja = 3, Blaze = 4 }
@@ -16,7 +16,7 @@ namespace PufferLaunch.Progress
     }
 
     /// <summary>Upgrade catalogue. Each level adds +1 to the effect (pierce, bounce, pups, ninja turns, blaze).</summary>
-    [CreateAssetMenu(menuName = "Puffer Launch/Upgrades", fileName = "Upgrades")]
+    [CreateAssetMenu(menuName = "Seal Catapult/Upgrades", fileName = "Upgrades")]
     public class UpgradeData : ScriptableObject
     {
         public const int MaxLevel = 3;

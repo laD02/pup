@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>
     /// String tables, one column per language in <see cref="Codes"/> order (English is the default).
@@ -15,8 +15,8 @@ namespace PufferLaunch.Core
         static readonly Dictionary<string, string[]> table = new Dictionary<string, string[]>
         {
             // key                       en, vi, then de, fr, es, it, pl (EU listings, docs/ASO.md)
-            ["title"]          = new[] { "Pup Launch",                             "Hải Cẩu Bay",
-                                         "Pup Launch", "Pup Launch", "Pup Launch", "Pup Launch", "Pup Launch" },
+            ["title"]          = new[] { "Seal Catapult",                             "Hải Cẩu Bay",
+                                         "Seal Catapult", "Seal Catapult", "Seal Catapult", "Seal Catapult", "Seal Catapult" },
             ["tagline"]        = new[] { "Win back the village fish from the polar bears!", "Giành lại cá cho làng hải cẩu!",
                                          "Hol den Fisch des Dorfes von den Eisbären zurück!", "Reprends le poisson du village aux ours polaires !", "¡Recupera el pescado del pueblo de los osos polares!", "Riprendi il pesce del villaggio dagli orsi polari!", "Odbierz niedźwiedziom polarnym ryby z wioski!" },
             ["play"]           = new[] { "Play",                                    "Chơi",
@@ -207,7 +207,7 @@ namespace PufferLaunch.Core
             ["need_stars"] = new[] { "Stars missing: {0}", "Cần thêm {0} sao", "Fehlende Sterne: {0}", "Étoiles manquantes : {0}", "Estrellas que faltan: {0}", "Stelle mancanti: {0}", "Brakuje gwiazdek: {0}" },
             ["collect_fish"] = new[] { "Fly through the fish to collect them!", "Bay xuyên qua đàn cá để gom cá!", "Flieg durch die Fische und sammle sie ein!", "Vole à travers les poissons pour les ramasser !", "¡Vuela entre los peces para recogerlos!", "Vola tra i pesci per raccoglierli!", "Przeleć przez ryby, by je zebrać!" },
             ["fish_got"] = new[] { "Fish collected: {0}/{1}", "Cá đã gom: {0}/{1}", "Gesammelte Fische: {0}/{1}", "Poissons ramassés : {0}/{1}", "Peces recogidos: {0}/{1}", "Pesci raccolti: {0}/{1}", "Zebrane ryby: {0}/{1}" },
-            ["ending"] = new[] { "Frost Bay is free! Now collect every star.", "Vịnh Băng Giá đã được giải cứu! Giờ hãy gom đủ sao.", "Die Frostbucht ist frei! Hol dir jetzt alle Sterne.", "La Baie Gelée est libre ! Récolte maintenant toutes les étoiles.", "¡La Bahía Helada es libre! Ahora consigue todas las estrellas.", "La Baia Gelata è libera! Ora raccogli tutte le stelle.", "Mroźna Zatoka jest wolna! Teraz zdobądź wszystkie gwiazdki." },
+            ["ending"] = new[] { "Frost Bay is free! On to the Glacier River.", "Vịnh Băng Giá đã được giải cứu! Tiếp tục tới Sông Băng.", "Die Frostbucht ist frei! Weiter zum Gletscherfluss.", "La Baie Gelée est libre ! En route vers la Rivière Glacée.", "¡La Bahía Helada es libre! Rumbo al Río Glaciar.", "La Baia Gelata è libera! Ora verso il Fiume Glaciale.", "Mroźna Zatoka jest wolna! Teraz nad Lodową Rzekę." },
             ["star_rule_1"] = new[] { "Mission passed", "Qua màn", "Mission geschafft", "Mission réussie", "Misión superada", "Missione superata", "Misja zaliczona" },
             ["star_rule_2"] = new[] { "All bears down, a pup to spare", "Hạ hết gấu khi còn dư hải cẩu", "Alle Bären besiegt, eine Robbe übrig", "Tous les ours assommés, un phoque en réserve", "Todos los osos derribados y una foca de sobra", "Tutti gli orsi abbattuti, una foca di scorta", "Wszystkie niedźwiedzie pokonane, foka w zapasie" },
             ["star_rule_3"] = new[] { "60% of the fortress smashed", "Phá 60% pháo đài", "60 % der Festung zerstört", "60 % de la forteresse détruite", "60 % de la fortaleza destruida", "60% della fortezza distrutto", "60% twierdzy rozbite" },
@@ -276,7 +276,7 @@ namespace PufferLaunch.Core
         public static string T(string key)
         {
             if (table.TryGetValue(key, out var row)) return row[Index];
-            Debug.LogWarning($"[PufferLaunch] Missing text key '{key}'");
+            Debug.LogWarning($"[SealCatapult] Missing text key '{key}'");
             return key;
         }
 

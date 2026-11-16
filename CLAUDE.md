@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code in this repo. Pup Launch (code name PufferLaunch): Unity 6.3 LTS, URP 2D,
+Guidance for Claude Code in this repo. Seal Catapult (code name SealCatapult): Unity 6.3 LTS, URP 2D,
 **Android only, Google Play**. Open, build, test, install: `README.md`. Game design: `GAME_DESIGN.md`.
 General working rules below were ported from the one-fill-line repo (2026-11-10); its design and
 app-specific rules were NOT ported — this game keeps its own design in `GAME_DESIGN.md`.
@@ -61,12 +61,12 @@ Follow `~/.claude/rules/ship-push-deploy-qa.md` (applies to every project). Proj
   UI/art/sound: install the APK on the emulator `Pixel_PlayStore_34` and play it.
 - Reviewers: `csharp-reviewer` for C#, `python-reviewer` for `Tools/*.py`, `silent-failure-hunter` for
   catch/fallback paths, `performance-optimizer` for per-frame cost.
-- Version: `Version` + `VersionCode` in `ProjectBuilder` (`PUFFER_VERSION_CODE` overrides the code for a rebuild).
+- Version: `Version` + `VersionCode` in `ProjectBuilder` (`SEAL_VERSION_CODE` overrides the code for a rebuild).
 - Deploy: `ProjectBuilder.BuildAab` signed from env vars, Play internal testing track first.
 - QA on the shipped build: one full level (launch + attack), win and lose, retry, pause, level map,
   shop/upgrades, sound/music, EN/VI, kill + reopen (progress kept). Game is landscape: rotate the emulator
   (`adb shell settings put system user_rotation 1`) and check both landscape directions.
-- Remote: `origin` = https://github.com/laD02/pup.git, branch `main`. `.utmp/`, `InitTestScene*` and keystores are git-ignored.
+- Remote: `origin` = https://github.com/laD02/seal-catapult.git (renamed from `pup` 2026-11-16), branch `main`. `.utmp/`, `InitTestScene*` and keystores are git-ignored.
 
 ## Docs
 

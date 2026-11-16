@@ -6,7 +6,7 @@ one connected blob of non-background pixels, and the blobs are named in reading 
 two blobs are in the same row when their vertical centres are within ROW_TOLERANCE of the sheet height).
 The white that touches the border becomes transparent, as in slice_sheets.py, so white snow inside an outline stays.
 
-Usage: python3 -I Tools/cut_props.py   (then Puffer Launch -> 2. Build Project)
+Usage: python3 -I Tools/cut_props.py   (then Seal Catapult -> 2. Build Project)
 """
 from __future__ import annotations
 

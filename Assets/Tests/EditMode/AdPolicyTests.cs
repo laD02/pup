@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using PufferLaunch.Ads;
+using SealCatapult.Ads;
 
-namespace PufferLaunch.Tests
+namespace SealCatapult.Tests
 {
     public class AdPolicyTests
     {

@@ -1,5 +1,5 @@
 # Google reads robots.txt only at the domain root: https://lad02.github.io/robots.txt governs this site.
-# Add "Sitemap: https://lad02.github.io/pup/sitemap.xml" there (docs/ASO.md §7). This copy is for a future own domain.
+# Add "Sitemap: https://lad02.github.io/seal-catapult/sitemap.xml" there (docs/ASO.md §7). This copy is for a future own domain.
 User-agent: *
 Allow: /
-Sitemap: https://lad02.github.io/pup/sitemap.xml
+Sitemap: https://lad02.github.io/seal-catapult/sitemap.xml

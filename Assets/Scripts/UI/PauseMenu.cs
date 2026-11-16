@@ -1,8 +1,8 @@
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using TMPro;
 using UnityEngine;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>Pause, as in the reference: the game dims under a big "PAUSE"; a row of buttons below it (Resume,
     /// Retry, Map, Sound) is this game's addition.</summary>

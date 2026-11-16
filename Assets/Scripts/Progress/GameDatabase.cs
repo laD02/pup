@@ -1,9 +1,9 @@
 using UnityEngine;
 
-namespace PufferLaunch.Progress
+namespace SealCatapult.Progress
 {
     /// <summary>Root data asset at Resources/GameDatabase: levels, upgrades and tuning.</summary>
-    [CreateAssetMenu(menuName = "Puffer Launch/Database", fileName = "GameDatabase")]
+    [CreateAssetMenu(menuName = "Seal Catapult/Database", fileName = "GameDatabase")]
     public class GameDatabase : ScriptableObject
     {
         public LevelData[] levels;
@@ -20,10 +20,10 @@ namespace PufferLaunch.Progress
                 {
                     instance = Resources.Load<GameDatabase>("GameDatabase");
                     if (instance == null)
-                        Debug.LogError("[PufferLaunch] Resources/GameDatabase.asset missing. Run Puffer Launch > Build Project.");
+                        Debug.LogError("[SealCatapult] Resources/GameDatabase.asset missing. Run Seal Catapult > Build Project.");
                     else if (instance.levels == null || instance.levels.Length != Core.SaveData.LevelCount)
                         // The save keeps stars per level in arrays of LevelCount: a mismatch indexes out of range at Finish.
-                        Debug.LogError($"[PufferLaunch] GameDatabase has {instance.levels?.Length ?? 0} levels, the save expects {Core.SaveData.LevelCount}.");
+                        Debug.LogError($"[SealCatapult] GameDatabase has {instance.levels?.Length ?? 0} levels, the save expects {Core.SaveData.LevelCount}.");
                 }
                 return instance;
             }

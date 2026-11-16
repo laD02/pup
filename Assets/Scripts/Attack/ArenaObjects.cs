@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 
-namespace PufferLaunch.Attack
+namespace SealCatapult.Attack
 {
     /// <summary>Orange gear-shaped bumper: anything that hits it is flung back hard (used to reach hidden bears).</summary>
     public class Bumper : MonoBehaviour

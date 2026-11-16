@@ -1,10 +1,10 @@
 using System;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>
     /// In-game HUD laid out like the reference (report §15): hero portrait + "× pups" top-left, four round buttons
@@ -202,10 +202,10 @@ namespace PufferLaunch.UI
 
         public void SetScore(int n) => score = n;
 
-        void OnEnable() => PufferLaunch.Attack.Bear.Defeated += OnBearDown;
-        void OnDisable() => PufferLaunch.Attack.Bear.Defeated -= OnBearDown;
+        void OnEnable() => SealCatapult.Attack.Bear.Defeated += OnBearDown;
+        void OnDisable() => SealCatapult.Attack.Bear.Defeated -= OnBearDown;
 
-        void OnBearDown(PufferLaunch.Attack.Bear bear, int score)
+        void OnBearDown(SealCatapult.Attack.Bear bear, int score)
         {
             // A bear that fell out of the arena has no on-screen spot to fly from: just bump the counter.
             if (bear == null || !isActiveAndEnabled) return;

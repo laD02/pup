@@ -1,4 +1,4 @@
-namespace PufferLaunch.Ads
+namespace SealCatapult.Ads
 {
     /// <summary>AdMob ids (GAME_DESIGN.md §13b). The app id lives in Assets/GoogleMobileAds/Resources/GoogleMobileAdsSettings
     /// (set by ProjectBuilder from <see cref="AppId"/>). Ids are not secrets: they ship inside the APK.</summary>

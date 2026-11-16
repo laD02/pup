@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using GoogleMobileAds.Api;
 using GoogleMobileAds.Ump.Api;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 
-namespace PufferLaunch.Ads
+namespace SealCatapult.Ads
 {
     /// <summary>
     /// AdMob (GAME_DESIGN.md §13b): UMP consent first, then a preloaded interstitial and rewarded ad. Without consent,
@@ -89,7 +89,7 @@ namespace PufferLaunch.Ads
         {
             if (UseTestUnits) return test;
             if (real.StartsWith("ca-app-pub-") && !real.Contains("XXXX")) return real;
-            Debug.LogError("[PufferLaunch] AdMob unit id missing in AdsConfig; showing test ads");
+            Debug.LogError("[SealCatapult] AdMob unit id missing in AdsConfig; showing test ads");
             return test;
         }
 
@@ -124,7 +124,7 @@ namespace PufferLaunch.Ads
                 request.ConsentDebugSettings = new ConsentDebugSettings { DebugGeography = DebugGeography.EEA };
             ConsentInformation.Update(request, updateError => Post(() =>
             {
-                if (updateError != null) Debug.LogWarning($"[PufferLaunch] consent update: {updateError.Message}");
+                if (updateError != null) Debug.LogWarning($"[SealCatapult] consent update: {updateError.Message}");
                 // A player who consented last session can see ads while the form (if any) is still on its way.
                 if (ConsentInformation.CanRequestAds()) StartSdk();
                 if (updateError != null)
@@ -135,7 +135,7 @@ namespace PufferLaunch.Ads
                 ConsentForm.LoadAndShowConsentFormIfRequired(formError => Post(() =>
                 {
                     consentRunning = false;
-                    if (formError != null) Debug.LogWarning($"[PufferLaunch] consent form: {formError.Message}");
+                    if (formError != null) Debug.LogWarning($"[SealCatapult] consent form: {formError.Message}");
                     if (ConsentInformation.CanRequestAds()) StartSdk();
                 }));
             }));
@@ -147,7 +147,8 @@ namespace PufferLaunch.Ads
             if (started) return;
             started = true;
             // Test units on a Play install would earn nothing without a sound: say which ones this build uses, and why.
-            Debug.Log($"[PufferLaunch] ads: {(UseTestUnits ? "test" : "real")} units (installer '{Application.installerName}', debug {Debug.isDebugBuild}, emulator {IsEmulator})");
+            Debug.Log($"[SealCatapult] ads: {(UseTestUnits ? "test" : "real")} units (installer '{Application.installerName}', debug {Debug.isDebugBuild}, emulator {IsEmulator})");
+            Analytics.GameAnalytics.SetCollection(true);   // the same consent covers measurement (GAME_DESIGN.md §13d)
             // Cartoon art draws a young audience (the listing is 13+): keep ads to general/parental-guidance content.
             MobileAds.SetRequestConfiguration(new RequestConfiguration { MaxAdContentRating = MaxAdContentRating.PG });
             MobileAds.Initialize(_ => Post(() =>
@@ -177,7 +178,7 @@ namespace PufferLaunch.Ads
                 interstitialLoading = false;
                 if (error != null || ad == null)
                 {
-                    Debug.LogWarning($"[PufferLaunch] interstitial load failed: {error?.GetMessage()}");
+                    Debug.LogWarning($"[SealCatapult] interstitial load failed: {error?.GetMessage()}");
                     StartCoroutine(After(interstitialRetry, LoadInterstitial));
                     interstitialRetry = Mathf.Min(RetryMax, interstitialRetry * 2f);
                     return;
@@ -199,7 +200,7 @@ namespace PufferLaunch.Ads
                 rewardedLoading = false;
                 if (error != null || ad == null)
                 {
-                    Debug.LogWarning($"[PufferLaunch] rewarded load failed: {error?.GetMessage()}");
+                    Debug.LogWarning($"[SealCatapult] rewarded load failed: {error?.GetMessage()}");
                     StartCoroutine(After(rewardedRetry, LoadRewarded));
                     rewardedRetry = Mathf.Min(RetryMax, rewardedRetry * 2f);
                     return;
@@ -293,17 +294,19 @@ namespace PufferLaunch.Ads
             ConsentForm.ShowPrivacyOptionsForm(error => Post(() =>
             {
                 self.privacyOpen = false;
-                if (error != null) Debug.LogWarning($"[PufferLaunch] privacy form: {error.Message}");
+                if (error != null) Debug.LogWarning($"[SealCatapult] privacy form: {error.Message}");
                 if (ConsentInformation.CanRequestAds())
                 {
                     if (!self.started) self.StartSdk();
                     else
                     {
+                        Analytics.GameAnalytics.SetCollection(true);
                         self.LoadInterstitial();   // consent given again after a withdrawal: refill
                         self.LoadRewarded();
                     }
                     return;
                 }
+                Analytics.GameAnalytics.SetCollection(false);   // consent withdrawn: stop measuring too
                 self.interstitial?.Destroy();
                 self.interstitial = null;
                 self.rewarded?.Destroy();

@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
-using PufferLaunch.Progress;
+using SealCatapult.Progress;
 using UnityEngine;
 
-namespace PufferLaunch.EditorTools
+namespace SealCatapult.EditorTools
 {
     /// <summary>
-    /// Source of truth for the 10 Frost Bay levels. ProjectBuilder writes them into Assets/Data/Level_XX.asset;
+    /// Source of truth for the levels: 12 in Frost Bay (zone 0), then 6 in Glacier River (zone 1). ProjectBuilder writes them into Assets/Data/Level_XX.asset;
     /// after that, tweak numbers in the Inspector (or here + "Rebuild Levels").
     /// The arena is AttackPhase.ArenaWidth (13) wide: x = 0 at the open left edge, 13 at the rock wall; y = 0 on the
     /// cobble floor. Terrain (ramps, plateaus, pillars) is solid rock spread across the width, ice cubes stack on it,
@@ -27,6 +27,7 @@ namespace PufferLaunch.EditorTools
             public int requiredBears;      // 0 = every bear
             public LevelKind kind = LevelKind.Normal;
             public LaunchStyle launcher = LaunchStyle.Swing;
+            public int zone;               // arena palette (AttackPhase.Palettes) and map page
             public float caveFrom, caveTo, gapFrom, gapTo;
             public readonly List<TerrainSpec> terrain = new List<TerrainSpec>();
             public readonly List<BlockSpec> blocks = new List<BlockSpec>();
@@ -123,6 +124,12 @@ namespace PufferLaunch.EditorTools
                 return this;
             }
 
+            public Design Zone(int z)
+            {
+                zone = z;
+                return this;
+            }
+
             public Design Kind(LevelKind k)
             {
                 kind = k;
@@ -154,7 +161,7 @@ namespace PufferLaunch.EditorTools
 
         const BlockMaterial S = BlockMaterial.Snow;
         const BearMood Dangle = BearMood.Dangle;
-        const float Deep = PufferLaunch.Attack.AttackPhase.CaveDepth;
+        const float Deep = SealCatapult.Attack.AttackPhase.CaveDepth;
         const BearMood Eat = BearMood.Eat, Sleep = BearMood.Sleep;
 
         public static Design[] All()
@@ -248,6 +255,49 @@ namespace PufferLaunch.EditorTools
                     .Button(2.2f, 1.2f, 7).Button(10.8f, 2.0f, 7)
                     .Boss(6.5f, 3.2f, 2, 7).Cage(4.3f, 5.6f)
                     .Bear(11.8f, 2.0f, mood: Eat).Bear(1.3f, 1.2f, mood: Sleep),   // 1.3: on the rock (edge 0.9), clear of the button at 2.2   // clear of the boss life bar at x 12.55
+
+                // ---------- Glacier River (zone 1, map page 2): the same pieces, more bears and fewer to spare ----------
+                // 13 · two plateaus: a cube tower on each, a bumper over the floor guard
+                new Design(7).Zone(1)
+                    .Rock(3.5f, 0f, 2.4f, 1f).Cubes(3.5f, 1f, 2).Bear(3.5f, 1f + C2)
+                    .Rock(9.5f, 0f, 2.4f, 1.4f).Cubes(9.1f, 1.4f, 2).Cubes(9.9f, 1.4f, 2).Row(9.1f, 1.4f + C2, 2).Bear(9.5f, 1.4f + C3)
+                    .Bear(6.5f, 0f, mood: Eat).Bear(12f, 0f).Bumper(6.5f, 4.6f).EdgePerch(4.2f).Need(4),
+                // 14 · a long plateau with a TNT crate between two towers; a cave on the left holds two bears
+                new Design(7).Zone(1)
+                    .Rock(9f, 0f, 6f, 1f).Cubes(7.2f, 1f, 2).Bear(7.2f, 1f + C2).Tnt(8.6f, 1f).Bear(9.8f, 1f, mood: Sleep)
+                    .Cubes(10.8f, 1f, 3).Bear(10.8f, 1f + C3, helmet: true)
+                    .Cave(0.6f, 5.6f, 2.2f, 4f).Bear(1.4f, -Deep, mood: Eat).Bear(4.9f, -Deep).Bear(1.2f, 0f).Need(4),
+                // 15 · bungee pit: two pillars and two ice towers, a sleeper at the wall
+                new Design(7).Zone(1)
+                    .Pillar(2f, 2.2f).Bear(2f, 2.2f, helmet: true)
+                    .Cubes(4.4f, 0f, 3).Bear(4.4f, C3).Wedge(3.6f, 0f, true).Wedge(5.2f, 0f, false)
+                    .Pillar(7f, 3.4f).Bear(7f, 3.4f)
+                    .Cubes(9.4f, 0f, 2).Cubes(10.2f, 0f, 2).Row(9.4f, C2, 2).Bear(9.8f, C3, mood: Eat)
+                    .Bear(12f, 0f, mood: Sleep).Need(4).Bungee(),
+                // 16 · a button on the left plateau opens the ice gate; TNT waits between the two guards behind it
+                new Design(8).Zone(1)
+                    .Rock(3f, 0f, 3f, 1.2f).Button(3f, 1.2f, 1).Bear(1.9f, 1.2f)
+                    .Cubes(6.6f, 0f, 2).Bear(6.6f, C2)
+                    .Gate(8.6f, 0f, 3, 1).Bear(9.6f, 0f, helmet: true).Tnt(10.5f, 0f).Bear(11.5f, 0f, mood: Eat)
+                    .EdgePerch(4.6f, helmet: true).Need(4),
+                // 17 · the big castle: a six-cube gateway with two armoured guards on top and two inside, guards on pillars
+                new Design(8).Zone(1)
+                    .Rock(7f, 0f, 6f, 1f)
+                    .Cubes(5f, 1f, 3).Cubes(9f, 1f, 3).Row(5f, 1f + C3, 6).Wedge(4.2f, 1f + C3, true).Wedge(9.8f, 1f + C3, false)
+                    .Bear(6f, 1f + C3 + Cube, helmet: true).Bear(8f, 1f + C3 + Cube, helmet: true)
+                    .Bear(6.2f, 1f, mood: Eat).Bear(7.8f, 1f)
+                    .Pillar(1.6f, 2.4f).Bear(1.6f, 2.4f)
+                    .Pillar(12f, 2f).Bear(12f, 2f, helmet: true)
+                    .Tnt(10.6f, 0f).Bumper(3.2f, 4.8f).Need(5),
+                // 18 · twin towers over a cave with the gate button, bungee pit, a guard on the edge perch
+                new Design(8).Zone(1)
+                    .Ramp(0.5f, 0f, 1.1f, 1f, true)
+                    .Rock(4f, 0f, 2.4f, 1f).Cubes(4f, 1f, 3).Bear(4f, 1f + C3, helmet: true)
+                    .Rock(9f, 0f, 2.4f, 1f).Cubes(9f, 1f, 3).Bear(9f, 1f + C3, helmet: true)
+                    .Wedge(3.2f, 1f, true).Wedge(9.8f, 1f, false)
+                    .Bear(11.8f, 0f, mood: Eat).Bear(2.2f, 0f, mood: Sleep).Gate(10.6f, 0f, 3, 1)
+                    .Cave(4f, 9f, 5.6f, 7.4f).Button(6.5f, -Deep, 1).Bear(8.3f, -Deep, mood: Sleep).Bear(5f, -Deep)
+                    .EdgePerch(4.6f).Need(5).Bungee(),
             };
         }
 

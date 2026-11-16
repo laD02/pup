@@ -1,15 +1,15 @@
 using System;
 using System.Collections;
-using PufferLaunch.Ads;
-using PufferLaunch.Attack;
-using PufferLaunch.Launch;
-using PufferLaunch.Progress;
-using PufferLaunch.Review;
-using PufferLaunch.UI;
+using SealCatapult.Ads;
+using SealCatapult.Attack;
+using SealCatapult.Launch;
+using SealCatapult.Progress;
+using SealCatapult.Review;
+using SealCatapult.UI;
 using Unity.Cinemachine;
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>
     /// Runs one level (landscape): Launch (fixed pit view — bat pups out through the top-right gap) → Transition →
@@ -77,6 +77,7 @@ namespace PufferLaunch.Core
             BossBear.Beaten += OnBossDown;
 
             int bonusPups = AdMob.Policy.TakeBonusPups(LevelIndex);
+            Analytics.GameAnalytics.LevelStart(LevelIndex + 1, quick);
             if (quick)
             {
                 // Attack-only retry (the lose card): the same pups fly again, straight into the arena. No pit, no card.
@@ -324,10 +325,11 @@ namespace PufferLaunch.Core
             data.totalBears += attack.BearsDown;
             foreach (int d in attack.Dives) data.AddDive(d);
             SaveSystem.Save();
+            Analytics.GameAnalytics.LevelEnd(LevelIndex + 1, won, stars, exits != null ? exits.Count : 0);
             AudioManager.Sfx(won ? "win" : "lose", 0f);
             bool bonus = level.kind == LevelKind.Bonus;
             result.Show(LevelIndex + 1, won, perfect, rules, bonus ? attack.FishCollected : attack.BearsDown,
-                bonus ? attack.FishTotal : attack.BearsRequired, bonus, !HasNextLevel);
+                bonus ? attack.FishTotal : attack.BearsRequired, bonus, level.kind == LevelKind.Boss);
             if (InAppReview.ShouldAsk(data, LevelIndex, won)) StartCoroutine(InAppReview.AskOnce());
         }
 

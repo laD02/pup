@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 
-namespace PufferLaunch.Launch
+namespace SealCatapult.Launch
 {
     /// <summary>
     /// Snowball catapult (ChatGPT art: catapult_base, catapult_arm, snowball; cut by Tools/cut_props.py) to the right

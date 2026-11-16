@@ -1,9 +1,9 @@
 using System.Collections;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>
     /// Opening story (GDD §R6): five ChatGPT paintings (Resources/Art/story_1..5) shown full screen, each drifting in a

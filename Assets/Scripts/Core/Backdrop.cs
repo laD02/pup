@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>
     /// Polar backdrop: night-to-dawn sky and aurora locked to the camera, infinitely tiled parallax layers

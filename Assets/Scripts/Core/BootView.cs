@@ -1,9 +1,9 @@
 using System.Collections;
-using PufferLaunch.UI;
+using SealCatapult.UI;
 using TMPro;
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>Boot: logo, load the save, warm up audio, then the main menu (at most ~2 s).</summary>
     public class BootView : MonoBehaviour

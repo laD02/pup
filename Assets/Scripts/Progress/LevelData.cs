@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PufferLaunch.Progress
+namespace SealCatapult.Progress
 {
     public enum BlockMaterial { Snow, Ice, Stone }
 
@@ -60,7 +60,7 @@ namespace PufferLaunch.Progress
     }
 
     /// <summary>One level: how many pups, and the arena layout (rock terrain, fortress blocks, bears).</summary>
-    [CreateAssetMenu(menuName = "Puffer Launch/Level", fileName = "Level_")]
+    [CreateAssetMenu(menuName = "Seal Catapult/Level", fileName = "Level_")]
     public class LevelData : ScriptableObject
     {
         [Header("Launch")]

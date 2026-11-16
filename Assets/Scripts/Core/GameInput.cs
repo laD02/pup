@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>One input surface for keyboard, mouse and touch (Input System).</summary>
     public static class GameInput

@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb4e1d57f40484ff5a0a789e6ac5813b, type: 3}
   m_Name: Level_08
-  m_EditorClassIdentifier: PufferLaunch::PufferLaunch.Progress.LevelData
+  m_EditorClassIdentifier: SealCatapult::SealCatapult.Progress.LevelData
   pufferCount: 7
   requiredBears: 3
   kind: 0

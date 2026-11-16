@@ -2,14 +2,14 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using PufferLaunch.Attack;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Attack;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
-namespace PufferLaunch.Tests
+namespace SealCatapult.Tests
 {
     /// <summary>Loads the real Game scene: fortress stability, dive damage, and screenshots for review.</summary>
     public class GameplayTests
@@ -19,14 +19,14 @@ namespace PufferLaunch.Tests
 
         // The ad policy is static: wins counted by one test must not decide whether another shows an interstitial.
         [SetUp]
-        public void ResetAdPolicy() => PufferLaunch.Ads.AdMob.Policy.Reset();
+        public void ResetAdPolicy() => SealCatapult.Ads.AdMob.Policy.Reset();
 
         [Test]
         public void OnlyBonusAndBossLevelsCloseTheChapter()
         {
             var levels = GameDatabase.Instance.levels;
             for (int i = 0; i < levels.Length; i++)
-                Assert.AreEqual(i >= levels.Length - 2, GameManager.IsChapterEnd(levels[i]), $"level {i + 1}");
+                Assert.AreEqual(levels[i].kind != LevelKind.Normal, GameManager.IsChapterEnd(levels[i]), $"level {i + 1}");
         }
 
         /// <summary>Loads a level and waits for the NEW scene (the fade keeps the old one alive for a moment).</summary>
@@ -92,7 +92,7 @@ namespace PufferLaunch.Tests
             float deadline = Time.realtimeSinceStartup + 10f;
             while (game.Current != GameManager.State.Attack && Time.realtimeSinceStartup < deadline) yield return null;
             Assert.AreEqual(GameManager.State.Attack, game.Current, "the attack starts by itself");
-            Assert.IsNull(Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>(), "no launch pit on an attack-only retry");
+            Assert.IsNull(Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>(), "no launch pit on an attack-only retry");
             var attack = Object.FindFirstObjectByType<AttackPhase>();
             Assert.AreEqual(1, attack.Ammo, "two kept pups: one flying, one waiting");
             Assert.IsNotNull(attack.Current);
@@ -102,7 +102,7 @@ namespace PufferLaunch.Tests
             Assert.AreEqual(entry.at.y, attack.Current.transform.position.y, 0.3f, "the pup enters at its kept exit's height");
             // The next ordinary start of the level is a full one again.
             yield return LoadLevel(0);
-            Assert.IsNotNull(Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>(), "PlayLevel forgets the kept pups");
+            Assert.IsNotNull(Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>(), "PlayLevel forgets the kept pups");
         }
 
         [UnityTest]
@@ -130,14 +130,14 @@ namespace PufferLaunch.Tests
             yield return new WaitForSeconds(3f);
             Block.Broken -= CountBlock;
             Bear.Defeated -= CountBear;
-            Debug.Log($"[PufferLaunch] dive test: {broken} blocks broken, {bearsDown}/{bearsBefore} bears down");
+            Debug.Log($"[SealCatapult] dive test: {broken} blocks broken, {bearsDown}/{bearsBefore} bears down");
             Assert.Greater(broken, 0, "a dive should break at least one ice cube");
         }
 
         /// <summary>Balance sweep: a good bot (times the swing, dives just before the nearest standing bear) plays every
         /// level once; logs escapes, bears down and the result per level and captures each arena. Not an assertion on
         /// balance: it reports, so level tuning has numbers (user 13/11: "chơi các màn để tối ưu").</summary>
-        [UnityTest, Timeout(1800000)]
+        [UnityTest, Timeout(3600000)]   // 18 levels × up to 150 s each: 30 min was too short once the Glacier River came in
         public IEnumerator BotPlaysEveryLevel()
         {
             var report = new System.Text.StringBuilder();
@@ -146,7 +146,7 @@ namespace PufferLaunch.Tests
             {
                 yield return LoadLevel(i);
                 var game = Object.FindFirstObjectByType<GameManager>();
-                var launch = Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>();
+                var launch = Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>();
                 var attack = Object.FindFirstObjectByType<AttackPhase>();
                 float t = 0f, clock = 0f;
                 int dives = 0;
@@ -176,7 +176,7 @@ namespace PufferLaunch.Tests
                 }
                 report.Append($" L{i + 1}:{game.Current} out{launch.Passed} down{attack.BearsDown}/{attack.BearsRequired} dives{dives} {t:0}s |");
             }
-            Debug.Log("[PufferLaunch] sweep:" + report);
+            Debug.Log("[SealCatapult] sweep:" + report);
         }
 
         [UnityTest]
@@ -184,7 +184,7 @@ namespace PufferLaunch.Tests
         {
             yield return LoadLevel(0);
             var game = Object.FindFirstObjectByType<GameManager>();
-            var launch = Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>();
+            var launch = Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>();
             var attack = Object.FindFirstObjectByType<AttackPhase>();
             const float Timeout = 150f;
             float t = 0f;
@@ -220,7 +220,7 @@ namespace PufferLaunch.Tests
                 t += Time.deltaTime;
                 yield return null;
             }
-            Debug.Log($"[PufferLaunch] flow test: {game.Current} after {t:0.0}s, swings {swings}, escaped {launch.Passed}, score {attack.Score}");
+            Debug.Log($"[SealCatapult] flow test: {game.Current} after {t:0.0}s, swings {swings}, escaped {launch.Passed}, score {attack.Score}");
             Assert.That(game.Current == GameManager.State.Won || game.Current == GameManager.State.Lost, "level never finished");
             yield return new WaitForSeconds(1.5f);
             CaptureWithUi("flow_result");
@@ -232,7 +232,7 @@ namespace PufferLaunch.Tests
         public IEnumerator CatapultStillFiresAtFourFps()
         {
             yield return LoadLevel(0);
-            var launch = Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>();
+            var launch = Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>();
             float wait = 0f;
             while (!launch.CanFire && wait < 10f) { wait += Time.deltaTime; yield return null; }
             Time.captureFramerate = 4;   // every frame advances 0.25 s, longer than the 0.24 s sweep
@@ -260,7 +260,7 @@ namespace PufferLaunch.Tests
         public IEnumerator BungeePitBobsAndCanBeHit()
         {
             yield return LoadLevel(4);
-            var launch = Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>();
+            var launch = Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>();
             int hits = 0, misses = 0;
             float minY = float.MaxValue, maxY = float.MinValue, minX = float.MaxValue, maxX = float.MinValue;
             for (int shot = 0; shot < 6 && launch.Waiting > 0; shot++)
@@ -282,7 +282,7 @@ namespace PufferLaunch.Tests
                 while (!launch.CanFire && w2 < 8f && launch.Waiting > 0) { w2 += Time.deltaTime; yield return null; }
                 if (launch.Waiting < before) hits++; else misses++;
             }
-            Debug.Log($"[PufferLaunch] bungee: bob {minY:0.00}..{maxY:0.00}, x {minX:0.00}..{maxX:0.00}, hits {hits}, misses {misses}, escaped {launch.Passed}");
+            Debug.Log($"[SealCatapult] bungee: bob {minY:0.00}..{maxY:0.00}, x {minX:0.00}..{maxX:0.00}, hits {hits}, misses {misses}, escaped {launch.Passed}");
             Assert.Greater(maxY - minY, 0.5f, "the pup bobs up and down");
             Assert.Less(maxX - minX, 0.4f, "it does not swing sideways");
             Assert.Greater(hits, 0, "some shots connect");
@@ -303,7 +303,7 @@ namespace PufferLaunch.Tests
             float wait = 0f;
             while (game.Current != GameManager.State.Attack && wait < 40f)
             {
-                var launch = Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>();
+                var launch = Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>();
                 if (launch != null && launch.CanFire && launch.ApproachingBottom) launch.TryFire();
                 if (game.Current == GameManager.State.Transition) game.ContinueMission();
                 wait += Time.deltaTime;
@@ -323,7 +323,7 @@ namespace PufferLaunch.Tests
             }
             yield return new WaitForSeconds(0.3f);
             Capture("cave_level6");
-            Debug.Log($"[PufferLaunch] cave: pup lowest {lowest - AttackPhase.Origin.y:0.00} from the floor, camera y {Camera.main.transform.position.y - AttackPhase.Origin.y:0.00}");
+            Debug.Log($"[SealCatapult] cave: pup lowest {lowest - AttackPhase.Origin.y:0.00} from the floor, camera y {Camera.main.transform.position.y - AttackPhase.Origin.y:0.00}");
             Assert.Less(lowest, AttackPhase.Origin.y - 1f, "fell through the gap into the cave");
         }
 
@@ -463,7 +463,7 @@ namespace PufferLaunch.Tests
             pup.SecondTap();
             yield return new WaitForSeconds(GameDatabase.Instance.tuning.ninjaHang + 0.05f);
             var v = pup.GetComponent<Rigidbody2D>().linearVelocity;
-            Debug.Log($"[PufferLaunch] ninja kick velocity {v}");
+            Debug.Log($"[SealCatapult] ninja kick velocity {v}");
             Assert.Greater(v.x, 1f, "kicks sideways toward the bear (to the right)");
             Assert.Less(v.y, -1f, "and down");
             bool knocked = false;
@@ -515,10 +515,9 @@ namespace PufferLaunch.Tests
         [UnityTest]
         public IEnumerator BeatingTheBossShowsTheEndingCard()
         {
-            int last = GameDatabase.Instance.levels.Length - 1;
-            yield return StartAttackOnly(last, 3);
+            int bossLevel = System.Array.FindIndex(GameDatabase.Instance.levels, l => l.kind == LevelKind.Boss);
+            yield return StartAttackOnly(bossLevel, 3);
             var game = Object.FindFirstObjectByType<GameManager>();
-            Assert.IsFalse(game.HasNextLevel);
             var boss = Object.FindFirstObjectByType<BossBear>();
             for (int n = 0; boss.Lives > 0 && n < 10; n++) { boss.Hit(); yield return new WaitForSeconds(0.6f); }   // past the per-dive hit cooldown
             Assert.AreEqual(0, boss.Lives);
@@ -526,7 +525,7 @@ namespace PufferLaunch.Tests
             Assert.AreEqual(1f, Time.timeScale, 0.001f, "the last blow's slow motion has ended");
             yield return new WaitForSecondsRealtime(1.6f);   // the card pops in and its stars land
             var texts = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None).Select(t => t.text).ToArray();
-            CollectionAssert.Contains(texts, Loc.T("ending"), "the last level's win card closes the story");
+            CollectionAssert.Contains(texts, Loc.T("ending"), "the boss's win card closes Frost Bay's story");
             CaptureWithUi("result_boss_win");
         }
 
@@ -549,7 +548,7 @@ namespace PufferLaunch.Tests
             yield return new WaitUntil(() => SceneManager.GetActiveScene().handle != before
                                              && SceneManager.GetActiveScene().name == SceneLoader.Game);
             yield return null;
-            Assert.IsNotNull(Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>(), "plain Retry goes back to the launch pit");
+            Assert.IsNotNull(Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>(), "plain Retry goes back to the launch pit");
         }
 
         /// <summary>Boss level: the king's angry steam, then the cage bursting open (captured for review).</summary>
@@ -586,7 +585,7 @@ namespace PufferLaunch.Tests
             SaveSystem.Data.upgrades[(int)UpgradeId.School] = 3;   // more pups to sample with (restored below)
             yield return LoadLevel(9);
             SaveSystem.Data.upgrades[(int)UpgradeId.School] = school;
-            var launch = Object.FindFirstObjectByType<PufferLaunch.Launch.LaunchPhase>();
+            var launch = Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>();
             var results = new System.Collections.Generic.List<string>();
             for (int shot = 0; shot < 16; shot++)
             {
@@ -603,7 +602,7 @@ namespace PufferLaunch.Tests
                 var lv = launch.LastLaunch;
                 results.Add($"x{at.x:0.0}/v{v.x:0.0}->{Mathf.Atan2(lv.y, lv.x) * Mathf.Rad2Deg:0}°@{lv.magnitude:0.0}:{(launch.Passed > before ? "OUT" : "in")}");
             }
-            Debug.Log($"[PufferLaunch] swing shots: {string.Join("  ", results)}");
+            Debug.Log($"[SealCatapult] swing shots: {string.Join("  ", results)}");
             Assert.That(results.Any(r => r.EndsWith("OUT")), "no swing timing escaped the pit");
             Assert.That(results.Any(r => r.EndsWith("in")), "every timing escaped: the gap is too easy");
         }
@@ -699,14 +698,14 @@ namespace PufferLaunch.Tests
             yield return new WaitUntil(() => SceneManager.GetActiveScene().handle != h);
             yield return new WaitForSeconds(1.5f);
             CaptureWithUi("menu_story");
-            var intro = Object.FindFirstObjectByType<PufferLaunch.UI.IntroView>();
+            var intro = Object.FindFirstObjectByType<SealCatapult.UI.IntroView>();
             Assert.IsNotNull(intro, "the story plays on a first run");
             yield return new WaitForSeconds(25f);   // five scenes play through and the story closes itself
             Assert.IsTrue(intro == null, "the story ends on its own");
             Assert.IsTrue(SaveSystem.Data.seenIntro, "a finished story is not shown again");
             SaveSystem.Data.seenIntro = seen;
             CaptureWithUi("menu_main");
-            var info = Object.FindFirstObjectByType<PufferLaunch.UI.InfoView>();
+            var info = Object.FindFirstObjectByType<SealCatapult.UI.InfoView>();
             info.ShowHowTo();
             yield return new WaitForSeconds(0.8f);
             CaptureWithUi("menu_howto");

@@ -1,8 +1,8 @@
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using TMPro;
 using UnityEngine;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>"How to play" and "About" pages opened from the main menu: a full-screen card over the menu.</summary>
     public class InfoView : MonoBehaviour

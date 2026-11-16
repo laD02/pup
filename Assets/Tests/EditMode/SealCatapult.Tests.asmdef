@@ -1,7 +1,7 @@
 {
-    "name": "PufferLaunch.Tests",
+    "name": "SealCatapult.Tests",
     "references": [
-        "PufferLaunch",
+        "SealCatapult",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

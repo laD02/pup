@@ -1,9 +1,9 @@
-# Pup Launch — Tài liệu thiết kế game (GDD)
+# Seal Catapult — Tài liệu thiết kế game (GDD)
 
 > Bản 10 · 12/11/2026 · **đã chốt, đang thực hiện** (người dùng: "từ báo cáo đó thiết kế lại game, redesign lại toàn bộ cx
 > đc, vẽ thì dùng chatgpt nhé phải thật mượt mà" → "làm đi"). Nguồn: `docs/cpc-reference-report.md` (chơi thật 3 lần + 5 video).
 > Bản 9 (11/11) vẫn đúng ở mọi chỗ §R không ghi đè.
-> Tên tiếng Việt tạm: **Hải Cẩu Bay** · Tên mã trong code: `PufferLaunch` · Bản cũ: `docs/archive/GAME_DESIGN_v6_2026-11-11.md`
+> Tên tiếng Việt tạm: **Hải Cẩu Bay** · Tên mã trong code: `SealCatapult` · Bản cũ: `docs/archive/GAME_DESIGN_v6_2026-11-11.md`
 
 Hải cẩu con Pip và bầy bạn giành lại kho cá mùa đông từ bầy gấu bắc cực. Mỗi màn hai pha: **đập đúng nhịp** để hải cẩu
 đang đu dây bay lọt khe thoát của hố băng, rồi **chạm đúng lúc** để từng con lao chéo xuống đấu trường hạ hết gấu.
@@ -118,7 +118,7 @@ Chỉ học **nhịp, bố cục, cách phản hồi** của thể loại.
 ### R7. Bản đồ và menu
 - Vẽ lại bằng ChatGPT: đảo băng nhìn từ trên, đường đá tròn uốn chữ S. Lồng có hải cẩu kêu "CỨU!" ở nút boss. Nút đã
   qua có sao, nút hiện tại có Pip đứng nhún.
-- Menu chính: tranh tiêu đề ChatGPT (logo "Pup Launch" + cảnh hoàng hôn), nút Chơi to, nút phụ nhỏ.
+- Menu chính: tranh tiêu đề ChatGPT (logo "Seal Catapult" + cảnh hoàng hôn), nút Chơi to, nút phụ nhỏ.
 
 ### R7b. Bố cục hố bắn theo tranh (đã làm 12/11)
 Toạ độ đo trên `pit_bg.png` (1536×1024), tranh cao 11 đơn vị, tâm (0, 0.5): tường trái x −7.0, tường phải x 6.0 cao tới
@@ -286,8 +286,15 @@ Luật áp dụng cho mọi màn hình và màn chơi từ nay:
   (`GameManager.TimeDip`). Rung dùng phản hồi chạm của Android (`Haptics.Tap`, không cần quyền, theo cài đặt máy); cũng rung khi bắn "TUYỆT!".
 - **Phần thưởng quảng cáo**: sau khi quảng cáo đóng, game chờ 1 giây cho callback thưởng (trước là 0,3 s: callback chậm thì xem
   xong mà không được hải cẩu).
-- Chưa làm, chờ người dùng: analytics (cần tạo project Firebase và sửa Data safety + chính sách riêng tư), thêm màn sau boss
-  (cần tranh bản đồ trang 2).
+- **Vùng 2 — Sông Băng / Glacier River** (người dùng 16/11: "6 màn vùng 2"): màn 13–18, `zone = 1` (bảng màu ban ngày, đá
+  xám), mở sau khi thắng boss. Dùng lại các vật thể đã có (bumper, TNT, hang, nút + cổng băng, bungee), nhiều gấu hơn và cần
+  hạ nhiều hơn (4–5). Bản đồ có **trang**: trang 1 `map_bg` (màn 1–12), trang 2 `map_bg_2` (tranh ChatGPT
+  `Assets/Art/Reference/map_glacier.png`); nút mũi tên vàng ở mép trái/phải đổi trang, Back lùi trang rồi mới về menu, bản đồ
+  mở ở trang có màn đang chơi. Thắng boss: thẻ ghi "Vịnh Băng Giá đã được giải cứu! Tiếp tục tới Sông Băng" và Tiếp tục
+  sang màn 13. Thẻ kết thúc và luật sao "hạ trùm" gắn với **màn boss** (`LevelKind.Boss`), không phải màn cuối.
+- **Tên game** (người dùng 16/11: "trên ggdich là phóng cún con mà", "làm SEO thật tốt nhé"): thương hiệu tiếng Anh đổi
+  từ "Pup Launch" thành **Seal Catapult** (`docs/ASO.md` §3b); tiếng Việt giữ "Hải Cẩu Bay". Package `com.sealcatapult.game`,
+  namespace `SealCatapult`.
 
 ## Mục lục
 
@@ -685,6 +692,20 @@ crash). Đếm "4 màn thắng" và "180 giây" theo phiên chơi (mở lại ga
   cho EDM ở `Assets/Scripts/Review/Editor/PlayReviewDependencies.xml`), không dùng plugin Unity của Google vì plugin đó
   kéo EDM bản `com.google.*` trùng với bản `com.unity.*` mà plugin AdMob dùng.
 
+## 13d. Thống kê lượt chơi (Firebase Analytics, người dùng 16/11/2026: "Có, làm đi")
+
+- Mục đích: biết người chơi rớt ở màn nào để cân độ khó (phễu màn). Chỉ 2 sự kiện: `level_start` (`level_name`,
+  `attack_only`) và `level_end` (`level_name`, `success`, `stars`, `pups_out`); Firebase tự thêm phiên, máy, quốc gia.
+- Project Firebase: **My First Project** (`project-351eae45-2c8e-4ca0-8de`, chung với One Line Fill vì tài khoản hết hạn
+  mức project), app Android riêng của game. Không dùng Firebase Unity SDK: thư viện `firebase-analytics` qua EDM
+  (`Assets/Scripts/Analytics/Editor/FirebaseDependencies.xml`), id app trong
+  `Assets/Plugins/Android/FirebaseConfig.androidlib/res/values/firebase.xml` (thay cho plugin google-services), gọi qua
+  JNI ở `GameAnalytics` như In-App Review.
+- **Đồng ý trước**: manifest tắt thu thập từ đầu (`firebase_analytics_collection_enabled=false`), tắt Advertising ID và
+  tín hiệu cá nhân hóa quảng cáo. Bật khi consent quảng cáo cho phép (`AdMob.StartSdk`), tắt khi người chơi rút đồng ý ở
+  Cài đặt → Quyền riêng tư. Không có consent thì không có số liệu (chấp nhận).
+- Editor và test: không gửi gì (`#if UNITY_ANDROID && !UNITY_EDITOR`).
+
 ## 14. Kế hoạch sản xuất
 
 Làm theo vai như một đội: **Thiết kế** (tài liệu này, số liệu màn), **Nghệ thuật** (sheet ChatGPT + SVG), **Lập trình**,
@@ -724,5 +745,5 @@ bật/tắt, EN/VI, tắt app mở lại giữ tiến trình, xoay hai chiều n
 3. **Hoàn hảo:** huy hiệu trên bản đồ, không thêm sao. Tổng sao vùng 1 = 36 (12 màn × 3).
 4. **Boss:** cuối vùng 1 (màn 12), màn thưởng là màn 11.
 5. **Tiền tệ:** chỉ sao.
-6. **Tên:** giữ "Pup Launch / Hải Cẩu Bay".
+6. **Tên:** giữ "Seal Catapult / Hải Cẩu Bay".
 7. Chế độ chiến thuật: không làm. Vùng 2–3: bảng màu (nền + đá) đã có (`LevelData.zone` 0–2, tint trong `AttackPhase.Palettes`); màn mẫu của vùng 2–3 để sau khi vùng 1 qua QA.

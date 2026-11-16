@@ -6,7 +6,7 @@ Each painting in Assets/Art/Reference/ is 1536x1024. The pit is a fixed screen a
 right half sky + ledge + wall), faded into its edges. Repeating the painting's own edge strip was tried and looked
 like woven cloth; mirroring turned cobbles into hearts.
 
-Run: python3 -I Tools/prep_backgrounds.py   (then Puffer Launch -> 2. Build Project)
+Run: python3 -I Tools/prep_backgrounds.py   (then Seal Catapult -> 2. Build Project)
 """
 from pathlib import Path
 
@@ -19,7 +19,7 @@ OUT = ROOT / "Assets" / "Resources" / "Art"
 
 # output sprite -> painting it comes from (Tools/make_art.py leaves these alone once the painting exists)
 PAINTINGS = {"bg_pit": "pit_bg_wide3.png", "bg_arena_sky": "arena_sky.png",
-             "map_bg": "map_island.png", "bg_menu": "menu_bay.png",
+             "map_bg": "map_island.png", "map_bg_2": "map_glacier.png", "bg_menu": "menu_bay.png",
              **{f"story_{i}": f"story_{i}.png" for i in range(1, 6)},
              "rock_cobble": "pit_side_walls_box.png", "rock_top": "pit_side_walls_box.png",
              "rock_ramp": "pit_side_walls_box.png"}
@@ -128,6 +128,7 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     build_pit()
     crop_16_9("map_bg", PAINTINGS["map_bg"])
+    crop_16_9("map_bg_2", PAINTINGS["map_bg_2"])   # Glacier River, levels 13–18 (ChatGPT, 16/11)
     crop_16_9("bg_menu", PAINTINGS["bg_menu"])
     for i in range(1, 6):
         crop_16_9(f"story_{i}", PAINTINGS[f"story_{i}"])

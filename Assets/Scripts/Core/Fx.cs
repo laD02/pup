@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>
     /// Lightweight sprite particles (snow puffs, snowfall, ice shards, powder) and floating score text.
@@ -153,7 +153,7 @@ namespace PufferLaunch.Core
             {
                 font = Resources.Load<TMP_FontAsset>("Fonts/Baloo2 SDF");
                 outline = Resources.Load<Material>("Fonts/Baloo2 SDF Outline");
-                if (font == null) Debug.LogError("[PufferLaunch] Missing Resources/Fonts/Baloo2 SDF: floating text falls back to TMP's default font (no Vietnamese glyphs).");
+                if (font == null) Debug.LogError("[SealCatapult] Missing Resources/Fonts/Baloo2 SDF: floating text falls back to TMP's default font (no Vietnamese glyphs).");
             }
             if (font != null) tmp.font = font;
             tmp.text = text;

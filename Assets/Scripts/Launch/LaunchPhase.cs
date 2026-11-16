@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using UnityEngine;
 
-namespace PufferLaunch.Launch
+namespace SealCatapult.Launch
 {
     /// <summary>
     /// Phase 1 (landscape, fixed screen): the ice pit, one ChatGPT painting (bg_pit) with invisible colliders laid

@@ -1,9 +1,9 @@
 using UnityEngine;
 
-namespace PufferLaunch.Progress
+namespace SealCatapult.Progress
 {
     /// <summary>Every "feel" number lives here so play-testing changes data, not code.</summary>
-    [CreateAssetMenu(menuName = "Puffer Launch/Tuning", fileName = "Tuning")]
+    [CreateAssetMenu(menuName = "Seal Catapult/Tuning", fileName = "Tuning")]
     public class GameTuning : ScriptableObject
     {
         [Header("Physics")]

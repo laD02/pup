@@ -1,9 +1,9 @@
-using PufferLaunch.Core;
-using PufferLaunch.Launch;
+using SealCatapult.Core;
+using SealCatapult.Launch;
 using TMPro;
 using UnityEngine;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>
     /// Main menu (landscape), laid out like the reference's title (report §15): the logo across the top, a big Play in

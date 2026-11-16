@@ -1,8 +1,8 @@
 using System.Collections;
-using PufferLaunch.Core;
+using SealCatapult.Core;
 using UnityEngine;
 
-namespace PufferLaunch.Launch
+namespace SealCatapult.Launch
 {
     /// <summary>
     /// A rope hanging from the beam, simulated as a damped pendulum. Idle it sways on its own; a pup can grab

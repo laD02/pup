@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>Music + pooled SFX. Lives across scenes; volumes come from the save file.</summary>
     public class AudioManager : MonoBehaviour
@@ -86,7 +86,7 @@ namespace PufferLaunch.Core
             if (!clips.TryGetValue(name, out var clip))
             {
                 clip = Resources.Load<AudioClip>("Audio/" + name);
-                if (clip == null) Debug.LogWarning($"[PufferLaunch] Missing audio clip Resources/Audio/{name}");
+                if (clip == null) Debug.LogWarning($"[SealCatapult] Missing audio clip Resources/Audio/{name}");
                 clips[name] = clip;
             }
             return clip;

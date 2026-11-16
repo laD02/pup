@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using UnityEngine;
 
-namespace PufferLaunch.Attack
+namespace SealCatapult.Attack
 {
     /// <summary>
     /// The boss bear, as in the reference (report §10.6): the size of any other bear, steaming with anger on a perch,

@@ -2,12 +2,12 @@ using System;
 using System.IO;
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     [Serializable]
     public class SaveData
     {
-        public const int LevelCount = 12;    // 10 levels + bonus + boss
+        public const int LevelCount = 18;    // Frost Bay: 10 levels + bonus + boss; Glacier River: 6 levels (old saves grow in Normalize)
         public const int UpgradeCount = 5;
 
         public int version = 1;
@@ -129,7 +129,7 @@ namespace PufferLaunch.Core
             catch (Exception e)
             {
                 // Keep the broken file for inspection instead of silently overwriting it.
-                Debug.LogWarning($"[PufferLaunch] Save file unreadable ({path}). {e.Message}");
+                Debug.LogWarning($"[SealCatapult] Save file unreadable ({path}). {e.Message}");
                 TryCopy(path, $"{path}.{DateTime.UtcNow:yyyyMMddHHmmss}.corrupt");
                 return null;
             }
@@ -164,7 +164,7 @@ namespace PufferLaunch.Core
             }
             catch (Exception e)
             {
-                Debug.LogError($"[PufferLaunch] Could not write save file at {path}: {e.Message}");
+                Debug.LogError($"[SealCatapult] Could not write save file at {path}: {e.Message}");
                 return false;
             }
         }
@@ -172,7 +172,7 @@ namespace PufferLaunch.Core
         static void TryCopy(string from, string to)
         {
             try { File.Copy(from, to, true); }
-            catch (Exception e) { Debug.LogWarning($"[PufferLaunch] Could not back up corrupt save: {e.Message}"); }
+            catch (Exception e) { Debug.LogWarning($"[SealCatapult] Could not back up corrupt save: {e.Message}"); }
         }
     }
 }

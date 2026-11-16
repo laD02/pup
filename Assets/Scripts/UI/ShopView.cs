@@ -1,10 +1,10 @@
 using System;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using TMPro;
 using UnityEngine;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>Upgrade shop: four cards with current level, effect, price and a Buy button.</summary>
     public class ShopView : MonoBehaviour

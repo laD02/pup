@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PufferLaunch.Core
+namespace SealCatapult.Core
 {
     /// <summary>
     /// The hero: a harp seal pup drawn frame by frame (Resources/Art/pup_&lt;anim&gt;_&lt;i&gt;, cut from the ChatGPT

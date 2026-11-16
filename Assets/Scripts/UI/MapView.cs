@@ -1,9 +1,9 @@
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using TMPro;
 using UnityEngine;
 
-namespace PufferLaunch.UI
+namespace SealCatapult.UI
 {
     /// <summary>
     /// Level map (landscape), laid out like the reference (report §15): the top-down island, 10 levels in an S — 1–6
@@ -14,13 +14,27 @@ namespace PufferLaunch.UI
     public class MapView : MonoBehaviour
     {
         // Node positions on the 1920×1080 reference canvas (centre origin); keep in step with map_bg in Tools/make_art.py.
-        static readonly Vector2[] Nodes =
+        // One page per area: its painting and the node positions on it, in level order.
+        static readonly (string painting, Vector2[] nodes)[] Pages =
         {
-            // Rows sit inside ±260 so the bottom caption/Upgrades and the top bars stay clear on 20:9 phones (canvas height ≈ 1000).
-            new Vector2(-760, -250), new Vector2(-540, -290), new Vector2(-320, -250), new Vector2(-100, -290), new Vector2(120, -250),
-            new Vector2(340, -280), new Vector2(560, -240), new Vector2(760, -120), new Vector2(700, 110), new Vector2(460, 170),
-            new Vector2(200, 130), new Vector2(-120, 180),
+            // Frost Bay (map_bg), levels 1–12. Rows sit inside ±260 so the bottom caption/Upgrades and the top bars stay
+            // clear on 20:9 phones (canvas height ≈ 1000).
+            ("map_bg", new[]
+            {
+                new Vector2(-760, -250), new Vector2(-540, -290), new Vector2(-320, -250), new Vector2(-100, -290), new Vector2(120, -250),
+                new Vector2(340, -280), new Vector2(560, -240), new Vector2(760, -120), new Vector2(700, 110), new Vector2(460, 170),
+                new Vector2(200, 130), new Vector2(-120, 180),
+            }),
+            // Glacier River (map_bg_2), levels 13–18: along the open snow field below the river and the bear castle.
+            ("map_bg_2", new[]
+            {
+                new Vector2(-700, -200), new Vector2(-420, -290), new Vector2(-140, -200), new Vector2(140, -290), new Vector2(420, -200),
+                new Vector2(680, -110),
+            }),
         };
+
+        int page;
+        Canvas canvas;
 
 
         TextMeshProUGUI starsLabel, spendLabel;
@@ -33,21 +47,66 @@ namespace PufferLaunch.UI
             // map_bg covers the whole screen: no backdrop under it, and a still screen idles at half the frame rate.
             MenuScene.Setup(backdrop: false);
             Application.targetFrameRate = BootView.StillFps;
+            page = PageOf(CurrentLevel(SaveSystem.Data));
             Build();
         }
 
-        /// <summary>Android Back: the shop first, then back to the main menu.</summary>
+        /// <summary>The next level to play: the first one open and not yet won (the last level when all are won).</summary>
+        static int CurrentLevel(SaveData data)
+        {
+            int count = GameDatabase.Instance.levels.Length;
+            for (int i = 0; i < count; i++)
+                if (Unlocked(i, data) && data.stars[i] == 0) return i;
+            return count - 1;
+        }
+
+        static int PageOf(int level)
+        {
+            int first = 0;
+            for (int p = 0; p < Pages.Length; p++)
+            {
+                if (level < first + Pages[p].nodes.Length) return p;
+                first += Pages[p].nodes.Length;
+            }
+            return Pages.Length - 1;
+        }
+
+        static int FirstLevelOf(int page)
+        {
+            int first = 0;
+            for (int p = 0; p < page; p++) first += Pages[p].nodes.Length;
+            return first;
+        }
+
+        /// <summary>Normal levels open one after another; the bonus and the boss both open once level 10 is done.</summary>
+        static bool Unlocked(int index, SaveData data)
+        {
+            var kind = GameDatabase.Instance.levels[index].kind;
+            int gate = kind == LevelKind.Normal ? index - 1 : 9;
+            return index == 0 || data.stars[gate] > 0;
+        }
+
+        void ShowPage(int p)
+        {
+            page = p;
+            Destroy(canvas.gameObject);   // the shop has its own canvas and is kept
+            Build();
+        }
+
+        /// <summary>Android Back: the shop first, then the previous map page, then the main menu.</summary>
         void Update()
         {
             if (!GameInput.BackPressed() || ScreenFader.LoadPending) return;
-            if (!shop.HandleBack()) SceneLoader.Load(SceneLoader.MainMenu);
+            if (shop.HandleBack()) return;
+            if (page > 0) ShowPage(page - 1);   // Back walks the pages back, then leaves for the menu
+            else SceneLoader.Load(SceneLoader.MainMenu);
         }
 
         void Build()
         {
-            var canvas = UiKit.CreateCanvas("Map");
+            canvas = UiKit.CreateCanvas("Map");
             // Top-down island fills the screen (cropped to cover any aspect).
-            var map = UiKit.Image(canvas.transform, "map_bg", UiKit.Center, Vector2.zero, new Vector2(1920, 1080));
+            var map = UiKit.Image(canvas.transform, Pages[page].painting, UiKit.Center, Vector2.zero, new Vector2(1920, 1080));
             map.preserveAspect = false;
             var fitter = map.gameObject.AddComponent<UnityEngine.UI.AspectRatioFitter>();
             fitter.aspectMode = UnityEngine.UI.AspectRatioFitter.AspectMode.EnvelopeParent;
@@ -80,15 +139,27 @@ namespace PufferLaunch.UI
             spendPulse = badge.gameObject.AddComponent<Bob>();
             spendPulse.pulse = true;
             spendPulse.speed = 5f;
-            shop = ShopView.Create(RefreshStars);
+            if (shop == null) shop = ShopView.Create(RefreshStars);
             RefreshStars();
+            // Page arrows on the side edges, vertically centred: next area / previous area.
+            if (page + 1 < Pages.Length)
+                UiKit.Button(root, null, ButtonStyle.Gold, new Vector2(1f, 0.5f), new Vector2(-24, 0), new Vector2(110, 110),
+                    () => ShowPage(page + 1), "glyph_next");
+            if (page > 0)
+            {
+                var prev = UiKit.Button(root, null, ButtonStyle.Gold, new Vector2(0f, 0.5f), new Vector2(24, 0), new Vector2(110, 110),
+                    () => ShowPage(page - 1), "glyph_next");
+                prev.transform.Find("Glyph").localScale = new Vector3(-1f, 1f, 1f);   // the same arrow, pointing left
+            }
 
             var data = SaveSystem.Data;
-            int count = Mathf.Min(GameDatabase.Instance.levels.Length, Nodes.Length);
+            var nodes = Pages[page].nodes;
+            int first = FirstLevelOf(page);
+            int count = Mathf.Clamp(GameDatabase.Instance.levels.Length - first, 0, nodes.Length);
             // Nodes sit on the painted trail, so they share the painting's frame (the full canvas), not the safe area.
             var trail = UiKit.Stretch(UiKit.Node(canvas.transform, "Trail"));
-            for (int i = 0; i < count - 1; i++) DrawDots(trail, Nodes[i], Nodes[i + 1]);
-            for (int i = 0; i < count; i++) BuildNode(trail, i, data);
+            for (int i = 0; i < count - 1; i++) DrawDots(trail, nodes[i], nodes[i + 1]);
+            for (int i = 0; i < count; i++) BuildNode(trail, first + i, nodes[i], data);
         }
 
         void RefreshStars()
@@ -116,16 +187,12 @@ namespace PufferLaunch.UI
             }
         }
 
-        static void BuildNode(Transform root, int index, SaveData data)
+        static void BuildNode(Transform root, int index, Vector2 pos, SaveData data)
         {
-            var levels = GameDatabase.Instance.levels;
-            var kind = levels[index].kind;
-            // Normal levels open one after another; the bonus and the boss both open once level 10 is done.
-            int gate = kind == LevelKind.Normal ? index - 1 : 9;
-            bool unlocked = index == 0 || data.stars[gate] > 0;
+            var kind = GameDatabase.Instance.levels[index].kind;
+            bool unlocked = Unlocked(index, data);
             int stars = data.stars[index];
             bool current = unlocked && stars == 0;
-            var pos = Nodes[index];
             // "You are here": the green pad under the stone, the hero standing on it.
             if (current) UiKit.Image(root, "node_glow", UiKit.Center, pos + new Vector2(0, -10), new Vector2(230, 150));
             var button = UiKit.ImageButton(root, stars > 0 ? "node_star" : "node_stone", UiKit.Center, pos, new Vector2(150, 150),

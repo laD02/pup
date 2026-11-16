@@ -1,10 +1,10 @@
 using System.IO;
 using NUnit.Framework;
-using PufferLaunch.Core;
-using PufferLaunch.Progress;
+using SealCatapult.Core;
+using SealCatapult.Progress;
 using UnityEngine;
 
-namespace PufferLaunch.Tests
+namespace SealCatapult.Tests
 {
     public class StarRatingTests
     {
@@ -238,12 +238,12 @@ namespace PufferLaunch.Tests
         public void AsksOnlyOnAWinFromLevelThreeUntilPlayAccepted()
         {
             var d = new SaveData();
-            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 1, true), "level 2 is too early");
-            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 2, false), "never on a loss");
-            Assert.IsTrue(PufferLaunch.Review.InAppReview.ShouldAsk(d, 2, true));
-            Assert.IsTrue(PufferLaunch.Review.InAppReview.ShouldAsk(d, 9, true), "a failed ask retries on a later win");
+            Assert.IsFalse(SealCatapult.Review.InAppReview.ShouldAsk(d, 1, true), "level 2 is too early");
+            Assert.IsFalse(SealCatapult.Review.InAppReview.ShouldAsk(d, 2, false), "never on a loss");
+            Assert.IsTrue(SealCatapult.Review.InAppReview.ShouldAsk(d, 2, true));
+            Assert.IsTrue(SealCatapult.Review.InAppReview.ShouldAsk(d, 9, true), "a failed ask retries on a later win");
             d.reviewAsked = true;
-            Assert.IsFalse(PufferLaunch.Review.InAppReview.ShouldAsk(d, 9, true), "asked once");
+            Assert.IsFalse(SealCatapult.Review.InAppReview.ShouldAsk(d, 9, true), "asked once");
         }
     }
 
@@ -285,8 +285,8 @@ namespace PufferLaunch.Tests
         [Test]
         public void SteepExitEntersHighAndSlowFlatExitLowAndFast()
         {
-            var (steepAt, steepV) = PufferLaunch.Attack.AttackPhase.Entry(new Vector2(3f, 9f));
-            var (flatAt, flatV) = PufferLaunch.Attack.AttackPhase.Entry(new Vector2(10f, 3f));
+            var (steepAt, steepV) = SealCatapult.Attack.AttackPhase.Entry(new Vector2(3f, 9f));
+            var (flatAt, flatV) = SealCatapult.Attack.AttackPhase.Entry(new Vector2(10f, 3f));
             Assert.Greater(steepAt.y, flatAt.y);
             Assert.Greater(flatV.x, steepV.x);
             Assert.AreEqual(0f, steepV.y);
@@ -295,19 +295,19 @@ namespace PufferLaunch.Tests
         [Test]
         public void BackwardExitUsesTheDefaultEntryAndSpeedsAreClamped()
         {
-            var (at, v) = PufferLaunch.Attack.AttackPhase.Entry(new Vector2(-1f, 5f));
-            Assert.AreEqual(PufferLaunch.Attack.AttackPhase.SpawnPoint, at);
-            Assert.AreEqual(PufferLaunch.Attack.AttackPhase.SpawnVelocity, v);
-            Assert.AreEqual(6.2f, PufferLaunch.Attack.AttackPhase.Entry(new Vector2(40f, 1f)).velocity.x, 1e-4f);
-            Assert.AreEqual(3.2f, PufferLaunch.Attack.AttackPhase.Entry(new Vector2(0.5f, 9f)).velocity.x, 1e-4f);
+            var (at, v) = SealCatapult.Attack.AttackPhase.Entry(new Vector2(-1f, 5f));
+            Assert.AreEqual(SealCatapult.Attack.AttackPhase.SpawnPoint, at);
+            Assert.AreEqual(SealCatapult.Attack.AttackPhase.SpawnVelocity, v);
+            Assert.AreEqual(6.2f, SealCatapult.Attack.AttackPhase.Entry(new Vector2(40f, 1f)).velocity.x, 1e-4f);
+            Assert.AreEqual(3.2f, SealCatapult.Attack.AttackPhase.Entry(new Vector2(0.5f, 9f)).velocity.x, 1e-4f);
         }
 
         [Test]
         public void NoExitUsesTheDefaultEntry()
         {
-            var (at, v) = PufferLaunch.Attack.AttackPhase.Entry(null);
-            Assert.AreEqual(PufferLaunch.Attack.AttackPhase.SpawnPoint, at);
-            Assert.AreEqual(PufferLaunch.Attack.AttackPhase.SpawnVelocity, v);
+            var (at, v) = SealCatapult.Attack.AttackPhase.Entry(null);
+            Assert.AreEqual(SealCatapult.Attack.AttackPhase.SpawnPoint, at);
+            Assert.AreEqual(SealCatapult.Attack.AttackPhase.SpawnVelocity, v);
         }
     }
 
@@ -320,11 +320,11 @@ namespace PufferLaunch.Tests
             try
             {
                 control.sizeDelta = new Vector2(96, 60);
-                PufferLaunch.UI.UiKit.PadHitArea(control);
+                SealCatapult.UI.UiKit.PadHitArea(control);
                 var hit = (RectTransform)control.Find("Hit");
                 Assert.IsNotNull(hit);
-                Assert.GreaterOrEqual(hit.sizeDelta.x, PufferLaunch.UI.UiKit.MinHit);
-                Assert.GreaterOrEqual(hit.sizeDelta.y, PufferLaunch.UI.UiKit.MinHit);
+                Assert.GreaterOrEqual(hit.sizeDelta.x, SealCatapult.UI.UiKit.MinHit);
+                Assert.GreaterOrEqual(hit.sizeDelta.y, SealCatapult.UI.UiKit.MinHit);
                 Assert.AreEqual(new Vector2(96, 60), control.sizeDelta, "the visible control keeps its size");
             }
             finally

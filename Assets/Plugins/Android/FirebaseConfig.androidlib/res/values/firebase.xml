@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the google-services Gradle plugin would generate from google-services.json (Firebase project
+     project-351eae45-2c8e-4ca0-8de, Android app com.sealcatapult.game). Public client ids, like the AdMob ids. -->
+<resources>
+  <string name="google_app_id" translatable="false">1:491423611950:android:7e0643168b027bb2eeb3bf</string>
+  <string name="google_api_key" translatable="false">AIzaSyAk6Dv331tQub9F2uwkxpzFjEnDJDMs-Mk</string>
+  <string name="gcm_defaultSenderId" translatable="false">491423611950</string>
+  <string name="project_id" translatable="false">project-351eae45-2c8e-4ca0-8de</string>
+</resources>
