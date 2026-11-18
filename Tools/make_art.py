@@ -1147,6 +1147,19 @@ def spark():
     return svg(32, 32, '<path d="M16,2 L19,13 L30,16 L19,19 L16,30 L13,19 L2,16 L13,13 Z" fill="#fff6c4"/>')
 
 
+def petal():
+    """A cherry-blossom petal for the map's weather (MapWeather): white-pink with a dark rose outline, so it reads on the
+    pink map."""
+    return svg(48, 48, '<path d="M24,4 C40,10 44,30 24,44 C4,30 8,10 24,4 Z" fill="#ffe3ee" stroke="#c2337a" stroke-width="3" stroke-linejoin="round"/>'
+               '<path d="M24,12 L24,36" stroke="#f28ab8" stroke-width="2" stroke-linecap="round"/>')
+
+
+def leaf():
+    """An autumn leaf for the map's weather: red-brown with a dark outline, so it reads on the amber map."""
+    return svg(48, 48, '<path d="M6,42 C4,20 20,4 44,6 C44,28 28,44 6,42 Z" fill="#c8451a" stroke="#5a1c08" stroke-width="3" stroke-linejoin="round"/>'
+               '<path d="M8,40 L38,12" stroke="#5a1c08" stroke-width="2" stroke-linecap="round"/>')
+
+
 # ---------------------------------------------------------------- UI
 
 def star(filled):
@@ -1310,6 +1323,8 @@ ASSETS = {
     "powder": powder(),
     "ice_shard": ice_shard(),
     "spark": spark(),
+    "petal": petal(),
+    "leaf": leaf(),
     "star_full": star(True),
     "star_empty": star(False),
     "gem": gem(),

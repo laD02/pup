@@ -14,6 +14,9 @@ namespace SealCatapult.Launch
     public class SwingRope : MonoBehaviour
     {
         const float Gravity = 9.81f;
+        // User 16/11 "cho nhảy, lắc lư và nhún nhanh hơn": the swing runs on a faster clock (period 2.87 s → 2.2 s). Omega
+        // and Velocity stay in the old clock's units, so the launch a whack gives is unchanged.
+        const float Tempo = 1.3f;
         public const float IdleLength = 1.9f;   // fits the painted pit: the swing bottom sits right over the catapult cup
         const float IdleDamping = 0.8f;
         const float IdleDrive = 0.35f;     // gentle push at the natural frequency keeps a ~10° sway
@@ -30,7 +33,6 @@ namespace SealCatapult.Launch
         float length = IdleLength;
         bool carrying;
         Transform rider;
-        float spriteHeight;
         float spriteWidth;
         float carrySwing = CarrySwingMin;
         bool bungee;
@@ -39,7 +41,7 @@ namespace SealCatapult.Launch
 
         // The bob's lowest point is the swing bottom (IdleLength), where the catapult is aimed; it rises 2·amplitude.
         const float BobAmplitudeMin = 0.4f, BobAmplitudeMax = 0.75f;   // world units
-        const float BobSpeedMin = 2.6f, BobSpeedMax = 3.8f;            // radians per second
+        const float BobSpeedMin = 3.4f, BobSpeedMax = 4.9f;            // radians per second
         const float SweetWindow = 4f;                  // degrees either side of the swing bottom (8 let 6 of 16 timings out, user wants the gap hard)
         const float SweetStretch = 0.12f;              // bungee: within this of full stretch
 
@@ -53,12 +55,19 @@ namespace SealCatapult.Launch
 
         public static SwingRope Create(Vector2 anchor, Transform parent)
         {
-            var sr = Art.Spawn("rope", parent, anchor, 1f, 6);
-            sr.name = "Rope";
-            var r = sr.gameObject.AddComponent<SwingRope>();
+            var go = new GameObject("Rope");
+            go.transform.SetParent(parent, false);
+            var r = go.AddComponent<SwingRope>();
             r.anchor = anchor;
-            r.spriteHeight = sr.sprite.bounds.size.y;
-            r.spriteWidth = sr.sprite.bounds.size.x;
+            // CPC (live, 17/11): the rope bows as it swings, so it is drawn as a few tiled pieces along a curve.
+            r.segments = new SpriteRenderer[Segments];
+            for (int i = 0; i < Segments; i++)
+            {
+                var sr = Art.Spawn("rope", go.transform, anchor, RopeWidth, 6);
+                sr.drawMode = SpriteDrawMode.Tiled;   // uniform scale from Spawn keeps the twist at its old density
+                r.segments[i] = sr;
+            }
+            r.spriteWidth = r.segments[0].sprite != null ? r.segments[0].sprite.bounds.size.x : RopeWidth;
             r.angle = 0.15f;
             r.Draw();
             return r;
@@ -97,14 +106,14 @@ namespace SealCatapult.Launch
                 float energy = 0.5f * omega * omega + g * (1f - Mathf.Cos(angle));
                 float target = g * (1f - Mathf.Cos(carrySwing));
                 float pump = Mathf.Clamp((target - energy) * 1.5f, -3f, 3f) * (omega >= 0f ? 1f : -1f);
-                Step(Time.deltaTime, 0.05f, pump);
+                Step(Time.deltaTime * Tempo, 0.05f, pump);
                 length = Mathf.MoveTowards(length, IdleLength, 1.5f * Time.deltaTime);
                 Hang(rider);
             }
             else if (!carrying)
             {
                 float w0 = Mathf.Sqrt(Gravity / length);
-                Step(Time.deltaTime, IdleDamping, IdleDrive * Mathf.Sin(Time.time * w0));
+                Step(Time.deltaTime * Tempo, IdleDamping, IdleDrive * Mathf.Sin(Time.time * Tempo * w0));
                 length = Mathf.MoveTowards(length, IdleLength, 1.5f * Time.deltaTime);
             }
             Draw();
@@ -123,13 +132,35 @@ namespace SealCatapult.Launch
             }
         }
 
+        /// <summary>Quadratic curve from the anchor to the rope end. The middle trails the swing (it lags behind the
+        /// weighted end), so the rope bows most where the swing is fastest and straightens at the turn-arounds.</summary>
         void Draw()
         {
-            Vector2 down = new Vector2(Mathf.Sin(angle), -Mathf.Cos(angle));
-            transform.position = anchor + down * (length * 0.5f);
-            transform.rotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg);
-            transform.localScale = new Vector3(RopeWidth / spriteWidth, length / spriteHeight, 1f);
+            if (segments == null) return;
+            Vector2 end = End;
+            Vector2 side = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));   // the direction the end moves for omega > 0
+            float bow = rider != null && !bungee ? Mathf.Clamp(-omega * BowPerOmega, -MaxBow, MaxBow) * length : 0f;
+            Vector2 control = (anchor + end) * 0.5f + side * bow;
+            float k = RopeWidth / spriteWidth;
+            Vector2 a = anchor;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                float t = (i + 1f) / segments.Length;
+                Vector2 b = (1 - t) * (1 - t) * anchor + 2 * (1 - t) * t * control + t * t * end;
+                Vector2 d = b - a;
+                var tr = segments[i].transform;
+                tr.position = (a + b) * 0.5f;
+                tr.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(d.x, -d.y) * Mathf.Rad2Deg);
+                segments[i].size = new Vector2(spriteWidth, (d.magnitude + SegmentOverlap) / k);   // local units, before the uniform scale
+                a = b;
+            }
         }
+
+        const int Segments = 6;
+        const float BowPerOmega = 0.06f;   // rope-length fraction of bow per rad/s of swing
+        const float MaxBow = 0.16f;
+        const float SegmentOverlap = 0.03f;   // hides the seams between pieces
+        SpriteRenderer[] segments;
 
         /// <summary>The rope swings over to the ledge while the pup leaps up and catches the end.</summary>
         public IEnumerator Grab(Transform pup, Vector2 grabPoint)
@@ -167,7 +198,7 @@ namespace SealCatapult.Launch
             const float Timeout = 3f;
             for (float t = 0f; t < Timeout; t += Time.deltaTime)
             {
-                Step(Time.deltaTime, CarryDamping, 0f);
+                Step(Time.deltaTime * Tempo, CarryDamping, 0f);
                 float progress = Mathf.InverseLerp(startAngle, releaseAngle, angle);
                 length = Mathf.Lerp(startLength, seatLength, Mathf.SmoothStep(0f, 1f, progress));
                 Draw();
@@ -193,6 +224,21 @@ namespace SealCatapult.Launch
             lengthSpeed = 0f;
         }
 
+        /// <summary>Where the rider is in its loop, 0..1, for rope-driven frames: on a swing 0..0.5 going left to right and
+        /// 0.5..1 coming back; on the bungee 0..0.5 sinking and 0.5..1 rising.</summary>
+        public float Phase
+        {
+            get
+            {
+                if (bungee) return Mathf.Repeat((bobPhase + Mathf.PI * 0.5f) / (Mathf.PI * 2f), 1f);
+                float t = Mathf.Clamp01((angle / Mathf.Max(carrySwing, 0.01f) + 1f) * 0.5f);
+                return omega >= 0f ? t * 0.5f : 0.5f + (1f - t) * 0.5f;
+            }
+        }
+
+        /// <summary>Rope angle over the swing's reach, −1 .. 1 (0 = hanging straight down).</summary>
+        public float Lean => bungee ? 0f : Mathf.Clamp(angle / Mathf.Max(carrySwing, 0.01f), -1f, 1f);
+
         /// <summary>Rope angle from straight down, radians (0 = the bottom of the swing).</summary>
         public float Angle => angle;
 
@@ -207,10 +253,15 @@ namespace SealCatapult.Launch
 
         void Hang(Transform pup)
         {
-            Vector2 down = new Vector2(Mathf.Sin(angle), -Mathf.Cos(angle));
+            // CPC (live, 16/11): the body whips further out than the rope and lies nearly flat at the ends of the swing.
+            // The hands stay on the rope end; only the body swings wider, capped just past horizontal.
+            float body = Mathf.Clamp(angle * (PupRig.SwingIsDrawn ? 1f : BodyWhip), -MaxBodyTilt, MaxBodyTilt);   // drawn swing frames lean on their own
+            Vector2 down = new Vector2(Mathf.Sin(body), -Mathf.Cos(body));
             pup.position = End + down * HangOffset;
-            // Tilted with the rope, trailing the swing a little.
-            pup.rotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg);  // hands on the rope: the body hangs straight down it
+            pup.rotation = Quaternion.Euler(0, 0, body * Mathf.Rad2Deg);
         }
+
+        const float BodyWhip = 1.5f;                       // body angle per rope angle
+        const float MaxBodyTilt = 95f * Mathf.Deg2Rad;
     }
 }

@@ -17,16 +17,20 @@ namespace SealCatapult.Launch
     /// </summary>
     public class WhackerMachine : MonoBehaviour
     {
-        // Measured on the cut art: base hub at (392, 75) of 771x461 px; arm pivot hole at (52, 100) and cup at
+        // Measured on the cut art: base hub at (380, 62) of 729x426 px (the 16/11 cart with a standing deck at (140, 220)); arm pivot hole at (52, 100) and cup at
         // (630, 75) of 726x156 px, so the arm is drawn ArmWidth wide to make hole → cup = Reach.
         const float BaseWidth = 2.6f;
         const float ArmWidth = 2.26f;
-        public const float HubOffsetY = 0.524f;           // hub above the base picture's centre
+        public const float HubOffsetY = 0.539f;           // hub above the base picture's centre
+        const float HubOffsetX = 0.055f;                   // hub right of the picture's centre (before the mirror): the base shifts back
         static readonly Vector2 ArmPivotOffset = new Vector2(0.969f, 0.068f);  // arm picture centre from its pivot hole
         const float CupLift = 0.08f;                       // the cup bowl sits a little above the beam's axis
         const float BallSize = 0.62f;                      // drawn snowball; the hit test still uses MalletRadius
         public const float Reach = 1.8f;     // hub → mallet centre
         public const float MalletRadius = 0.42f;
+        /// <summary>Where the operator pup's feet go, from the machine's centre: on the deck at the back, beside the
+        /// lever (user 16/11: it stood on the ground next to the machine, "nó phải ở trên máy").</summary>
+        public static readonly Vector2 OperatorSeat = new Vector2(0.86f, -0.03f);   // the painted deck (after the mirror)
         const float RestAngle = -55f;
         const float WindupAngle = -68f;
         const float EndAngle = 75f;
@@ -52,7 +56,7 @@ namespace SealCatapult.Launch
             root.localScale = new Vector3(-1f, 1f, 1f);   // face the pit on the left
             var m = root.gameObject.AddComponent<WhackerMachine>();
             m.reloadTime = reloadTime;
-            var b = Art.Spawn("catapult_base", root, Vector2.zero, BaseWidth, 8);
+            var b = Art.Spawn("catapult_base", root, new Vector2(-HubOffsetX, 0f), BaseWidth, 8);
             m.baseTr = b.transform;
             m.baseScale = b.transform.localScale;
             m.pivot = new GameObject("ArmPivot").transform;
@@ -100,6 +104,7 @@ namespace SealCatapult.Launch
             }
             if (!hit) hit = Contact(prev, EndAngle, target, targetRadius, onHit);   // a slow frame jumped the sweep's end
             SetAngle(EndAngle);
+            Fx.Puff(cupBall.transform.position, 3, 0.15f);    // CPC: a snow puff off the arm's tip on every shot
             if (!hit) AudioManager.Sfx("splash", 0.1f, 0.4f);  // whiff
             yield return new WaitForSeconds(0.12f);
             yield return Rotate(EndAngle, RestAngle - 6f, Mathf.Max(0.3f, reloadTime), false);

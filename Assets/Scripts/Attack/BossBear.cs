@@ -131,6 +131,7 @@ namespace SealCatapult.Attack
             Fx.Burst("star_full", (Vector2)transform.position + Vector2.up * rig.Height, 4, 3f, 0.8f, 0.25f, 2f, 0.2f);
             AudioManager.Sfx("bear_down");
             rig.SetPose(BearRig.Pose.Dizzy);
+            Fx.DizzyOrbit(transform, Vector2.up * rig.Height, HitCooldown + 0.6f);   // stars round its head, like a bear's
             if (lives > 0) return;
             KnockOut();
         }
@@ -142,6 +143,24 @@ namespace SealCatapult.Attack
             col.enabled = false;
             rb.simulated = false;
             Beaten?.Invoke(this);
+            StartCoroutine(FallOut());
         }
+
+        /// <summary>Out cold, the king is flung up and tumbles out of the arena like any bear (CPC, live 16/11); the
+        /// object stays (tests and the finale still read it), only its picture leaves.</summary>
+        IEnumerator FallOut()
+        {
+            Vector2 v = new Vector2(-2.5f, 7f);
+            float until = Time.time + FallOutTime;
+            while (Time.time < until)
+            {
+                v += Vector2.down * 22f * Time.deltaTime;
+                transform.position += (Vector3)(v * Time.deltaTime);
+                transform.Rotate(0, 0, 220f * Time.deltaTime);
+                yield return null;
+            }
+        }
+
+        const float FallOutTime = 1.6f;
     }
 }

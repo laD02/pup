@@ -31,7 +31,7 @@ namespace SealCatapult.Core
 
         public State Current { get; private set; }
         public int LevelIndex { get; private set; }
-        public bool HasNextLevel => LevelIndex + 1 < GameDatabase.Instance.levels.Length;
+        public bool HasNextLevel => LevelIndex + 1 < LevelCatalog.Total;   // ten castles (LevelCatalog.Castles)
 
         LevelData level;
         GameTuning tuning;
@@ -49,8 +49,8 @@ namespace SealCatapult.Core
         {
             SaveSystem.EnsureLoaded();
             var db = GameDatabase.Instance;
-            LevelIndex = Mathf.Clamp(SceneLoader.CurrentLevel, 0, db.levels.Length - 1);
-            level = db.levels[LevelIndex];
+            LevelIndex = Mathf.Max(0, SceneLoader.CurrentLevel);
+            level = LevelCatalog.Get(LevelIndex);   // hand-made or generated: the castles have no end
             tuning = db.tuning;
             GameInput.GameplayEnabled = true;
             Time.timeScale = 1f;
@@ -71,6 +71,7 @@ namespace SealCatapult.Core
             attack = new GameObject("AttackPhase").AddComponent<AttackPhase>();
             attack.BearsChanged += hud.SetBears;
             attack.ScoreChanged += hud.SetScore;
+            hud.SetStarTarget(level.kind == LevelKind.Bonus ? 0 : level.threeStarScore);
             attack.AmmoChanged += hud.SetPuffers;
             attack.Build(level, tuning);
             Bear.Defeated += OnBearDown;   // after AttackPhase subscribed: BearsLeft is already counted down when this runs
@@ -100,6 +101,7 @@ namespace SealCatapult.Core
             Current = State.Launch;
             launch.Begin(tuning, count, OnLaunchDone, level.launcher, level.showTutorial);
             if (level.launcher == LaunchStyle.Bungee) StartCoroutine(After(2.4f, () => hud.Banner(Loc.T("bungee_tip"))));
+            else if (level.launcher == LaunchStyle.Drop) StartCoroutine(After(2.4f, () => hud.Banner(Loc.T("drop_tip"))));
         }
 
         /// <summary>Exit velocity of each pup that left the pit (this attempt's, or the kept ones on an attack-only retry).</summary>
@@ -222,9 +224,13 @@ namespace SealCatapult.Core
                 // it rises again for the next pup.
                 if (pup != heldFor) { heldFor = pup; heldLow = float.MaxValue; }
                 if (pup != null && (pup.Dived || pup.Landed)) { heldLow = Mathf.Min(heldLow, y); y = heldLow; }
-                focus.position = new Vector3(c.x, y, 0f);
+                // CPC (live 16/11): the arena view drifts a hair sideways, so the scene never sits dead still. Taps are
+                // timed, not aimed at screen points, so the drift moves nothing the player has to hit.
+                focus.position = new Vector3(c.x + Mathf.Sin(Time.time * CameraDriftSpeed) * CameraDrift, y, 0f);
             }
         }
+
+        const float CameraDrift = 0.15f, CameraDriftSpeed = 0.35f;   // world units, radians per second
 
         const int AimDots = 12;
         const float AimStep = 0.13f;   // seconds of dive between two dots
@@ -318,9 +324,9 @@ namespace SealCatapult.Core
             int stars = (rules.passed ? 1 : 0) + (rules.second ? 1 : 0) + (rules.third ? 1 : 0);
             bool perfect = won && attack.Perfect;
             var data = SaveSystem.Data;
-            int previous = data.stars[LevelIndex];
-            data.stars[LevelIndex] = Mathf.Max(previous, stars);
-            if (perfect) data.perfect[LevelIndex] = 1;
+            int previous = data.StarsOf(LevelIndex);
+            data.Record(LevelIndex, stars, perfect);
+            if (previous == 0 && stars > 0) MapView.HopFrom = LevelIndex;   // the map shows the hero hopping on
             // Statistics count every attempt, won or lost.
             data.totalBears += attack.BearsDown;
             foreach (int d in attack.Dives) data.AddDive(d);
@@ -346,10 +352,6 @@ namespace SealCatapult.Core
         {
             if (!focused && !Application.isEditor) OnApplicationPause(true);
         }
-
-        /// <summary>The "?" button's tip: the one that fits what the player is doing now.</summary>
-        public string HelpText => Loc.T(Current == State.Attack ? "hint_dive"
-            : level.launcher == LaunchStyle.Bungee ? "hint_aim_bungee" : "hint_aim");
 
         public void TogglePause()
         {
@@ -389,7 +391,11 @@ namespace SealCatapult.Core
             int cleared = 0;
             foreach (int s in SaveSystem.Data.stars) if (s > 0) cleared++;
             bool chapterEnd = IsChapterEnd(level);
-            AdMob.InterstitialThen(cleared, chapterEnd, () => SceneLoader.PlayLevel(LevelIndex + 1));
+            // CPC flow (user 17/11: "khi sang màn mới phải hiện map để hải cẩu di chuyển sang ô mới đã thì mới sang màn
+            // tiếp theo"): the map first, the hero hops on to the next stone, then that level starts by itself.
+            // HopFrom is set when the level is first cleared (Record above): a replay of a cleared level shows no star pop.
+            MapView.PlayAfterHop = LevelIndex + 1;
+            AdMob.InterstitialThen(cleared, chapterEnd, () => SceneLoader.Load(SceneLoader.LevelMap));
         }
 
         /// <summary>The bonus (fish) and boss levels close a chapter: no interstitial when leaving them.</summary>

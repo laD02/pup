@@ -46,12 +46,7 @@ namespace SealCatapult.UI
             holder.localScale = new Vector3(fit, fit, 1f);
             var panel = UiKit.Panel(holder, new Vector2(1600, 940)).transform;
             panel.gameObject.AddComponent<PopIn>();
-            var ribbon = UiKit.Image(panel, "ribbon", UiKit.Top, new Vector2(0, 70), new Vector2(860, 200));
-            var t = UiKit.Text(ribbon.transform, title, 64, UiKit.Center, new Vector2(0, 8), new Vector2(640, 100), Color.white,
-                TextAlignmentOptions.Center, true);
-            t.enableAutoSizing = true;
-            t.fontSizeMin = 30;
-            t.fontSizeMax = 64;
+            UiKit.Ribbon(panel, title, 860, 70);
             if (onContinue == null)
                 UiKit.Button(panel, Loc.T("back"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(0, 30), new Vector2(360, 110), Close, "glyph_back");
             else

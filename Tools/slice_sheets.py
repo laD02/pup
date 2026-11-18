@@ -29,13 +29,24 @@ OUT = ROOT / "Assets/Resources/Art"
 
 BEANIE_PX = 50.0        # sqrt of the red beanie area on a standing pup, output pixels (idle measured 50)
 WHITE = 232             # all channels above this count as background when connected to the border
+# Sheets whose outline has gaps (sheet S: the tumbling head's top line is missing, so 232 leaked into the fur):
+# only near-pure white counts as background there. Costs a thin light fringe.
+WHITE_FOR = {"pup_sheet_t4.png": 248, "pup_sheet_f2.png": 248, "pup_sheet_r2.png": 248, "pup_sheet_f3.png": 248, **{f"pup_sheet_16_{a}.png": 248 for a in ("fling_cartwheel", "fling_backflip", "fling_corkscrew", "tumble", "slide", "flat", "stuck_wall", "stuck_buried", "stuck_splat")}, "pup_sheet_s.png": 248, "pup_sheet_u.png": 248, "pup_sheet_v.png": 248, "pup_sheet_x.png": 248}
 PAD = 4
+
+# Front-view sheets H, I, J, K (ChatGPT, 16/11) share one scale, so frames never jump in size between poses. 1.0 makes the
+# standing front pup about 270 px tall, the size of the side-view cheer/lever frames and the hanging pup (user 16/11: the
+# queue at 1.226 looked bigger than the pup on the rope).
+FRONT_SCALE = 1.0
+# ChatGPT draws the pup a little bigger or smaller on each new sheet, so the front sheets are sized by their helmet instead:
+# 40.8 px is the helmet of sheet H at FRONT_SCALE (50 px at its measured 1.226), the size the user approved.
+FRONT_BEANIE = 40.8
 
 # sheet file, output prefix, columns, rows, row names, scale rule: a row name (its red beanie must measure BEANIE_PX)
 # or ("height", row name, px) (that row's frames are scaled to this height). A missing sheet is skipped with a note.
 SHEETS = [
-    ("pup_walk_sheet.png", "pup", 6, 1, ["walk"], "walk"),
-    ("pup_sheet_a.png", "pup", 4, 4, ["idle", "hang", "flail", "cheer"], "idle"),
+    # idle and walk now come from sheet I (front view, user 16/11); sheet A keeps its other rows at its measured scale
+    ("pup_sheet_a.png", "pup", 4, 4, [None, None, "flail", "cheer"], ("scale", 1.069)),   # hang: sheet K
     ("pup_sheet_c.png", "pup", 4, 4, ["leap", "glide", "dizzy", "ball"], "dizzy"),
     ("pup_sheet_d.png", "pup", 4, 4, ["lever", "lever", "launch", "fall"], "lever"),
     # hero sheet E (docs/pup-art-brief-2.md): level flight (2 rows = 8 frames), nose-down turn + ninja hang, getting up
@@ -44,13 +55,59 @@ SHEETS = [
     ("pup_sheet_f.png", "pup", 4, 4, ["grab", "stuck", "flinch", "spin"], "flinch"),
     # hero sheet G (report §11): saluting on the mission card; four near-identical rows, the first one is the loop
     ("pup_sheet_g.png", "pup", 4, 4, ["salute"] * 4, "salute"),
+    # hero sheet H (CPC live study 16/11, ChatGPT edit of sheet F): queue fidgets and the helmetless stuck pup
+    ("pup_sheet_h.png", "pup", 4, 4, [None, None, None, "stuck_bare"], ("scale", FRONT_SCALE)),   # wave/hattip/look: sheets L, M
+    # sheet T (user 17/11: "hải cẩu dính tường chưa đẹp và hợp lí"): splatted flat on its back, limbs kicking, no hat;
+    # rows 3-4 repeat rows 1-2. Cut back-down so the frame's bottom line is the rock surface.
+    ("pup_sheet_t.png", "pup", 4, 4, ["stuck_wall", "stuck_wall", None, None], ("scale", FRONT_SCALE)),
+    # hero sheet I (front view, user 16/11: "vẽ lại cả khung đứng chờ và đi bộ nhìn thẳng"): idle, waddle, bare idle, and
+    # the mission card's pick-up-the-helmet loop
+    ("pup_sheet_i.png", "pup", 4, 4, ["idle", None, "idle_bare", "pickhat"], ("beanie", "idle", FRONT_BEANIE)),   # walk: sheet O
+    # hero sheet J (user 16/11: more funny queue fidgets): hop for joy, dance, yawn, sneeze; front view, sheet H's scale
+    # sheet J (4-frame hop, dance, yawn, sneeze) is replaced by the 8-frame sheets M, N, O and no longer cut.
+    # 8-frame front-view fidgets (user 16/11: "chưa đủ khung hình"): each action spans two rows, read left to right
+    ("pup_sheet_l.png", "pup", 4, 4, ["wave", "wave", "hattip", "hattip"], ("beanie", "wave", FRONT_BEANIE)),
+    ("pup_sheet_m.png", "pup", 4, 4, ["look", "look", "hop", "hop"], ("beanie", "look", FRONT_BEANIE)),
+    # captive's cry for help on the map (user 18/11: "chưa có hoạt ảnh help cho hải cẩu ở trong lồng"): flippers up and
+    # waving, mouth open, a little hop; 8 frames in rows 1-2 (rows 3-4 repeat them)
+    ("pup_sheet_help.png", "pup", 4, 4, ["help", "help", None, None], ("beanie", "help", FRONT_BEANIE)),
+    ("pup_sheet_n.png", "pup", 4, 4, ["dance", "dance", "yawn", "yawn"], ("beanie", "dance", FRONT_BEANIE)),
+    ("pup_sheet_o.png", "pup", 4, 4, ["sneeze", "sneeze", "walk", "walk"], ("beanie", "walk", FRONT_BEANIE)),
+    # hero sheet K (user 16/11: "thêm hoạt ảnh đu nữa"): front-view hang (flipper tips = the rope point), a fast excited
+    # hang, reaching up for the rope, crouching ready at the bridge edge
+    ("pup_sheet_k.png", "pup", 4, 4, ["hang", "hang_fast", "reach", "ready"], ("beanie", "reach", FRONT_BEANIE)),
+    # 16/11: the operator at its own lever on the cart's deck (wait, pull), and the no-rope launch (jump off, fall)
+    # 16/11 (user: "hải cẩu điều khiển máy đứng ngang"): the operator side-on, facing left toward the pit; sheet P (front
+    # view) is kept in Reference but no longer cut
+    ("pup_sheet_r.png", "pup", 4, 4, ["op_wait", "op_wait", "op_pull", "op_pull"], ("height", "op_wait", 262)),   # side view: the helmet shows more red, so sized by height like the front idle
+    ("pup_sheet_q.png", "pup", 4, 4, ["drop_jump", "drop_jump", "drop_fall", "drop_fall"], ("beanie", "drop_jump", FRONT_BEANIE)),
     # bare-headed pup (hat knocked off in the arena): ChatGPT edits of sheets E, walk, C and A with the hat removed; only
     # the rows used after the hat is gone are cut. No beanie to measure: each uses ("scale", s), the scale this script
     # prints for its hatted sheet (the edits keep the same canvas and cell layout), so both sets are the same size.
     ("pup_sheet_e_bare.png", "pup", 4, 4, [None, None, None, "getup_bare"], ("scale", 1.231)),
+    # sheet S (CPC video 17/11, ChatGPT edit of sheet E bare): belly slide and rag-doll somersault after the bounces
+    ("pup_sheet_s.png", "pup", 4, 4, ["slide", "slide", "tumble", "tumble"], ("scale", 1.231)),
+    # sheets U-X (user 17/11: no curled ball when flung, "nhiều kiểu" for every action): rag-doll fling styles and a
+    # knocked-flat rest (edits of S), two more launch flights (edit of D, same 35° flight), two more stuck styles (edit of T)
+    ("pup_sheet_u.png", "pup", 4, 4, ["fling_cartwheel", "fling_cartwheel", "fling_backflip", "fling_backflip"], ("scale", 1.231)),
+    ("pup_sheet_v.png", "pup", 4, 4, ["fling_corkscrew", "fling_corkscrew", "flat", "flat"], ("scale", 1.231)),
+    ("pup_sheet_w.png", "pup", 4, 4, ["launch_panic", "launch_panic", "launch_hero", "launch_hero"], ("scale", 0.890)),
+    # sheet T4 (user 17/11: "kiểu nằm dính hình như bị sai, vẽ lại"; CPC: flat as a pancake against the rock): one
+    # 16-frame splat for every rock face, the pup's back on the frame's top line
+    ("pup_sheet_t4.png", "pup", 4, 4, ["stuck_splat"] * 4, ("scale", FRONT_SCALE)),
+    # sheet F2 (user 17/11: "phải vẽ lại văng … xem kĩ lại cpc"; CPC at 60 fps: a flung penguin is a stiff arched body,
+    # flippers pressed back, feet trailing, and the whole sprite spins): one held pose with a small shiver, 16 frames
+    ("pup_sheet_f2.png", "pup", 4, 4, ["flung"] * 4, ("scale", 1.231)),
+    # sheet R2: CPC's ground roll, curled round seen from the side (the code rolls it like a wheel)
+    ("pup_sheet_r2.png", "pup", 4, 4, ["roll"] * 4, ("scale", 1.231)),
+    # sheets Y, Z, Q2 (user 17/11: swing, bungee and no-rope drop each their own ride, gently funny, "đừng lố quá"):
+    # edits of K (swing, bungee: rope point at the top centre) and Q (jump off, fall); a Q2 replaces Q's rows
+    ("pup_sheet_y.png", "pup", 4, 4, ["swing"] * 4, ("scale", 1.076)),
+    ("pup_sheet_z.png", "pup", 4, 4, ["bungee"] * 4, ("scale", 1.076)),
+    ("pup_sheet_q2.png", "pup", 4, 4, ["drop_jump", "drop_jump", "drop_fall", "drop_fall"], ("scale", 0.942)),
     ("pup_walk_bare.png", "pup", 6, 1, ["walk_bare"], ("scale", 0.592)),
     ("pup_sheet_c_bare.png", "pup", 4, 4, [None, None, "dizzy_bare", "ball_bare"], ("scale", 1.058)),
-    ("pup_sheet_a_bare.png", "pup", 4, 4, ["idle_bare", None, "flail_bare", "cheer_bare"], ("scale", 1.069)),
+    ("pup_sheet_a_bare.png", "pup", 4, 4, [None, None, "flail_bare", "cheer_bare"], ("scale", 1.069)),
     # polar bear guard (docs/bear-art-brief.md): standing bear 260 px tall, feet on the canvas bottom
     ("bear_sheet.png", "bear", 4, 4, ["idle", "taunt", "dizzy", "ko"], ("height", "idle", 260)),
     ("bear_sheet_b.png", "bear", 4, 2, ["eat", "sleep"], ("height", "eat", 260)),
@@ -61,18 +118,26 @@ SHEETS = [
     # third column (legs hanging straight down) is the dangle, so that column read top to bottom is the loop.
     ("bear_sheet_e.png", "bear", 4, 4, ["dangle"] * 4, ("height", "dangle", 230), 2),
 ]
-ANCHOR = {"getup_bare": "bottom", "walk_bare": "bottom", "dizzy_bare": "bottom", "cheer_bare": "bottom", "idle_bare": "bottom", "flail_bare": "center", "ball_bare": "center", "salute": "bottom", "dangle": "bottom", "punch": "bottom", "sit": "bottom", "smug": "bottom", "bowl": "bottom", "grab": "bottom", "stuck": "center", "flinch": "bottom", "spin": "center", "fly": "center", "divening": "center", "getup": "bottom", "eat": "bottom", "sleep": "bottom",
+ANCHOR = {"roll": "center", "flung": "center", "stuck_splat": "rope", "swing": "rope", "bungee": "rope", "fling_cartwheel": "center", "fling_backflip": "center", "fling_corkscrew": "center", "flat": "bottom", "launch_panic": "center", "launch_hero": "center", "stuck_buried": "bottom", "stuck_wall": "bottom", "slide": "center", "tumble": "center", "op_wait": "bottom", "op_pull": "bottom", "drop_jump": "center", "drop_fall": "center", "hang_fast": "rope", "reach": "bottom", "ready": "bottom", "hop": "bottom", "dance": "bottom", "yawn": "bottom", "sneeze": "bottom", "pickhat": "bottom", "wave": "bottom", "help": "bottom", "hattip": "bottom", "look": "bottom", "stuck_bare": "center", "getup_bare": "bottom", "walk_bare": "bottom", "dizzy_bare": "bottom", "cheer_bare": "bottom", "idle_bare": "bottom", "flail_bare": "center", "ball_bare": "center", "salute": "bottom", "dangle": "bottom", "punch": "bottom", "sit": "bottom", "smug": "bottom", "bowl": "bottom", "grab": "bottom", "stuck": "center", "flinch": "bottom", "spin": "center", "fly": "center", "divening": "center", "getup": "bottom", "eat": "bottom", "sleep": "bottom",
           "laugh": "bottom", "scratch": "bottom", "juggle": "bottom", "flex": "bottom",
           "leap": "bottom", "walk": "bottom", "idle": "bottom", "cheer": "bottom", "dizzy": "bottom", "taunt": "bottom", "ko": "bottom",
           "hang": "rope", "flail": "center", "glide": "center", "ball": "center",
           "lever": "cell", "launch": "center", "fall": "center"}
+# Cell order per (sheet, row) where the drawing's order differs from what PupRig plays: idle wants 0-1-2 breathing and the
+# blink last (frame 3); sheet I drew the blink third.
+REORDER = {("pup_sheet_i.png", "idle"): [0, 1, 3, 2], ("pup_sheet_i.png", "idle_bare"): [0, 1, 3, 2],
+           # sheet O's two ACHOO cells: the lifted helmet opens the white face to the white background, so the background
+           # cut eats it; the neighbouring cells stand in (keys are per row: sneeze row 1, then row 2)
+           ("pup_sheet_o.png", "sneeze"): [0, 1, 2, 2]}
+REORDER_ROW2 = {("pup_sheet_o.png", "sneeze"): [1, 1, 2, 3]}
+
 # single sprites used by menus and the dive (ball spins in code, so one ball frame is enough)
 ALIASES = {"pup": "pup_idle_0", "pup_ball": "pup_ball_0", "pup_ball_bare": "pup_ball_bare_0", "pup_dizzy": "pup_dizzy_2", "bear": "bear_idle_0", "bear_helmet": "bear_idle_0"}
 
 
-def remove_background(rgb: np.ndarray) -> np.ndarray:
+def remove_background(rgb: np.ndarray, white: int = WHITE) -> np.ndarray:
     """Alpha mask: 0 where near-white pixels connect to the border, else 255."""
-    light = (rgb > WHITE).all(axis=2)
+    light = (rgb > white).all(axis=2)
     reach = np.zeros_like(light)
     reach[0, :], reach[-1, :], reach[:, 0], reach[:, -1] = light[0, :], light[-1, :], light[:, 0], light[:, -1]
     while True:   # grow the border region through light pixels until it stops
@@ -99,7 +164,7 @@ def cells(path: Path, cols: int, rows: int) -> list[list[Image.Image | None]]:
     """Grid cells with the background removed, uncropped (frames keep their place in the cell). An empty cell stays in
     the grid as None so later frames keep their number (a spare or missing drawing never renumbers the rest)."""
     rgb = np.asarray(Image.open(path).convert("RGB"))
-    rgba = Image.fromarray(np.dstack([rgb, remove_background(rgb)]), "RGBA")
+    rgba = Image.fromarray(np.dstack([rgb, remove_background(rgb, WHITE_FOR.get(path.name, WHITE))]), "RGBA")
     w, h = rgba.size
     grid = []
     for r in range(rows):
@@ -155,6 +220,57 @@ def crop(frames: list[Image.Image], mode: str) -> list[Image.Image]:
     return [f.crop(b) for f, b in zip(frames, boxes)]
 
 
+# Front-view sheets (16/11): ChatGPT sprinkles yellow "!" ticks and motion strokes around the pup, a different set in
+# every frame, so they blink on and off as the frames play (user: "hải cẩu trên hàng bị nhấp nháy"). Only the pup's
+# body and anything nearly as big (a helmet lying beside it) is kept.
+FX_FREE = {"pup_sheet_t4.png", "pup_sheet_f2.png", "pup_sheet_r2.png", "pup_sheet_f3.png", "pup_sheet_y.png", "pup_sheet_z.png", "pup_sheet_q2.png", *(f"pup_sheet_16_{a}.png" for a in ("fling_cartwheel", "fling_backflip", "fling_corkscrew", "tumble", "slide", "flat", "launch_panic", "launch_hero", "stuck_wall", "stuck_buried", "stuck_splat")), "pup_sheet_u.png", "pup_sheet_v.png", "pup_sheet_w.png", "pup_sheet_x.png", "pup_sheet_t.png", "pup_sheet_s.png", "pup_sheet_r.png", "pup_sheet_p.png", "pup_sheet_q.png", "pup_sheet_h.png", "pup_sheet_i.png", "pup_sheet_k.png", "pup_sheet_l.png", "pup_sheet_m.png",
+           "pup_sheet_n.png", "pup_sheet_o.png"}
+KEEP_SHARE = 0.08
+# Within one ChatGPT row the pup also grows and shrinks a few percent from cell to cell, which pops as the frames play.
+# Where the helmet sits on the head the whole time, each frame is sized by its own helmet instead of the row's median.
+PER_FRAME_SIZE = {"idle", "walk", "wave", "help", "look", "hop", "dance", "yawn", "hang", "hang_fast", "reach", "ready"}
+
+
+def even_size(img: Image.Image) -> Image.Image:
+    b = beanie(img)
+    if b < FRONT_BEANIE * 0.5:
+        raise ValueError(f"even_size: helmet not found ({b:.1f} px)")
+    k = min(1.25, max(0.8, FRONT_BEANIE / b))   # a tilted or hidden helmet must not blow a frame up
+    if abs(k - 1.0) < 0.01:
+        return img
+    return img.resize((max(1, round(img.width * k)), max(1, round(img.height * k))), Image.LANCZOS)   # parts at least this share of the body's area stay (a dropped helmet is ~15 %)
+
+
+def keep_body(img: Image.Image, share: float = KEEP_SHARE) -> Image.Image:
+    """Clears every opaque island smaller than `share` of the largest one (4-connected flood fill)."""
+    a = np.asarray(img.getchannel("A")) > 40
+    h, w = a.shape
+    label = np.zeros((h, w), dtype=np.int32)
+    sizes = [0]
+    for y0, x0 in zip(*np.nonzero(a)):
+        if label[y0, x0]:
+            continue
+        n = len(sizes)
+        label[y0, x0] = n
+        stack, count = [(y0, x0)], 0
+        while stack:
+            y, x = stack.pop()
+            count += 1
+            for yy, xx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                if 0 <= yy < h and 0 <= xx < w and a[yy, xx] and not label[yy, xx]:
+                    label[yy, xx] = n
+                    stack.append((yy, xx))
+        sizes.append(count)
+    if len(sizes) <= 2:
+        return img
+    big = max(sizes)
+    keep = np.array([s >= big * share for s in sizes])
+    keep[0] = False
+    rgba = np.asarray(img).copy()
+    rgba[..., 3] = np.where(keep[label], rgba[..., 3], 0)
+    return Image.fromarray(rgba)
+
+
 # Rows that ChatGPT drew standing on a slab of ice ledge: the slab is erased so the pup stands on the game's own bridge.
 STRIP_LEDGE = {"grab"}
 
@@ -204,9 +320,25 @@ def out_name(prefix: str, anim: str, slot: int) -> str | None:
     return f"{prefix}_dive_{slot}" if slot < 2 else (f"{prefix}_ninja_0" if slot == 2 else None)
 
 
+# 16-frame redraws (user 17/11: "tăng khung hình lên để hoạt ảnh mượt mà"): Reference/pup_sheet_16_<anim>.png holds one
+# animation in all 16 cells. When it exists it replaces that animation's 8-frame rows, at the scale of its first sheet.
+SMOOTH_SCALE = {"fling_cartwheel": 1.231, "fling_backflip": 1.231, "fling_corkscrew": 1.231, "tumble": 1.231, "slide": 1.231,
+                "flat": 1.231, "launch_panic": 0.890, "launch_hero": 0.890, "stuck_wall": FRONT_SCALE,
+                "stuck_buried": FRONT_SCALE, "stuck_splat": FRONT_SCALE}
+
+
+def with_smooth(sheets: list) -> list:
+    if (REF / "pup_sheet_q2.png").exists():
+        sheets = [e for e in sheets if e[0] != "pup_sheet_q.png"]
+    smooth = {a for a in SMOOTH_SCALE if (REF / f"pup_sheet_16_{a}.png").exists()}
+    out = [(e[0], e[1], e[2], e[3], [None if n in smooth else n for n in e[4]], *e[5:]) for e in sheets]
+    out += [(f"pup_sheet_16_{a}.png", "pup", 4, 4, [a] * 4, ("scale", SMOOTH_SCALE[a])) for a in sorted(smooth)]
+    return out
+
+
 def main() -> None:
     failed = []
-    for entry in SHEETS:
+    for entry in with_smooth(SHEETS):
         try:
             cut_sheet(entry)
         except (ValueError, OSError, KeyError, IndexError, ZeroDivisionError) as e:   # a row that measures 0 (no beanie found) fails alone
@@ -234,6 +366,9 @@ def cut_sheet(entry: tuple) -> None:
         grid = [[row[only_col]] for row in grid]
     if isinstance(rule, tuple) and rule[0] == "scale":
         scale = rule[1]
+    elif isinstance(rule, tuple) and rule[0] == "beanie":   # ("beanie", row, px): that row's helmet measures px
+        _, row, px = rule
+        scale = px / median_of([beanie(f) for f in grid[row_names.index(row)] if f], f"the beanie of row '{row}'")
     elif isinstance(rule, tuple):
         _, row, px = rule
         heights = [f.getchannel("A").getbbox()[3] - f.getchannel("A").getbbox()[1] for f in grid[row_names.index(row)] if f]
@@ -243,7 +378,9 @@ def cut_sheet(entry: tuple) -> None:
     anims: dict[str, list[Image.Image | None]] = {}
     for row, anim in zip(grid, row_names):
         if anim is not None:   # None = a row of the sheet that is not used
-            anims.setdefault(anim, []).extend(row)
+            order = REORDER_ROW2.get((name, anim)) if anim in anims and len(anims[anim]) >= cols else None
+            order = order or REORDER.get((name, anim))
+            anims.setdefault(anim, []).extend([row[i] for i in order] if order else row)
     # Measure and place every anim first, then write: a sheet that fails leaves its old frames untouched.
     results = []
     for anim, cells_ in anims.items():
@@ -254,11 +391,15 @@ def cut_sheet(entry: tuple) -> None:
         if not slots:
             raise ValueError(f"{anim}: every cell is empty")
         frames = [cells_[i] for i in slots]
+        if name in FX_FREE:
+            frames = [keep_body(f) for f in frames]
         mode = ANCHOR[anim]
         scaled = [f.resize((max(1, round(f.width * scale)), max(1, round(f.height * scale))), Image.LANCZOS)
                   for f in crop(frames, mode)]
         if anim in STRIP_LEDGE:
             scaled = [strip_ledge(f) for f in scaled]
+        if name in FX_FREE and anim in PER_FRAME_SIZE:
+            scaled = [even_size(f) for f in scaled]
         try:
             placed = place(scaled, mode) if mode != "cell" else [pad(f) for f in scaled]
         except ValueError as e:

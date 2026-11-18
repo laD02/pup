@@ -222,7 +222,7 @@ Dây dài 1.9 (cũ 2.4) để đáy cung nằm ngay trên cốc máy bắn đặ
   dải tuyết** (dốc với mặt bằng trên/dưới); dải viền dốc chạy đúng từ khớp này tới khớp kia. Khối không có khớp riêng.
 - **Tuyết và đá pha 2 lấy thẳng từ tranh hố pha 1**: `rock_top` là dải mũ tuyết vẽ tay của hố (cắt từ
   `pit_side_walls_box.png`), cao `RimHeight` 0,7; ô đá `rock_cobble` trải 5,5 đơn vị mỗi ô để viên đá to cỡ đá của hố.
-- **Tranh hố là MỘT tranh liền** `pit_bg_wide3.png` (16:9, 1672×941; đá bao quanh nằm sẵn trong tranh), `PaintingHeight`
+- **Tranh hố là MỘT tranh liền** `pit_bg_wide4.png` (16/11: bản wide3 có khối đá dưới cầu bị khoét bớt, ChatGPT sửa) (16:9, 1672×941; đá bao quanh nằm sẵn trong tranh), `PaintingHeight`
   12,64 nên rộng 22,5 đơn vị, đủ cho 20:9 (21:9 hở 0,4 đơn vị mỗi bên). **Mặt trên cột phải dốc chéo song song với mái
   chéo** (người dùng 13/11), thành máng thoát chéo; va chạm `Column Slope`. Không còn ghép cột, ghép viền (`pit_bg_box*.png`, `pit_side_walls_box.png` chỉ
   còn là nguồn vân đá/tuyết cho pha 2). Số đo `LaunchPhase` lấy lại trên tranh này (mép trong cột H(355)).
@@ -296,6 +296,23 @@ Luật áp dụng cho mọi màn hình và màn chơi từ nay:
   từ "Pup Launch" thành **Seal Catapult** (`docs/ASO.md` §3b); tiếng Việt giữ "Hải Cẩu Bay". Package `com.sealcatapult.game`,
   namespace `SealCatapult`.
 
+### R10. Giao diện phương án A "Arcade Bold" (người dùng 16/11: "làm A thử đi"; 6 phương án ở canvas Seal Catapult UI Concepts)
+Học theo Angry Birds 2; thay cụm nút tròn trên-giữa của R7e:
+- **Menu chính**: góc trái trên = chân dung hải cẩu + tên vùng + "Màn N" (màn sẽ chơi); góc phải trên = số sao còn tiêu
+  · nút Cách chơi · nút Cài đặt. Logo giữa trên. Hai **dải nút lớn** hai bên (300×112): trái Nâng cấp (mở shop ngay tại menu)
+  · Truyện; phải Bản đồ · Thống kê. Dưới giữa: **một nút Chơi to** "Chơi · Màn N" vào thẳng màn tiếp theo
+  (`MapView.CurrentLevel`), không qua bản đồ. Bật/tắt âm thanh, nhạc nằm trong Cài đặt (thanh trượt) và menu tạm dừng.
+  Nút Giới thiệu bỏ khỏi menu (tác giả, phông chữ đã có trong Cài đặt).
+- **HUD**: chỉ còn **một nút Tạm dừng** ở góc phải trên; bộ đếm gấu dời sang trái nó. Giữa trên (chỉ ở đấu trường, không có
+  ở màn cá): **thanh tiến tới sao thứ 3** (điểm phá / `threeStarScore`), ngôi sao cuối thanh sáng lên khi đạt. Nút "?" bỏ
+  (gợi ý tự hiện ở màn dạy và khi hải cẩu bay vòng lâu).
+- **Menu tạm dừng**: thêm nút tròn bật/tắt nhạc dưới hàng nút (nút Âm thanh vẫn ở cuối hàng).
+- **Thẻ thắng**: Bản đồ và Chơi lại thành nút vuông chỉ có hình (120×108); "Tiếp tục" là nút lớn duy nhất (560).
+- **Nhất quán mọi trang** (người dùng 16/11: "nhất quán lại mọi thứ của app"): màn toàn trang (Bản đồ, Nâng cấp) dùng chung
+  **thanh trên** `UiKit.TopBar`: nút Back vuông 104 ở góc trái, tiêu đề 64 px cạnh nó, viên sao ở góc phải. Bản đồ: tiêu đề
+  là tên vùng của trang, không còn nút âm thanh/nhạc. Bảng popup (Cách chơi, Giới thiệu, Thống kê, Cài đặt) dùng chung dải tiêu đề
+  `UiKit.Ribbon`; bảng cao (Cách chơi, Cài đặt) thu nhỏ theo chiều cao màn hình để dải không bị cắt trên 21:9. Nút chính luôn Vàng, nút phụ Xanh, nút nhấn mạnh Cam; trang mới phải dùng hai helper này.
+
 ## Mục lục
 
 0. [Quan sát từ bản tham chiếu](#0-quan-sát-từ-bản-tham-chiếu-chơi-thật--xem-3-video-11112026)
@@ -318,6 +335,215 @@ Luật áp dụng cho mọi màn hình và màn chơi từ nay:
 16. [Quyết định cần bạn chốt](#16-quyết-định-cần-bạn-chốt)
 
 ---
+
+### R11. Hành động, trạng thái, hoạt ảnh theo CPC (người dùng 16/11: "xem lại cpc … thiết kế lại tất cả … thật cẩn thận")
+Đối chiếu đầy đủ ở `docs/cpc-gap.md` (chơi lại CPC trên flashmuseum 16/11 + báo cáo cũ). Đã làm:
+- **Lao**: xoay đầu xuống trong 0,12 s rồi giữ thẳng như ngư lôi theo hướng bay; chỉ cuộn tròn và xoay khi chạm vật đầu tiên
+  (`PufferController.NoseDown` / `BallUpOnImpact`).
+- **Hải cẩu nằm**: đứng dậy, ngồi choáng tại chỗ (sao quay, khói trên đầu) 1,1 s rồi mờ dần; không đi bộ ra nữa.
+- **Đu dây**: thân văng rộng hơn dây 1,5 lần (tối đa 95°), tay vẫn ở đầu dây; ở hai đầu cú đu thân gần nằm ngang.
+- **Hàng chờ**: mỗi con có nhịp riêng, cứ 2–5,5 s lại reo 1 s hoặc quay lại nhìn hàng; con lên dây ngồi xổm 0,25 s ở mép cầu.
+- **Chữ OK / GREAT / OOPS**: nghiêng 10°, đứng yên, nằm dưới cầu bên trái. **×N combo**: nghiêng 12° ngay chỗ gấu ngã.
+- **Va chạm**: vòng bụi tuyết bắn ra khi vỡ băng và khi chạm gấu; chớp trắng tròn khi đập đá; 8 mảnh băng lơ lửng 3–4,5 s sau khi vỡ.
+- **Màn nước** chuyển pha: hải cẩu khổng lồ treo ở mép sóng, đung đưa.
+- **Gấu canh** quay mặt theo hải cẩu vừa bay qua (`Bear.WatchPup`).
+- **Trùm**: sao quay trên đầu mỗi lần trúng; bị hạ thì văng lên và lộn nhào ra khỏi đấu trường.
+- **Thẻ kết quả**: thắng thường 1 hải cẩu reo; Perfect 4 con không mũ nhảy múa + sao lấp lánh quanh tiêu đề; thua: 2 gấu cười.
+- **Bản đồ**: lần đầu qua một màn, mở bản đồ thấy hải cẩu nhảy vòng cung từ ô vừa thắng sang ô kế (`MapView.HopFrom`).
+- **Tranh mới** `pup_sheet_h.png` (ChatGPT sửa từ sheet F; người dùng 16/11: "vẽ hải cẩu quay về trước", nên vẽ **nhìn thẳng**):
+  vẫy tay, ngả mũ, nhìn quanh (động tác của hàng chờ, chọn ngẫu nhiên cùng reo), và hải cẩu kẹt **mất mũ**, mũ nằm cạnh
+  (`PupRig.Pose.Wave/HatTip/Look`, `stuck_bare` khi `GoBare`).
+- `pup_sheet_i.png` (người dùng 16/11: "vẽ lại cả khung đứng chờ và đi bộ nhìn thẳng"): đứng chờ (khung 3 là chớp mắt, slicer
+  `REORDER` đổi thứ tự), đi bộ lạch bạch 4 khung, đứng không mũ, **nhặt mũ đội lại** (thẻ nhiệm vụ: nhặt mũ rồi đứng thở).
+- `pup_sheet_j.png` (người dùng: "nhiều hoạt ảnh ngộ nghĩnh"): nhảy cẫng, lắc mông, ngáp vươn vai, hắt xì bay mũ.
+  Hàng chờ chọn ngẫu nhiên 7 động tác (vẫy, ngả mũ, nhìn quanh + 4 cái này), mỗi con 0,8–3 s một lần, kéo 1,6 s.
+- **Hàng chờ thoáng** (người dùng: "cho hàng đứng thoáng ra"): cách nhau 0,85 (cũ 0,6); hàng trước 6 con, con thứ 7 trở đi
+  đứng hàng sau cao hơn 0,18, chen giữa hai con hàng trước (cách 0,78), đủ 12 con (8 + School 3 + quảng cáo 1).
+- `pup_sheet_k.png` (người dùng: "thêm hoạt ảnh đu nữa"): đu dây nhìn thẳng (hai tay giơ lên bám, đầu ngón tay = điểm dây),
+  **đu nhanh** hớn hở đá chân (`hang_fast`, tự đổi khi tốc độ dây > 2,2 rad/s), với tay bám dây (`reach`), ngồi chờ ở mép (`ready`).
+- Tất cả tranh hải cẩu nhìn thẳng (H, I, J, K) dùng chung `FRONT_SCALE = 1.0` trong slicer: đứng cao ~270 px, bằng con đang đu
+  (người dùng 16/11: "hàng ở trên bị to hơn con đang đu" ở tỉ lệ 1,226).
+- Camera đấu trường trôi ngang ±0,15 (chạm theo thời điểm, không theo vị trí, nên không lệch ngắm); bụi tuyết ở đầu cần bắn mỗi phát.
+- **Đá dưới cầu khoét bớt** (người dùng 16/11: "cắt bớt đất đá bên dưới đi để hải cẩu đu vào đó ko bị đè"): khối đá giờ
+  kết thúc dưới giữa cầu (`BlockEndX` W(478), mặt dốc tới đáy hố ở W(620)); hải cẩu đu không còn lấn lên đá.
+- **Hàng chờ một hàng đều** (16/11: hàng sau chen chúc, "đang lỗi khá nhiều"): khoảng cách = min(0,85; 4,37/(số con−1)),
+  tính lúc dựng hàng. Động tác chờ chạy khung qua lại 0-1-2-3-2-1 (`PupRig.Anim.PingPong`) ở 5–8 khung/giây.
+- **8 khung mỗi động tác** (người dùng 16/11: "chưa đủ khung hình để hoạt ảnh mượt mà"): `pup_sheet_l`–`o` (ChatGPT), mỗi
+  động tác trải 2 hàng: vẫy, ngả mũ, nhìn quanh, nhảy, múa, ngáp, hắt xì, đi bộ. `PupRig.LoadAll` lấy đủ số khung có sẵn và
+  đặt tốc độ theo thời lượng một vòng, nên 4 hay 8 khung chạy cùng nhịp. Sheet J (4 khung) bỏ. Mọi sheet nhìn thẳng được
+  cân **theo cỡ mũ đỏ** (`FRONT_BEANIE` 40,8 px) vì mỗi lần ChatGPT vẽ hải cẩu to nhỏ khác nhau; 2 ô "ACHOO" bị nền cắt
+  lẹm mặt nên dùng ô bên cạnh (`REORDER`).
+- **Chống nhấp nháy** (người dùng 16/11: "hải cẩu trên hàng bị nhấp nháy"): đứng chờ là MỘT khung (`pup_idle_2`), thở bằng
+  co giãn trong code (±1,8 %, lệch pha từng con); slicer xoá các mảng rời nhỏ (tia vàng, gạch chuyển động: `keep_body`) và
+  cân từng khung theo mũ của chính nó (`even_size`) với các động tác mũ luôn trên đầu. Con ở mép cầu: ngồi xổm → bật lên
+  dáng đu → theo đầu dây xuống (bỏ dáng với tay vì trông như chìm qua cầu).
+- **Xem lại CPC 17/11** (người dùng: "xem lại pha 1 và pha 2 của cpc thật kĩ, quan sát vật lí, hoạt ảnh"; video Flash
+  `1Dp_WM-9ag0` từng khung 60 fps + chơi lại flashmuseum): 
+  - Hải cẩu bị đập bay ra **không xoay vòng**: đầu đi trước theo hướng bay, vây ra sau, chỉ lắc ±18° tắt dần
+    (`LaunchPhase.Fly`, cũ: xoay 540° trong 0,35 s).
+  - **Chớp trắng** ở chỗ cầu tuyết chạm hải cẩu và **tia vàng** ở đầu dây vừa trống.
+  - **Dây cong**: vẽ bằng 6 đoạn sprite lát (`SpriteDrawMode.Tiled`, `rope` là FullRect) theo đường cong bậc hai; giữa dây
+    trễ sau đầu dây theo tốc độ đu (`BowPerOmega`), thẳng lại ở hai đầu cú đu.
+  - Lao trúng gấu: **mũ hải cẩu bay lên đội trên đầu gấu** rồi lộn nhào rơi cùng gấu (`HatOntoBear`); trúng thứ khác mũ vẫn văng tự do.
+  - Hết lượt nảy bóng mà còn trớn: hải cẩu **duỗi ra lộn nhào** (`Pose.Tumble`); chạm dốc đá thì **nằm bụng trượt**
+    theo dốc (`Pose.Slide`), ra tới chỗ phẳng thì nằm ngang lại. Tranh mới `pup_sheet_s.png` (ChatGPT sửa sheet E không mũ,
+    8 khung trượt + 8 khung lộn); viền đầu bị hở nên slicer dùng ngưỡng nền 248 cho riêng sheet này (`WHITE_FOR`).
+- **Vỡ băng theo CPC** (người dùng 17/11: "xem lại băng cpc xem cơ chế vỡ, hoạt ảnh"; "xem các loại băng sau bao lần va
+  chạm là vỡ"; video 60 fps màn 1–12):
+  - **Độ bền**: cả 12 màn chỉ có MỘT loại băng (khối vuông + nêm), vỡ ngay lần chạm đầu ở mọi tốc độ (bay ngang, lao,
+    lăn, trượt); thùng gỗ màn boss không vỡ khi đập. Game đã đúng (khối tuyết riêng của mình cũng 1 chạm).
+  - **Hoạt ảnh vỡ**: khối biến thành **đống cục băng nhỏ lấp đúng hình khối**, treo tại chỗ ~1,2 s rồi lấp lánh và tan
+    (không rơi, không nằm lại); 4–6 cục **bật lên chậm** rồi rơi; chỗ va có **vòng tròn vàng** loé ra và **khói xám**.
+    Code `Fx.IceBreak` + `Fx.HitRings`, tranh `ice_fx.png` (ChatGPT theo nét `block_ice`, `cut_props.py`: `ice_chunk_0..8`,
+    `impact_ring(_small)`, `smoke_ball`, `twinkle`). Bỏ mảnh tam giác vẽ code, đá vụn nằm lại mãi và mảnh lơ lửng 4 s cũ.
+  - **Lăn xuyên**: hải cẩu đã chạm lần đầu mà còn lăn/trượt thì chạm băng nào phá băng đó và đi tiếp (giữ 85 % tốc độ),
+    không nảy ngược; phá liên tiếp cả hàng như CPC.
+- **Hải cẩu kẹt tường** (người dùng 17/11: "hải cẩu dính tường chưa đẹp và hợp lí"): bản cũ dán khung ngồi có mũ nằm
+  cạnh lên đá, nên mũ dính lơ lửng và nhiều con chồng lên một chỗ. Giờ: tranh `pup_sheet_t.png` (8 khung nằm ngửa, lưng
+  phẳng ở mép dưới khung, tay chân dang đạp, không mũ), cắt neo đáy, đặt mép lưng đúng điểm chạm (`StuckSink` 0,04);
+  mũ văng ra và rơi khỏi màn (`KnockHatOff`); con sau chạm gần con trước thì trượt dọc vách sang trái 0,55 cho tới chỗ
+  trống (`ClearOfStuck`). Thẻ thua dùng cùng 8 khung đạp chân.
+- **Chiều lao** (người dùng 17/11: "hải cẩu lao cx chưa đúng chiều"): khung `pup_dive_1` vẽ sẵn đầu chúc ~−70°, code lại
+  xoay thêm cả góc bay nên đầu quay ra sau. Giờ xoay `góc bay − DiveArtAngle`: đầu luôn đi trước theo hướng lao.
+- **Bỏ quả bóng tròn, nhiều kiểu hoạt ảnh** (người dùng 17/11: "bỏ hoạt ảnh tròn khi văng đi, thay vào đó là hoạt ảnh văng
+  mới như cpc, nhiều kiểu vào … mỗi loại hoạt ảnh sẽ có nhiều kiểu"; "tăng khung hình lên để hoạt ảnh mượt mà"; "cẩn thận vẽ lỗi"):
+  - Cú chạm đầu tiên không còn cuộn thành bóng: hải cẩu văng ra kiểu búp bê vải, khung hình tự xoay (thân không quay).
+    4 kiểu văng: lộn nhào, nhào lộn dang tay (`fling_cartwheel`), lộn ngược (`fling_backflip`), xoắn ốc (`fling_corkscrew`).
+    Chỉ nâng cấp Ice Spikes còn là quả bóng gai (đó là hình của nâng cấp).
+  - Mỗi hải cẩu bốc một kiểu riêng (`PupRig.Variant`) cho từng loại: bay ra ở pha 1 (cũ, hoảng loạn `launch_panic`, siêu
+    nhân `launch_hero`; mỗi bộ có góc vẽ riêng `ArtAngle` 35°/25°/15°), kẹt vách (nằm ngửa đạp chân, vùi đầu `stuck_buried`,
+    mặt bẹp `stuck_splat`), nghỉ (ngồi choáng, hoặc nằm bẹp co giật `flat`).
+  - Tranh: sheet U, V, W, X (ChatGPT sửa từ S, D, T). Mỗi hoạt ảnh được vẽ lại 16 khung (`pup_sheet_16_<tên>.png`, chèn khung
+    giữa); slicer tự thay bộ 8 khung khi có bản 16 (`with_smooth`), `PupRig.Loop` đếm số khung và giữ thời lượng một vòng.
+  - Soi từng khung trước khi nhận: bản 16 khung "bay hoảng" đầu tiên đổi sang mặt siêu nhân ở nửa sau nên bị loại, vẽ lại.
+- **Ba kiểu thả có hoạt ảnh riêng, hài hước vừa phải** (người dùng 17/11: "3 hoạt ảnh dây lắc lư, dây nhún, nhảy ko dây cx
+  phải khác nhau … hài hước"; rồi "hài hước đừng lố quá"): đu dây = `pup_sheet_y` (16 khung, thân lắc theo dây, chân văng),
+  dây nhún = `pup_sheet_z` (`Pose.Bungee`, 16 khung: chìm duỗi chân, bật co gối cười), nhảy không dây = `pup_sheet_q2`
+  (bịt mũi nhảy, rơi vỗ vây). Khung đu và nhún chọn theo pha dây (`SwingRope.Phase` → `PupRig.DrivenPhase`), không chạy
+  tự do, nên thân khớp nhịp dây; khung đu tự nghiêng nên dây không vung thân thêm (`SwingIsDrawn`). Bản vẽ "lố" đầu tiên
+  (lè lưỡi, thân kéo dãn, nhún treo ngược) bị loại.
+- **Kẹt vách kiểu CPC** (người dùng 17/11: "vẽ lại hải cẩu dính … dính chưa nằm đúng vị trí", "nhìn hơi xấu, học kiểu của
+  cpc"; chơi CPC trực tiếp): chim kẹt trần nằm ngửa ép lưng vào đá, mặt và bụng quay ra, vây dang chữ T, chân đạp, mất mũ;
+  chim kẹt dốc nằm bẹp dọc mặt đá. Game: chạm trần (normal.y < −0,3) → `Pose.Stuck` = `pup_sheet_t3` (16 khung, neo đỉnh
+  đầu vào đá); chạm vách/dốc → `Pose.StuckSlope` = `pup_sheet_t2` hàng 3–4 (neo bụng vào đá, đầu hướng ra chỗ trống). Chỗ
+  kẹt phải có đá thật (`ClearOfStuck` dò lại mặt đá bằng `NearestRock`; trước đó con bị đẩy quá mép vách lơ lửng giữa trời).
+  Bỏ các bản vùi đầu / mặt bẹp / cụm tuyết (sheet X, X2) vì xấu và không giống CPC.
+- **Văng theo CPC** (video 60 fps): cú chạm đầu ném hải cẩu theo cung dài cao (`FlingSpeed` 7,5, góc ≥50°, thường bật
+  ngược lại), mỗi lần đập vách sau đó nảy mạnh kèm vòng vàng + khói (`FlingKeep` 0,65); trúng gấu cũng văng xa như vậy
+  (bỏ cú nảy thấp `bearBounce`).
+- **Sửa 17/11 (tiếp)**: không còn va chạm với cầu (hải cẩu bay qua cầu, chỉ đá chặn); hải cẩu kẹt = một kiểu bẹp như bánh,
+  tay chân dang, mặt quay ra (`pup_sheet_t4`, 16 khung, lưng áp đá), dính ngay chỗ chạm, chồng lên nhau được (người dùng:
+  "dính đè nhau cx đc"). Đu dây cân hai bên: chỉ dùng nửa trái của bộ khung (0 = xa trái … 4 = thẳng) và lật gương cho bên
+  phải theo góc dây (`SwingRope.Lean` → `PupRig.SwingLean`). Văng theo CPC (xem lại 20–30 fps): giữ MỘT tư thế vùng vẫy và
+  xoay cả thân ~1 vòng/0,5 s theo chiều bay (`Tumble`/`Spin`), không cuộn tròn, không đổi sang khung lộn nhào; mỗi lần đập
+  có mây tuyết trắng + vòng vàng + vài cục tuyết (`Fx.Splat`), nảy 3 lần (`BaseBounces` 3, giữ 75 % tốc độ).
+- **Văng theo CPC, xem lại 60 fps (17/11)** (người dùng: "vẽ lại văng, ko đc tận dụng", "cpc có kiểu văng lộn lung tung
+  các hướng và kiểu lộn tròn"): trên không là MỘT dáng vẽ riêng `pup_sheet_f2` (gập người về trước như ngồi giữa không,
+  chân thò dưới bụng, vây hất ra sau; 16 khung rung nhẹ) và code xoay cả thân, mỗi lần đập đổi chiều/tốc độ ngẫu nhiên và
+  có khi lật mặt (`Spin`) → lộn lung tung mọi hướng. Hết lượt nảy mà còn trớn trên sàn thì cuộn tròn `pup_sheet_r2` và
+  lăn như bánh xe (`RollOn`, quay theo tốc độ dọc mặt đất). Bỏ các bản: thân cong cứng, co người nhìn lưng.
+- **Luồng sang màn như CPC** (người dùng 17/11: "khi sang màn mới phải hiện map để hải cẩu di chuyển sang ô mới đã thì mới
+  sang màn tiếp theo"): "Tiếp" ở thẻ thắng mở bản đồ, hải cẩu nhảy từ ô vừa thắng sang ô kế (`MapView.HopFrom`), đáp xong
+  0,6 s thì tự vào màn đó (`MapView.PlayAfterHop`); không có cú nhảy (màn cũ đã thắng) thì chờ 1,2 s rồi vào.
+- **Mỗi thành một bản đồ riêng, 10 thành, 41 màn/thành** (người dùng 17/11: "sang thành khác thì map cx phải khác", "màu
+  nền của các map cx phải khác nhau", "mỗi thành có 41 màn", "tối đa 10 thành"): Vịnh Băng Giá (xanh dương, map 1), Hẻm
+  Núi Băng (tím), Rừng Cực Quang (xanh ngọc), Cảng Đóng Băng (hoàng hôn), Hang Pha Lê (ngọc lam), Núi Lửa (đỏ cam), Đảo
+  Anh Đào (hồng), Cung Điện Băng (xanh đêm + vàng), Đồng Cỏ Hổ Phách (vàng nâu), Ngai Vua Gấu (xám bão). Bảng thế giới:
+  `WorldTheme.cs` (tranh, tên `world_*` 7 thứ tiếng, màu thành). Pha bắn và pha tấn công nhuộm theo màu thành
+  (`WorldTheme.Tint`; người dùng: "các pha cx phải theo màu của thành").
+  **Luật bản đồ** (người dùng 17/11): chỉ MỘT con đường, không rẽ nhánh, không nhánh cụt; đường trải khắp bản đồ; mỗi bản
+  một dáng đường riêng; nhìn tự nhiên như map 1, không phải hình học đè lên tranh; làng ở đầu đường, cổng pháo đài ở cuối
+  đường (đường không chạy quá đích). Cách làm (`README.md` "World maps"): mình vẽ sơ đồ một nét (`Tools/map_plan.py`),
+  ChatGPT tô theo sơ đồ với map 1 làm mẫu phong cách và chấm đỏ giữa đường, `Tools/map_roadcheck.py` chấm PASS/FAIL,
+  `Tools/map_trail.py` dò chấm → `MapTrails.cs` và xoá chấm thành tranh sạch. Để ChatGPT tự nghĩ đường thì lần nào cũng
+  ra ngã ba; hai khúc đường gần nhau trong sơ đồ cũng bị nhập thành ngã ba (giữ ≥ 250 px).
+  41 màn: lồng ở màn 10, 20, 30, 40, trùm thành ở 41 (`LevelGenerator.PerCastle` 41). Lưu ý: đổi 40→41 dời chỉ số màn của
+  thành 2 trở đi một ô.
+- **Bản đồ sống động như CPC** (người dùng 17/11: "xem trên cpc ở trang map thì các animation, hoạt ảnh, UIUX nào mà game còn
+  thiếu thì thêm vào"; xem video 60 fps ở 12 lần mở bản đồ: 10, 63, 122, 206, 269, 347, 419, 514, 585, 664, 720, 785 s).
+  CPC có và game đã có sẵn: đá "?" xám, đá đã thắng thành đĩa sao, đệm xanh ở màn hiện tại, hải cẩu nhảy sang ô kế rồi tự
+  vào màn, vẫy tay / ngả mũ khi chờ, lồng trên đế cam, chữ "HELP!" đỏ ở lồng gần nhất, trùm ở cổng thành.
+  Thêm 17/11: (1) **cá nhảy khỏi mặt nước** theo vòng cung, để lại vòng sóng, vài giây một lần (`MapLife`; điểm nước do
+  `Tools/map_trail.py` tìm trên tranh → `MapTrails.<World>Water`; chỉ thế giới có nước hở: Vịnh, Hẻm núi, Cảng, Hang,
+  Cung điện, Ngai vua; dùng lại 1 cá + 2 vòng, không cấp phát mỗi lần); (2) **tia lấp lánh** bay ra khi ô vừa thắng bật
+  thành sao (`Sparkle`) kèm tiếng `star` (ô lồng: tiếng `cage`); (3) **đệm xanh ô kế bật sáng** trước khi hải cẩu nhảy;
+  (4) **lồng rung** từng đợt khi tù nhân kêu cứu (`Rattle`); (5) tiếng `boing` lúc bật nhảy, `pop` lúc đáp.
+  Không làm theo CPC: nút âm thanh / nhạc / trợ giúp ngay trên bản đồ (game này để trong Cài đặt, §R10), gấu đứng trang
+  trí giữa đảo (tranh mỗi thành đã vẽ sẵn cảnh).
+- **Xem lại bản đồ CPC 18/11** (người dùng: "xem lại map trên cpc đi xem còn thiếu hoạt ảnh, animation… thì bổ sung"; video
+  60 fps, phóng to từng vùng ở 9,8–11,6 s và 513–521 s). CPC có mà game còn thiếu, đã thêm:
+  (1) **gấu trắng đứng chơi cạnh đường**: thở, gãi, vài giây quay đầu nhìn phía kia (`MapBear`; chỗ đứng do
+  `Tools/map_trail.py bear_spots` tìm: thân gấu nằm trọn trên tuyết cùng màu mặt đường, phẳng, cách mọi ô đá ≥ 80 px,
+  trong 260 px quanh đường; `MapTrails.<World>Bears`). Hiện có ở Vịnh Băng Giá (2) và Đảo Anh Đào (1); các bản đồ khác vẽ
+  dày (cây, đá, nhà sát đường) nên không còn chỗ trống, để trống còn hơn đặt gấu đè lên cảnh;
+  (2) **tù nhân trong lồng vẫy tay** cho tới khi được cứu (tranh lồng trống; hải cẩu `pup_wave_` vẽ sau song lồng);
+  (3) **trùm đấm gió** (`bear_punch_`) xen dáng đứng và khiêu khích.
+  CPC còn có hải cẩu ngoi lên khỏi nước rồi lặn, game đã có cá nhảy cùng chỗ nước nên giữ cá.
+- **Hải cẩu trên ô và tù nhân, học CPC** (người dùng 18/11: "hải cẩu di chuyển trên ô nhìn chưa nổi bật", "hải cẩu trong
+  lồng bị lồng che … chưa có hoạt ảnh help", "nhìn cách thiết kế của cpc mà học tập"; video 514–517 s): hải cẩu to gần
+  gấp đôi ô đá, bóng dưới chân, đệm xanh lớn nhịp thở (thử mũi tên vàng: nhỏ, đè ô bên trên, CPC không có → bỏ); sang ô mới thì **đi lạch bạch** dọc
+  đường (khung `pup_walk_`, nảy nhẹ từng bước, 1,1 s) như CPC chứ không nhảy vòng cao. Tù nhân: hoạt ảnh mới `pup_help_`
+  (8 khung, giơ hai tay vẫy, há miệng kêu, nhảy nhẹ; `pup_sheet_help.png`) đứng trong lồng, song sau tối, song trước
+  mờ 35% nên thấy rõ; lồng gần nhất có chữ **CỨU!** đỏ to viền trắng, lắc lư, hiện 2 s lúc mở bản đồ rồi thu nhỏ biến mất,
+  5 s lặp lại (`Shout`), lồng rung song.
+- **Không khí riêng từng thành trên bản đồ** (người dùng 17/11: "ở các map hãy thêm các thứ sinh động phù hợp với phong
+  cảnh thành để thêm sinh động, hiện tại hơi tĩnh"; `MapWeather.cs`, bảng `Of(world)`): Vịnh Băng Giá tuyết rơi + ánh
+  lấp lánh trên băng; Hẻm Núi tuyết tím nhạt + pha lê lấp lánh; Rừng tuyết dày + dải cực quang nhấp nháy; Cảng ánh nắng
+  vàng lấp lánh + ít tuyết; Hang đốm sáng ngọc lam bay lên + pha lê lấp lánh; Núi Lửa tàn lửa cam bay lên; Anh Đào cánh
+  hoa hồng bay xoay; Cung Điện sao vàng lấp lánh + tuyết thưa; Đồng Cỏ lá cam bay ngang theo gió; Ngai Vua bão tuyết xiên
+  + chớp sáng hai nhịp. Thêm thành mới = thêm một dòng trong `Of`. Mọi hạt gộp sẵn (không cấp phát sau `Start`), nằm trên
+  Canvas con riêng để hạt bay không làm dựng lại ~200 hình ô đá; vẽ trên ô đá, dưới các nút.
+- **Phong cảnh hai pha theo thành** (người dùng 17/11: "mỗi thành thì cx thay đổi phong cảnh trong cả pha 1 và pha 2 (đất
+  đá, băng…)", "đổi cả thanh đứng nữa"): mỗi thành có 3 tranh riêng, ChatGPT vẽ, đã có đủ 9 thành (Vịnh Băng Giá dùng
+  tranh gốc):
+  - Pha 1 `pit_<thành>.png`: bản SỬA của `pit_bg_wide5.png`, giữ nguyên mọi đường viền (va chạm đo trên tranh gốc) nhưng
+    đổi đá, băng, trời, cảnh xa và chất liệu thanh cầu (pha lê tím, gỗ thông, ván tàu, gỗ mỏ, sắt đinh đỏ, gỗ sơn đỏ, khung
+    vàng kính, gỗ lũa, sắt gai). Kiểm tra: chồng viền với tranh gốc ≥ 92% (Ngai Vua 70% do đá đổi dáng, chơi thử vẫn khớp).
+  - Pha 2 `arena_sky_<thành>.png` (nền, giữ đường chân trời cùng độ cao) và `wall_<thành>.png` (mảng đá lát).
+  `Tools/prep_backgrounds.py` → `bg_pit_<thành>`, `bg_arena_sky_<thành>`, `rock_cobble_<thành>`; `WorldTheme.Scene` chọn
+  tranh của thành, thiếu tranh thì dùng tranh Vịnh Băng Giá nhuộm màu thành. Chỉ dùng tranh vẽ: không tô lại màu bằng code
+  (người dùng từ chối cách đó).
+  Lưu ý ChatGPT: hết lượt tạo ảnh của gói Plus sau khoảng 30 ảnh, mở lại sau 14 giờ; đôi khi trả ảnh sai cỡ (1536×1024)
+  làm lệch khung → gửi lại đúng tranh đã khớp vào chat mới và yêu cầu giữ 1672×941; đôi khi đưa 2 phương án "Bạn thích
+  ảnh nào hơn?" phải chọn trước khi tải; Chrome chặn tải nhiều lần từ một tab → mở tab mới cùng chat để tải.
+- **Dọn ảnh không dùng** (người dùng 17/11: "các ảnh nào ko dùng nữa thì xóa đi cho nhẹ dự án"): bỏ các tranh hố cũ
+  (`pit_bg`, `pit_bg_wide`–`wide4`, `pit_bg_box`, `pit_bg_box2`, `pit_side_walls`; tranh dùng là `pit_bg_wide5`), sheet hải
+  cẩu bị loại (`pup_sheet_b/c_rejected_style`, `pup_reference*`, `pup_ball_bare`), `map_world_stones` (dùng bản `stones40`),
+  và trang bản đồ 2 cũ (`map_glacier` → `map_bg_2`; bản đồ giờ là một tranh `map_bg_world`). Còn giữ: ảnh `cpc_ref_*`
+  (tham chiếu), `feature_graphic`, `app_icon`.
+Chưa làm: mây trôi riêng (mây vẽ liền trong tranh nền); bánh răng quay (cần tranh bánh răng).
+
+### R12. Thành không giới hạn, mỗi thành một bản đồ 60 màn như CPC
+(người dùng 16/11: "vô hạn thành và nhiều màn như cpc"; "thiết kế lại trang map, học tập cpc, và thiết kế cho t nhiêu đó màn
+trong 1 thành như cpc")
+- **Mỗi thành = 1 bản đồ 60 màn**, chơi lần lượt từng ô như CPC (bản đồ CPC ~50–60 ô, 5 lồng cách nhau ~10 ô, gấu trùm cuối).
+  Màn 10, 20, 30, 40, 50 là **lồng giải cứu** (trùm nhỏ, lời "các bạn hải cẩu trong lồng đã được thả"), màn 60 là
+  **trùm của thành** ("{tên thành} đã được giải cứu!"), màn 25 và 45 là **cá thưởng**. Mở khoá: màn trước đã có sao
+  (màn đã thắng luôn mở). Thành sau mở khi hạ trùm màn 60. Chỉ số: thành k = k·60 … k·60+59 (`LevelCatalog`).
+- **18 màn đầu vẽ tay** (asset, giữ nguyên thứ tự: màn 11 cá, màn 12 trùm/lồng); mọi màn sau do **`LevelGenerator`**
+  dựng lúc chạy từ bộ khối `LevelBlueprint` (cột đá, tháp băng có nêm, vòm, cao nguyên, đồi, lính gác sau khối tuyết, hang,
+  cổng băng + nút, TNT, bệ nảy, mỏm rìa). Hạt giống = vị trí màn → chơi lại vẫn đúng màn đó.
+- **Độ khó** d = thành·6 + vị trí/10 (tăng 1 mỗi 10 màn): gấu 4 → 10, dư gấu 2 → 1 → 0, dư hải cẩu 3 → 1, mũ giáp tới 60 %,
+  khối đá tới 40 %, hang/cổng/bệ nảy nhiều dần; trùm 2 → 5 mạng (trùm cuối +1). Bảng màu đấu trường đổi theo từng đảo
+  (mỗi 20 màn).
+- **Bản đồ** (`MapView`): tranh `map_world.png` (ChatGPT, 3 đảo băng, đường mòn chữ S từ làng igloo tới pháo đài gấu, cầu gỗ,
+  thang dây). 60 ô "?" nhỏ (58 px) rải đều theo đường mòn (`Trail`, đo trên tranh; `Resample`), ô lồng/trùm đứng trên đế cam,
+  "HELP!" ở lồng gần nhất chưa mở, ô đã qua hiện sao nhỏ, hải cẩu đứng ở ô kế. Ô co giãn cùng tranh trên mọi tỉ lệ màn hình.
+  Mỗi thành một trang (tông màu riêng), trang thành kế hiện sẵn (khoá). Bảng sao: sao của thành /180.
+- Bệ nảy đặt cao hơn vật cao nhất bên dưới ≥ 1,0 (bỏ nếu phải cao quá 5,6); đồi chỉ ở lô rộng ≥ 3,4; khe hang rộng 2,0;
+  gấu sau cổng băng ở 10,1 / 12,0 cách TNT 11,05.
+- **16/11 (sau)**: mỗi thành **40 màn** (người dùng: "cho 40 màn cho thoáng ra"): màn 10, 20, 30 lồng, 40 trùm thành; cá ở 15 và
+  35; d = thành·4 + vị trí/10. Đường mòn lấy từ 51 viên đá ChatGPT vẽ lên tranh (`map_world_stones40.png`, `Tools/map_stones.py`),
+  40 ô rải đều trên đó, vẽ trên tranh sạch `map_world.png`. Hoạt ảnh bản đồ như CPC: ô vừa thắng bật sao, hải cẩu nhảy sang ô
+  kế (khung `drop_jump`), chờ thì vẫy tay và ngả mũ, gấu trùm ở cổng cử động.
+- **3 kiểu thả** (người dùng: "đu dây, dây lên xuống và hải cẩu nhảy xuống ko dây, tùy màn"): `LaunchStyle.Swing/Bungee/Drop`.
+  Drop: hải cẩu ngồi xổm ở mép cầu, nhảy (0,25 s), rơi nhanh qua tầm cần bắn (trọng lực 9, tối đa 5,5); trượt thì rơi xuống
+  tuyết choáng, OOPS. Màn tự sinh xen kẽ: vị trí%5==2 dây nhún, ==4 nhảy.
+- **Xe bắn mới** (`catapult_parts_2.png`): bỏ nồi hơi, sàn gỗ phẳng; người kéo cần đứng NGANG quay về hố (`pup_sheet_r.png`,
+  cần gạt riêng, chờ + kéo 8 khung). Tranh mới vẽ riêng cho từng việc, không mượn khung cũ.
+- **Lưu**: mảng sao/hoàn hảo tự nới (`SaveData.Record`, `StarsOf`); `LevelCount` = 18 màn vẽ tay.
+- Test: `LevelGeneratorTests` (ổn định; mỗi thành 5 lồng + trùm cuối + 2 cá; 8 thành × 60 màn: gấu đứng trên vật, không chôn,
+  không chồng, bệ nảy/TNT không chạm gấu, đủ hải cẩu; thành 5 khó hơn thành 1).
 
 ## 0. Quan sát từ bản tham chiếu (chơi thật + xem 3 video, 11/11/2026)
 

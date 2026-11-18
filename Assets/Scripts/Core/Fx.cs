@@ -67,19 +67,6 @@ namespace SealCatapult.Core
             }
         }
 
-        /// <summary>Shards that stay where they fell for the rest of the level (the reference keeps every cube's rubble): small
-        /// sprites scattered around the break point, no physics, drawn just over the floor.</summary>
-        public static void Rubble(string sprite, Vector2 at, int count, float size, float spread)
-        {
-            if (!Art.Has(sprite)) return;
-            for (int i = 0; i < count; i++)
-            {
-                var sr = Art.Spawn(sprite, null, at + new Vector2(Random.Range(-spread, spread), Random.Range(-spread * 0.6f, spread * 0.2f)), size * Random.Range(0.7f, 1.3f), 11);
-                sr.transform.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
-                sr.color = new Color(1f, 1f, 1f, 0.9f);
-            }
-        }
-
         /// <summary>Soft snow puffs that swell and fade: impacts, launches, landings.</summary>
         public static void Puff(Vector2 at, int count, float spread = 0.4f)
         {
@@ -91,6 +78,113 @@ namespace SealCatapult.Core
                 p.grow = 1.2f;
             }
         }
+
+        /// <summary>A ring of snow puffs flung straight out from a hit (CPC, live 16/11: every ice impact).</summary>
+        public static void ImpactRing(Vector2 at, int count = 8, float speed = 3.2f)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float a = (i + Random.value * 0.4f) / count * Mathf.PI * 2f;
+                var p = Particle("snow_puff", at, Random.Range(0.3f, 0.45f), 41);
+                p.velocity = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * speed;
+                p.drag = 5f;
+                p.life = 0.45f;
+                p.grow = 0.9f;
+            }
+        }
+
+        /// <summary>A quick white round flash where a pup strikes rock (CPC, live 16/11).</summary>
+        public static void Flash(Vector2 at, float size = 0.9f)
+        {
+            var p = Particle("snow_puff", at, size, 42);
+            p.life = 0.16f;
+            p.grow = 5f;
+            p.drag = 0f;
+        }
+
+        /// <summary>CPC's ice break (video at 60 fps, 17/11): the block turns into a heap of small chunks that fills its
+        /// own outline and hangs there, then twinkles and is gone; a few chunks pop up and drift down slowly.</summary>
+        public static void IceBreak(Vector2 at, Vector2 size)
+        {
+            int cols = Mathf.Clamp(Mathf.RoundToInt(size.x / ChunkCell), 1, 6);
+            int rows = Mathf.Clamp(Mathf.RoundToInt(size.y / ChunkCell), 1, 6);
+            Vector2 cell = new Vector2(size.x / cols, size.y / rows);
+            for (int y = 0; y < rows; y++)
+                for (int x = 0; x < cols; x++)
+                {
+                    Vector2 p0 = at - size * 0.5f + new Vector2((x + 0.5f) * cell.x, (y + 0.5f) * cell.y);
+                    var d = Particle(Chunk(), p0 + Random.insideUnitCircle * cell.x * 0.15f, Mathf.Min(cell.x, cell.y) * Random.Range(0.75f, 1.05f), 11);
+                    d.transform.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+                    d.velocity = Random.insideUnitCircle * 0.12f;
+                    d.drag = 2f;
+                    d.life = Random.Range(1.1f, 1.5f);
+                    d.shrinkOut = true;
+                    if (Random.value < 0.35f) Twinkle(p0, d.life * 0.8f);
+                }
+            for (int i = 0; i < FlyingChunks; i++)
+            {
+                float a = (90f + Random.Range(-60f, 60f)) * Mathf.Deg2Rad;
+                var d = Particle(Chunk(), at, Random.Range(0.16f, 0.24f), 41);
+                d.velocity = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(3f, 4.6f);
+                d.gravity = 2.5f;
+                d.drag = 1.2f;
+                d.spin = Random.Range(-200f, 200f);
+                d.life = Random.Range(1f, 1.4f);
+            }
+        }
+
+        /// <summary>CPC's bounce mark (video, 17/11): a big white snow cloud at the contact, a gold ring and a few snowballs
+        /// scattering out of it.</summary>
+        public static void Splat(Vector2 at)
+        {
+            var cloud = Particle("snow_puff", at, 0.9f, 42);
+            cloud.grow = 1.4f;
+            cloud.drag = 0f;
+            cloud.life = 0.35f;
+            var ring = Particle("impact_ring", at, 0.3f, 43);
+            ring.grow = 4f;
+            ring.life = 0.3f;
+            for (int i = 0; i < 5; i++)
+            {
+                var b = Particle("snowball", at, Random.Range(0.14f, 0.22f), 42);
+                b.velocity = Random.insideUnitCircle.normalized * Random.Range(1.5f, 3f) + Vector2.up;
+                b.gravity = 4f;
+                b.drag = 1f;
+                b.life = Random.Range(0.4f, 0.6f);
+            }
+        }
+
+        /// <summary>Gold rings and grey smoke balls where a pup smashes ice (CPC, 17/11).</summary>
+        public static void HitRings(Vector2 at)
+        {
+            var big = Particle("impact_ring", at, 0.35f, 42);
+            big.grow = 4f;
+            big.life = 0.3f;
+            var small = Particle("impact_ring_small", at + Random.insideUnitCircle * 0.25f, 0.2f, 42);
+            small.grow = 4f;
+            small.life = 0.35f;
+            for (int i = 0; i < 3; i++)
+            {
+                var p = Particle("smoke_ball", at + Random.insideUnitCircle * 0.25f, Random.Range(0.22f, 0.34f), 41);
+                p.velocity = Random.insideUnitCircle * 0.8f + Vector2.up * 0.3f;
+                p.drag = 3f;
+                p.grow = 0.6f;
+                p.life = Random.Range(0.45f, 0.7f);
+            }
+        }
+
+        static void Twinkle(Vector2 at, float delay)
+        {
+            var t = Particle("twinkle", at, 0.22f, 43);
+            t.delay = delay;
+            t.life = delay + 0.35f;
+            t.grow = 1.5f;
+        }
+
+        static string Chunk() => ChunkNames[Random.Range(0, ChunkNames.Length)];
+        static readonly string[] ChunkNames = { "ice_chunk_0", "ice_chunk_1", "ice_chunk_2", "ice_chunk_3", "ice_chunk_4", "ice_chunk_5", "ice_chunk_6", "ice_chunk_7", "ice_chunk_8" };
+        const float ChunkCell = 0.3f;   // world units per heap chunk
+        const int FlyingChunks = 5;
 
         /// <summary>Three little snowballs circling a dazed head (the genre's dizzy mark, report §11).</summary>
         public static void DizzyOrbit(Transform head, Vector2 offset, float duration)
@@ -144,10 +238,14 @@ namespace SealCatapult.Core
         static TMP_FontAsset font;
         static Material outline;
 
-        public static void FloatingText(string text, Vector2 at, Color color, float size = 5f, float life = 1.1f)
+        /// <param name="tilt">Degrees, anticlockwise: CPC's call-outs sit tilted.</param>
+        /// <param name="rise">Upward drift, world units per second; 0 holds still.</param>
+        public static void FloatingText(string text, Vector2 at, Color color, float size = 5f, float life = 1.1f,
+            float tilt = 0f, float rise = 1.4f)
         {
             var go = new GameObject("FloatText");
             go.transform.position = at;
+            go.transform.rotation = Quaternion.Euler(0, 0, tilt);
             var tmp = go.AddComponent<TextMeshPro>();
             if (font == null)
             {
@@ -163,7 +261,7 @@ namespace SealCatapult.Core
             tmp.sortingOrder = 60;
             if (outline != null) tmp.fontSharedMaterial = outline;
             var d = go.AddComponent<Debris>();
-            d.velocity = new Vector2(0, 1.4f);
+            d.velocity = new Vector2(0, rise);
             d.life = life;
             d.text = tmp;
         }
@@ -212,6 +310,8 @@ namespace SealCatapult.Core
         public bool wobble;
         public float grow;          // extra scale per second (snow puffs swell)
         public float drag = 1.5f;   // air resistance, per second
+        public bool shrinkOut;      // shrinks away over the fade instead of only fading (crushed ice)
+        public float delay;         // hidden until this age (a twinkle that waits for the heap to go)
         public TMP_Text text;
         public SpriteRenderer Renderer;
         internal bool pooled;
@@ -253,6 +353,9 @@ namespace SealCatapult.Core
             wobble = false;
             grow = 0f;
             drag = 1.5f;
+            shrinkOut = false;
+            delay = 0f;
+            if (sr != null) sr.enabled = true;
             text = null;
             age = 0f;
             phase = Random.value * 10f;
@@ -276,13 +379,20 @@ namespace SealCatapult.Core
                 else Destroy(gameObject);
                 return;
             }
+            if (age < delay)
+            {
+                if (sr != null && sr.enabled) sr.enabled = false;
+                return;
+            }
+            if (sr != null && !sr.enabled) sr.enabled = true;
             velocity += Vector2.down * gravity * dt;
             velocity *= Mathf.Max(0f, 1f - drag * dt);
             var pos = (Vector2)transform.position + velocity * dt;
             if (wobble) pos.x += Mathf.Sin((age + phase) * 2.5f) * 0.006f;
             transform.position = pos;
             transform.Rotate(0, 0, spin * dt);
-            if (grow > 0f) transform.localScale = baseScale * (1f + grow * age);
+            if (grow > 0f) transform.localScale = baseScale * (1f + grow * (age - delay));
+            if (shrinkOut) transform.localScale = baseScale * Mathf.Clamp01((life - age) / (life * 0.4f));
             if (text != null) transform.localScale = baseScale * PopIn(age / PopTime);
             // The fade scales the alpha the caller spawned with (smoke 0.9, steam 0.95) instead of resetting it to 1.
             if (startAlpha < 0f) startAlpha = text != null ? text.alpha : sr != null ? sr.color.a : 1f;

@@ -51,16 +51,11 @@ namespace SealCatapult.UI
             var data = SaveSystem.Data;
 
             // Landscape: title top-left, star balance top-right, 2×2 cards, caption bar and Back along the bottom.
-            UiKit.Text(overlay, Loc.T("shop"), 72, UiKit.TopLeft, new Vector2(60, -30), new Vector2(700, 100), Color.white,
-                TextAlignmentOptions.Left, true);
-            UiKit.Image(overlay, "star_full", UiKit.TopRight, new Vector2(-180, -40), new Vector2(70, 70));
-            UiKit.Text(overlay, Shop.AvailableStars(data).ToString(), 60, UiKit.TopRight, new Vector2(-40, -42), new Vector2(130, 70),
-                Color.white, TextAlignmentOptions.Left, true);
-            UiKit.Button(overlay, Loc.T("back"), ButtonStyle.Teal, UiKit.BottomLeft, new Vector2(40, 30), new Vector2(300, 100),
-                Close, "glyph_back");
+            // Layout A top bar, the same as the map's: Back, title, stars to spend.
+            UiKit.TopBar(overlay, Loc.T("shop"), Close, Shop.AvailableStars(data).ToString(), out _);
 
             // Description bar at the bottom, like a caption for the selected upgrade.
-            var bar = UiKit.Place(UiKit.Node(overlay, "Description"), UiKit.Bottom, new Vector2(80, 30), new Vector2(1100, 100));
+            var bar = UiKit.Place(UiKit.Node(overlay, "Description"), UiKit.Bottom, new Vector2(0, 30), new Vector2(1100, 100));
             var barBg = bar.gameObject.AddComponent<UnityEngine.UI.Image>();
             barBg.sprite = Art.Get("ui_pill");
             barBg.type = UnityEngine.UI.Image.Type.Sliced;

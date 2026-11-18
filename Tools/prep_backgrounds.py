@@ -18,18 +18,18 @@ REF = ROOT / "Assets" / "Art" / "Reference"
 OUT = ROOT / "Assets" / "Resources" / "Art"
 
 # output sprite -> painting it comes from (Tools/make_art.py leaves these alone once the painting exists)
-PAINTINGS = {"bg_pit": "pit_bg_wide3.png", "bg_arena_sky": "arena_sky.png",
-             "map_bg": "map_island.png", "map_bg_2": "map_glacier.png", "bg_menu": "menu_bay.png",
+PAINTINGS = {"bg_pit": "pit_bg_wide5.png", "bg_arena_sky": "arena_sky.png",
+             "map_bg": "map_island.png", "bg_menu": "menu_bay.png",
              **{f"story_{i}": f"story_{i}.png" for i in range(1, 6)},
              "rock_cobble": "pit_side_walls_box.png", "rock_top": "pit_side_walls_box.png",
              "rock_ramp": "pit_side_walls_box.png"}
 
 
 def build_pit() -> None:
-    """bg_pit.png is ONE painting (pit_bg_wide3.png, 16:9): rock on every side is part of the picture, wide enough
+    """bg_pit.png is ONE painting (pit_bg_wide5.png, 16:9): rock on every side is part of the picture, wide enough
     for 21:9 at the scale LaunchPhase uses. Nothing is pasted or padded any more (user 13/11: the composed pit
     "nhìn vẫn lộ là bị ghép")."""
-    copy_plain("bg_pit", "pit_bg_wide3.png")
+    copy_plain("bg_pit", "pit_bg_wide5.png")   # 16/11: the bridge painted one bay longer
 
 
 def copy_plain(name: str, source: str) -> None:
@@ -128,12 +128,54 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     build_pit()
     crop_16_9("map_bg", PAINTINGS["map_bg"])
-    crop_16_9("map_bg_2", PAINTINGS["map_bg_2"])   # Glacier River, levels 13–18 (ChatGPT, 16/11)
     crop_16_9("bg_menu", PAINTINGS["bg_menu"])
     for i in range(1, 6):
         crop_16_9(f"story_{i}", PAINTINGS[f"story_{i}"])
     build_terrain()
     copy_plain("bg_arena_sky", PAINTINGS["bg_arena_sky"])
+    # One map painting per castle world (user 17/11: "sang thành khác thì map cx phải khác", "màu nền … khác nhau");
+    # trails come from the red-dot copies via Tools/map_trail.py. Kept at the painting frame MapView measures (1672×941).
+    copy_plain("map_bg_world", "map_world.png")
+    for world in ("canyon", "forest", "harbour", "caves", "volcano", "blossom", "palace", "tundra", "throne"):
+        copy_plain(f"map_bg_{world}", f"map_{world}.png")
+    build_scenes()
+
+
+WORLDS = ("canyon", "forest", "harbour", "caves", "volcano", "blossom", "palace", "tundra", "throne")
+SKY_SIZE = (1536, 1024)    # arena_sky.png: AttackPhase places the horizon by this frame
+WALL_SIZE = (1536, 1024)   # pit_side_walls_box.png
+PIT_SIZE = (1672, 941)     # pit_bg_wide5.png: LaunchPhase's colliders are measured on it
+
+
+def cover(im: Image.Image, size: tuple[int, int]) -> Image.Image:
+    """Scales to cover `size`, then centre-crops: ChatGPT returns a slightly different aspect."""
+    k = max(size[0] / im.width, size[1] / im.height)
+    im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
+    x, y = (im.width - size[0]) // 2, (im.height - size[1]) // 2
+    return im.crop((x, y, x + size[0], y + size[1]))
+
+
+def build_scenes() -> None:
+    """Each castle's own scenery for both phases (user 17/11: "mỗi thành thì cx thay đổi phong cảnh trong cả pha 1 và pha
+    2 (đất đá, băng…)", "đổi cả thanh đứng nữa"), from three ChatGPT pictures per world in Assets/Art/Reference:
+    pit_<w>.png (an EDIT of pit_bg_wide5.png that keeps every outline, so the colliders stay; its bridge is painted in
+    the world's own material), arena_sky_<w>.png and wall_<w>.png (an edit of pit_side_walls_box.png; its left part is
+    the cobble texture). Only painted pictures are used: a missing one leaves the Frost Bay art, tinted (WorldTheme)."""
+    for w in WORLDS:
+        for name, source, size, crop in ((f"bg_pit_{w}", f"pit_{w}.png", PIT_SIZE, None),
+                                         (f"bg_arena_sky_{w}", f"arena_sky_{w}.png", SKY_SIZE, None),
+                                         (f"rock_cobble_{w}", f"wall_{w}.png", WALL_SIZE, (0, 0, 760, 1024))):
+            path = REF / source
+            if not path.exists():
+                print(f"skip {name}: {source} not in Assets/Art/Reference yet")
+                continue
+            raw = Image.open(path).convert("RGB")
+            if name.startswith("bg_pit_") and raw.size != size:
+                # The pit's colliders are measured on the 1672x941 original: a rescaled or cropped edit moves the rock.
+                raise SystemExit(f"{source} is {raw.size[0]}x{raw.size[1]}, not {size[0]}x{size[1]}: repaint it at that size")
+            im = cover(raw, size)
+            (im.crop(crop) if crop else im).save(OUT / f"{name}.png", optimize=True)
+            print(f"{name}.png")
 
 
 if __name__ == "__main__":

@@ -208,6 +208,19 @@ namespace SealCatapult.Core
             ["collect_fish"] = new[] { "Fly through the fish to collect them!", "Bay xuyên qua đàn cá để gom cá!", "Flieg durch die Fische und sammle sie ein!", "Vole à travers les poissons pour les ramasser !", "¡Vuela entre los peces para recogerlos!", "Vola tra i pesci per raccoglierli!", "Przeleć przez ryby, by je zebrać!" },
             ["fish_got"] = new[] { "Fish collected: {0}/{1}", "Cá đã gom: {0}/{1}", "Gesammelte Fische: {0}/{1}", "Poissons ramassés : {0}/{1}", "Peces recogidos: {0}/{1}", "Pesci raccolti: {0}/{1}", "Zebrane ryby: {0}/{1}" },
             ["ending"] = new[] { "Frost Bay is free! On to the Glacier River.", "Vịnh Băng Giá đã được giải cứu! Tiếp tục tới Sông Băng.", "Die Frostbucht ist frei! Weiter zum Gletscherfluss.", "La Baie Gelée est libre ! En route vers la Rivière Glacée.", "¡La Bahía Helada es libre! Rumbo al Río Glaciar.", "La Baia Gelata è libera! Ora verso il Fiume Glaciale.", "Mroźna Zatoka jest wolna! Teraz nad Lodową Rzekę." },
+            ["castle_freed"] = new[] { "{0} is free! On to the next castle.", "{0} đã được giải cứu! Tiến tới thành tiếp theo.", "{0} ist frei! Weiter zur nächsten Burg.", "{0} est libéré ! En route vers le château suivant.", "¡{0} es libre! Al siguiente castillo.", "{0} è libero! Avanti al prossimo castello.", "{0} wolny! Ruszamy do następnego zamku." },
+            ["drop_tip"] = new[] { "No rope! Fire as the pup drops past the catapult", "Không dây! Bắn lúc hải cẩu rơi ngang qua máy bắn", "Kein Seil! Feuere, wenn die Robbe am Katapult vorbeifällt", "Pas de corde ! Tire quand le phoque passe devant la catapulte", "¡Sin cuerda! Dispara cuando la foca caiga junto a la catapulta", "Niente corda! Spara quando la foca cade davanti alla catapulta", "Bez liny! Strzelaj, gdy foka spada obok katapulty" },
+            ["cage_freed"] = new[] { "The caged pups are free! On along the trail.", "Các bạn hải cẩu trong lồng đã được thả! Đi tiếp thôi.", "Die gefangenen Robben sind frei! Weiter des Weges.", "Les phoques en cage sont libres ! On continue.", "¡Las focas enjauladas son libres! A seguir.", "Le foche in gabbia sono libere! Avanti.", "Foki z klatki są wolne! Ruszamy dalej." },
+            ["castle_n"] = new[] { "Castle {0}", "Thành {0}", "Burg {0}", "Château {0}", "Castillo {0}", "Castello {0}", "Zamek {0}" },
+            ["world_canyon"] = new[] { "Glacier Canyon", "Hẻm Núi Băng", "Gletscherschlucht", "Canyon glacé", "Cañón Glaciar", "Canyon di ghiaccio", "Lodowy Kanion" },
+            ["world_forest"] = new[] { "Aurora Forest", "Rừng Cực Quang", "Polarlichtwald", "Forêt boréale", "Bosque Aurora", "Foresta dell'aurora", "Las Zorzy" },
+            ["world_harbour"] = new[] { "Frozen Harbour", "Cảng Đóng Băng", "Eishafen", "Port gelé", "Puerto Helado", "Porto ghiacciato", "Zamarznięty Port" },
+            ["world_caves"] = new[] { "Crystal Caves", "Hang Pha Lê", "Kristallhöhlen", "Grottes de cristal", "Cuevas de Cristal", "Grotte di cristallo", "Kryształowe Jaskinie" },
+            ["world_volcano"] = new[] { "Fire Peak", "Núi Lửa Băng", "Feuergipfel", "Pic de feu", "Pico de Fuego", "Picco di fuoco", "Ognisty Szczyt" },
+            ["world_blossom"] = new[] { "Blossom Valley", "Thung Lũng Hoa", "Blütental", "Vallée fleurie", "Valle Florido", "Valle dei fiori", "Kwitnąca Dolina" },
+            ["world_palace"] = new[] { "Starlight Palace", "Cung Điện Sao", "Sternenpalast", "Palais étoilé", "Palacio Estelar", "Palazzo stellato", "Gwiezdny Pałac" },
+            ["world_tundra"] = new[] { "Amber Tundra", "Lãnh Nguyên Hổ Phách", "Bernsteintundra", "Toundra ambrée", "Tundra Ámbar", "Tundra d'ambra", "Bursztynowa Tundra" },
+            ["world_throne"] = new[] { "Bear King's Throne", "Ngai Vua Gấu", "Thron des Bärenkönigs", "Trône du Roi Ours", "Trono del Rey Oso", "Trono del Re Orso", "Tron Króla Niedźwiedzi" },
             ["star_rule_1"] = new[] { "Mission passed", "Qua màn", "Mission geschafft", "Mission réussie", "Misión superada", "Missione superata", "Misja zaliczona" },
             ["star_rule_2"] = new[] { "All bears down, a pup to spare", "Hạ hết gấu khi còn dư hải cẩu", "Alle Bären besiegt, eine Robbe übrig", "Tous les ours assommés, un phoque en réserve", "Todos los osos derribados y una foca de sobra", "Tutti gli orsi abbattuti, una foca di scorta", "Wszystkie niedźwiedzie pokonane, foka w zapasie" },
             ["star_rule_3"] = new[] { "60% of the fortress smashed", "Phá 60% pháo đài", "60 % der Festung zerstört", "60 % de la forteresse détruite", "60 % de la fortaleza destruida", "60% della fortezza distrutto", "60% twierdzy rozbite" },
@@ -216,6 +229,8 @@ namespace SealCatapult.Core
             ["star_fish_3"] = new[] { "80% of the fish", "Gom 80% số cá", "80 % der Fische", "80 % des poissons", "El 80 % de los peces", "L'80% dei pesci", "80% ryb" },
             ["retry_attack"] = new[] { "Attack again", "Tấn công lại", "Nochmal angreifen", "Réattaquer", "Atacar de nuevo", "Attacca di nuovo", "Atakuj ponownie" },
             ["star_boss_2"] = new[] { "Boss down with a pup to spare", "Hạ trùm khi còn dư hải cẩu", "Boss besiegt, eine Robbe übrig", "Boss vaincu, un phoque en réserve", "Jefe derrotado y una foca de sobra", "Boss sconfitto, una foca di scorta", "Boss pokonany, foka w zapasie" },
+            ["play_level"] = new[] { "Play · Level {0}", "Chơi · Màn {0}", "Spielen · Level {0}", "Jouer · Niveau {0}", "Jugar · Nivel {0}", "Gioca · Livello {0}", "Graj · Poziom {0}" },
+            ["zone_glacier"] = new[] { "Glacier River", "Sông Băng", "Gletscherfluss", "Rivière Glacée", "Río Glaciar", "Fiume Glaciale", "Lodowa Rzeka" },
         };
 
         /// <summary>Language codes in table-column order; also the values stored in the save.</summary>

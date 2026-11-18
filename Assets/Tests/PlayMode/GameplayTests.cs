@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -138,13 +139,23 @@ namespace SealCatapult.Tests
         /// level once; logs escapes, bears down and the result per level and captures each arena. Not an assertion on
         /// balance: it reports, so level tuning has numbers (user 13/11: "chơi các màn để tối ưu").</summary>
         [UnityTest, Timeout(3600000)]   // 18 levels × up to 150 s each: 30 min was too short once the Glacier River came in
-        public IEnumerator BotPlaysEveryLevel()
+        public IEnumerator BotPlaysEveryLevel() => Sweep(Enumerable.Range(0, GameDatabase.Instance.levels.Length), "sweep");
+
+        /// <summary>The bot on a sample of generated castles (castles without end): early, middle and late, normal,
+        /// bonus and boss levels. Like the sweep it reports; it fails only if a level never reaches a result.</summary>
+        [UnityTest, Timeout(1800000)]
+        public IEnumerator BotPlaysGeneratedCastles() =>
+            Sweep(new[] { 18, 19, 24, 34, 39, 40, 60, 79, 120, 159 }, "castles");   // normal, cage, bonus, final boss; castles 1–4
+
+        const float Fast = 3f;
+
+        IEnumerator Sweep(IEnumerable<int> levels, string label)
         {
             var report = new System.Text.StringBuilder();
-            int count = GameDatabase.Instance.levels.Length;
-            for (int i = 0; i < count; i++)
+            foreach (int i in levels)
             {
                 yield return LoadLevel(i);
+                if (label == "castles") Time.timeScale = Fast;   // a smoke run: it only has to reach a result
                 var game = Object.FindFirstObjectByType<GameManager>();
                 var launch = Object.FindFirstObjectByType<SealCatapult.Launch.LaunchPhase>();
                 var attack = Object.FindFirstObjectByType<AttackPhase>();
@@ -162,7 +173,7 @@ namespace SealCatapult.Tests
                     var p = attack.Current;
                     if (p != null && !p.Dived && !p.Landed)
                     {
-                        if (!shot) { yield return new WaitForSeconds(0.2f); Capture($"sweep_level{i + 1:00}"); shot = true; }
+                        if (!shot) { yield return new WaitForSeconds(0.2f); Capture($"{label}_level{i + 1:00}"); shot = true; }
                         var bear = Object.FindObjectsByType<Bear>(FindObjectsSortMode.None).Where(b => !b.IsDown)
                             .OrderBy(b => b.transform.position.x).FirstOrDefault();
                         if (bear != null && p.transform.position.x > bear.transform.position.x - 0.9f * (p.transform.position.y - bear.transform.position.y))
@@ -175,8 +186,11 @@ namespace SealCatapult.Tests
                     yield return null;
                 }
                 report.Append($" L{i + 1}:{game.Current} out{launch.Passed} down{attack.BearsDown}/{attack.BearsRequired} dives{dives} {t:0}s |");
+                Time.timeScale = 1f;
+                if (label == "castles")
+                    Assert.IsTrue(game.Current == GameManager.State.Won || game.Current == GameManager.State.Lost, $"level {i + 1} never reached a result");
             }
-            Debug.Log("[SealCatapult] sweep:" + report);
+            Debug.Log($"[SealCatapult] {label}:" + report);
         }
 
         [UnityTest]
@@ -363,6 +377,10 @@ namespace SealCatapult.Tests
             d.musicVolume = 0.35f;
             d.muted = false;
             yield return LoadLevel(0);
+            // Layout A: the switches live in the pause menu (and on the main menu's Settings), not on the HUD.
+            var game = Object.FindFirstObjectByType<GameManager>();
+            game.TogglePause();
+            yield return null;
             var music = GameObject.Find("Button glyph_music").GetComponent<UnityEngine.UI.Button>();
             var sound = GameObject.Find("Button glyph_sound").GetComponent<UnityEngine.UI.Button>();
             var musicMark = music.transform.Find("ui_bar").GetComponent<UnityEngine.UI.Image>();
@@ -381,6 +399,7 @@ namespace SealCatapult.Tests
             d.musicVolume = keepMusic;
             d.muted = keepMuted;
             SaveSystem.Save();
+            game.TogglePause();   // leave the level running for the next test
         }
 
         /// <summary>Going to the background mid-level pauses the game (and coming back leaves it paused).</summary>

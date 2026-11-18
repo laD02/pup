@@ -253,6 +253,39 @@ namespace SealCatapult.UI
             return button;
         }
 
+        /// <summary>Layout A's top bar for full screens (map, shop): square Back on the left, the screen's title beside it,
+        /// a star pill on the right when <paramref name="starsText"/> is given. GAME_DESIGN.md §R10.</summary>
+        public static RectTransform TopBar(Transform root, string title, Action onBack, string starsText, out TextMeshProUGUI starsLabel)
+        {
+            var bar = Node(root, "Top bar");
+            bar.anchorMin = new Vector2(0f, 1f);
+            bar.anchorMax = new Vector2(1f, 1f);
+            bar.pivot = new Vector2(0.5f, 1f);
+            bar.anchoredPosition = new Vector2(0f, -24f);
+            bar.sizeDelta = new Vector2(0f, 104f);
+            Button(bar, null, ButtonStyle.Teal, new Vector2(0f, 0.5f), new Vector2(24, 0), new Vector2(104, 104), onBack, "glyph_back");
+            Text(bar, title, 64, new Vector2(0f, 0.5f), new Vector2(150, 4), new Vector2(760, 100), White, TextAlignmentOptions.Left, true);
+            starsLabel = null;
+            if (starsText == null) return bar;
+            var stars = Place(Node(bar, "Stars"), new Vector2(1f, 0.5f), new Vector2(-24, 0), new Vector2(260, 104));
+            var pill = stars.gameObject.AddComponent<Image>();
+            pill.sprite = Art.Get("ui_pill");
+            pill.type = UnityEngine.UI.Image.Type.Sliced;
+            Image(stars, "star_full", new Vector2(0f, 0.5f), new Vector2(12, 2), new Vector2(76, 76));
+            starsLabel = Text(stars, starsText, 48, new Vector2(1f, 0.5f), new Vector2(-20, 2), new Vector2(160, 80), White, TextAlignmentOptions.Right, true);
+            return bar;
+        }
+
+        /// <summary>The ribbon title every popup panel wears, overhanging the panel's top by <paramref name="overhang"/>.</summary>
+        public static TextMeshProUGUI Ribbon(Transform panel, string title, float width, float overhang)
+        {
+            var ribbon = Image(panel, "ribbon", Top, new Vector2(0, overhang), new Vector2(width, width * 0.23f));
+            var t = Text(ribbon.transform, title, 64, Center, new Vector2(0, 8), new Vector2(width * 0.74f, 100), White,
+                TextAlignmentOptions.Center, true);
+            t.fontSizeMin = 30;
+            return t;
+        }
+
         public static Slider Slider(Transform parent, Vector2 anchor, Vector2 position, Vector2 size, float value, Action<float> onChange)
         {
             var root = Place(Node(parent, "Slider"), anchor, position, size);
@@ -434,6 +467,42 @@ namespace SealCatapult.UI
     }
 
     /// <summary>Gentle bob/pulse for hints and titles.</summary>
+    /// <summary>One arcing hop from <see cref="from"/> to <see cref="to"/> (anchored positions), then a gentle bob.</summary>
+    public class Hop : MonoBehaviour
+    {
+        public Vector2 from, to;
+        /// <summary>Optional: hop from this element instead of <see cref="from"/> (read every frame, so it holds once
+        /// layout has placed it), keeping <see cref="fromOffset"/> above it.</summary>
+        public RectTransform fromSpot;
+        public Vector2 fromOffset;
+        /// <summary>Called once on landing (the map swaps the jump frames back to the waiting loop).</summary>
+        public System.Action landed;
+        public const float Delay = 0.4f;
+        public float duration = 0.7f, height = 120f;   // the map's walk: longer and low (MapView)
+        float t = -Delay;
+
+        Vector2 From => fromSpot != null
+            ? (Vector2)transform.parent.InverseTransformPoint(fromSpot.position) + fromOffset
+            : from;
+
+        void Start() => ((RectTransform)transform).anchoredPosition = From;
+
+        void Update()
+        {
+            t += UnityEngine.Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / duration);
+            // A low height bounces each step (four steps), a high one is a single leap.
+            float lift = height < 40f ? Mathf.Abs(Mathf.Sin(k * Mathf.PI * 4f)) : Mathf.Sin(k * Mathf.PI);
+            ((RectTransform)transform).anchoredPosition = Vector2.Lerp(From, to, k) + Vector2.up * height * lift;
+            if (k < 1f) return;
+            landed?.Invoke();
+            var bob = gameObject.AddComponent<Bob>();
+            bob.amplitude = 6f;
+            bob.speed = 3f;
+            Destroy(this);
+        }
+    }
+
     public class Bob : MonoBehaviour
     {
         public float amplitude = 10f;

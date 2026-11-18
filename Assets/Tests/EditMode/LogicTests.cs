@@ -53,7 +53,30 @@ namespace SealCatapult.Tests
 
         [Test]
         public void LevelCountMatchesTheSaveFormat() =>
-            Assert.AreEqual(SaveData.LevelCount, GameDatabase.Instance.levels.Length);
+            Assert.AreEqual(SaveData.LevelCount, GameDatabase.Instance.levels.Length);   // the hand-made levels
+
+        [Test]
+        public void SaveGrowsForGeneratedCastles()
+        {
+            var d = new SaveData();
+            d.Record(40, 2, true);
+            Assert.AreEqual(2, d.StarsOf(40));
+            Assert.IsTrue(d.PerfectOf(40));
+            Assert.AreEqual(0, d.StarsOf(500), "a level never played has no stars");
+            d.Normalize();
+            Assert.AreEqual(2, d.StarsOf(40), "Normalize keeps results past the hand-made levels");
+        }
+
+        [Test]
+        public void CorruptHugeSaveIsCutToTheGamesLevels()
+        {
+            var d = new SaveData { stars = new int[2_000_000], perfect = new int[5] };
+            d.stars[3] = 9;
+            d.Normalize();
+            Assert.AreEqual(LevelCatalog.Total, d.stars.Length, "a file's own length is never trusted past the last level");
+            Assert.AreEqual(d.stars.Length, d.perfect.Length);
+            Assert.AreEqual(3, d.StarsOf(3), "stars clamped to 0..3");
+        }
     }
 
     public class ShopTests

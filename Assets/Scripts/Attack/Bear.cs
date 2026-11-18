@@ -35,6 +35,9 @@ namespace SealCatapult.Attack
         float height;
 
         public bool IsDown => defeated;
+        /// <summary>Feet-to-top height and the spinning body (a pup's knocked-off hat rides on it, CPC).</summary>
+        public float Height => height;
+        public Transform Body => body;
 
         public static Bear Create(BearSpec spec, Vector2 origin, GameTuning tuning, Transform parent)
         {
@@ -112,10 +115,22 @@ namespace SealCatapult.Attack
                 }
                 float w = Mathf.Sin(Time.time * 3f + wavePhase);
                 body.localRotation = Quaternion.Euler(0, 0, w * 4f);
+                WatchPup();
             }
             if (Block.Armed && startY - transform.position.y > tuning.bearFallDistance) Defeat();
             if (transform.position.y < Backdrop.GroundY - 3f) Defeat();
         }
+
+        /// <summary>CPC (live 16/11): a guard bear turns to keep its eyes on a pup that flies past it.</summary>
+        void WatchPup()
+        {
+            var pup = PufferController.Latest;
+            bool behind = pup != null && pup.transform.position.x > transform.position.x + WatchMargin;
+            if (behind != watchingRight) { watchingRight = behind; rig.Face(behind); }
+        }
+
+        bool watchingRight;
+        const float WatchMargin = 0.6f;
 
         void OnCollisionEnter2D(Collision2D collision)
         {

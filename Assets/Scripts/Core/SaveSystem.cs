@@ -7,7 +7,7 @@ namespace SealCatapult.Core
     [Serializable]
     public class SaveData
     {
-        public const int LevelCount = 18;    // Frost Bay: 10 levels + bonus + boss; Glacier River: 6 levels (old saves grow in Normalize)
+        public const int LevelCount = 18;    // the hand-made levels; the arrays grow past it as generated castles are played (no end)
         public const int UpgradeCount = 5;
 
         public int version = 1;
@@ -33,9 +33,13 @@ namespace SealCatapult.Core
         /// <summary>Repairs data from older or hand-edited files so the game never indexes out of range.</summary>
         public void Normalize()
         {
-            stars = Resize(stars, LevelCount, 0, 3);
+            // Keep generated levels' results, but never trust a file's own length past the game's last level (a corrupt or
+            // hand-edited save with a huge array would allocate it at boot).
+            int levels = Mathf.Clamp(Mathf.Max(stars?.Length ?? 0, perfect?.Length ?? 0), LevelCount,
+                Mathf.Max(LevelCount, SealCatapult.Progress.LevelCatalog.Total));
+            stars = Resize(stars, levels, 0, 3);
             upgrades = Resize(upgrades, UpgradeCount, 0, 3);
-            perfect = Resize(perfect, LevelCount, 0, 1);
+            perfect = Resize(perfect, levels, 0, 1);
             musicVolume = float.IsNaN(musicVolume) ? DefaultMusic : Mathf.Clamp01(musicVolume);   // Clamp01 keeps NaN
             sfxVolume = float.IsNaN(sfxVolume) ? DefaultSfx : Mathf.Clamp01(sfxVolume);
             int earned = 0;
@@ -46,6 +50,21 @@ namespace SealCatapult.Core
             combo3 = Mathf.Max(0, combo3);
             combo4 = Mathf.Max(0, combo4);
             if (Array.IndexOf(Loc.Codes, language) < 0) language = "";
+        }
+
+        /// <summary>Best stars of a level; 0 for one never won (the arrays only reach as far as levels were played).</summary>
+        public int StarsOf(int level) => level >= 0 && level < stars.Length ? stars[level] : 0;
+
+        public bool PerfectOf(int level) => level >= 0 && level < perfect.Length && perfect[level] > 0;
+
+        /// <summary>Keeps the best result of a level, growing the arrays for the generated castles.</summary>
+        public void Record(int level, int starsWon, bool perfectWon)
+        {
+            if (level < 0) return;
+            if (level >= stars.Length) stars = Resize(stars, level + 1, 0, 3);
+            if (level >= perfect.Length) perfect = Resize(perfect, level + 1, 0, 1);
+            stars[level] = Mathf.Max(stars[level], Mathf.Clamp(starsWon, 0, 3));
+            if (perfectWon) perfect[level] = 1;
         }
 
         /// <summary>Records one pup's dive: how many bears it knocked out (combos of 2+ are counted by size).</summary>

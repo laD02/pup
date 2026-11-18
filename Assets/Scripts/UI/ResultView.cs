@@ -50,22 +50,54 @@ namespace SealCatapult.UI
                 // The winners' pile: a knocked-out bear with pups hopping on it, like the reference's result card.
                 var pile = UiKit.Place(UiKit.Node(panel, "Pile"), UiKit.Top, new Vector2(0, -215), new Vector2(360, 230));
                 UiKit.Image(pile, "bear_ko_0", UiKit.Bottom, new Vector2(0, 30), new Vector2(300, 180));
-                for (int i = 0; i < 4; i++)
+                // CPC (live 16/11): one pup cheers on a plain win; on a Perfect four bare-headed pups dance, flippers up,
+                // and stars twinkle round the title.
+                int dancers = perfect ? 4 : 1;
+                string loop = perfect && Art.Has("pup_cheer_bare_3") ? "pup_cheer_bare_" : "pup_cheer_";
+                for (int i = 0; i < dancers; i++)
                 {
-                    var pup = UiKit.Image(pile, $"pup_cheer_{i}", UiKit.Bottom, new Vector2(-120 + i * 80, 130 + (i % 2) * 20), new Vector2(96, 96));
+                    float x = dancers == 1 ? 0f : -120 + i * 80;
+                    var pup = UiKit.Image(pile, loop + "0", UiKit.Bottom, new Vector2(x, 130 + (i % 2) * 20), new Vector2(dancers == 1 ? 120 : 96, dancers == 1 ? 120 : 96));
+                    if (Art.Has(loop + "3")) pup.gameObject.AddComponent<FrameLoop>().Set(loop, 4, 6f + i);
                     var bob = pup.gameObject.AddComponent<Bob>();
                     bob.amplitude = 14f;
                     bob.speed = 4f + i;
                 }
+                if (perfect)
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var star = UiKit.Image(panel, "star_full", UiKit.Top, new Vector2(i < 2 ? -560 + i * 60 : 500 + (i - 2) * 60, -70 - (i % 2) * 50), new Vector2(54, 54));
+                        star.gameObject.AddComponent<PopIn>().delay = 0.3f + i * 0.15f;
+                        var twinkle = star.gameObject.AddComponent<Bob>();
+                        twinkle.amplitude = 8f;
+                        twinkle.speed = 5f + i;
+                    }
             }
             else
             {
-                // The failed card: the bear still standing over a dizzy pup.
-                UiKit.Image(panel, "bear_helmet", UiKit.Top, new Vector2(60, -220), new Vector2(230, 230)).gameObject.AddComponent<PopIn>().delay = 0.2f;
-                UiKit.Image(panel, "pup_stuck_0", UiKit.Top, new Vector2(-160, -300), new Vector2(170, 170));
+                // The failed card (CPC): two bears laughing over a flattened pup.
+                for (int i = 0; i < 2; i++)
+                {
+                    // Both point at the pup on the left: the laugh frames point right, so a flipped holder mirrors them
+                    // (PopIn owns the image's own scale).
+                    var holder = UiKit.Place(UiKit.Node(panel, "Laugher"), UiKit.Top, new Vector2(i == 0 ? 40 : 240, -220), new Vector2(220, 220));
+                    holder.localScale = new Vector3(-1f, 1f, 1f);
+                    var bear = UiKit.Image(holder, Art.Has("bear_laugh_0") ? "bear_laugh_0" : "bear_helmet", UiKit.Center, Vector2.zero, new Vector2(220, 220));
+                    if (Art.Has("bear_laugh_3")) bear.gameObject.AddComponent<FrameLoop>().Set("bear_laugh_", 4, 6f + i);
+                    bear.gameObject.AddComponent<PopIn>().delay = 0.2f + i * 0.15f;
+                }
+                // The beaten pup lies on its back, bare-headed and kicking (sheet T), between the laughing bears.
+                bool kicking = Art.Has("pup_stuck_wall_7");
+                var loser = UiKit.Image(panel, kicking ? "pup_stuck_wall_0" : "pup_stuck_0", UiKit.Top, new Vector2(-170, -300), new Vector2(170, 170));
+                if (kicking) loser.gameObject.AddComponent<FrameLoop>().Set("pup_stuck_wall_", 8, 10f);
             }
 
-            string line = won && boss ? Loc.T("ending") : Loc.T(bonus ? "fish_got" : "bears_hit", down, required);
+            // A cage boss frees its captive pups; the castle's own boss (last on the map) frees the castle.
+            int index = levelNumber - 1;
+            string bossLine = Progress.LevelCatalog.IsFinal(index)
+                ? Loc.T("castle_freed", MapView.CastleName(Progress.LevelCatalog.CastleOf(index)))
+                : Loc.T("cage_freed");
+            string line = won && boss ? bossLine : Loc.T(bonus ? "fish_got" : "bears_hit", down, required);
             UiKit.Text(panel, line, 44, UiKit.Top, new Vector2(0, -462), new Vector2(1100, 60), UiKit.Ink);
 
             // This game's own: the stars earned (they pay for upgrades), each over the rule that earns it, so a missing
@@ -90,10 +122,11 @@ namespace SealCatapult.UI
                     var badge = UiKit.Image(panel, "badge_perfect", UiKit.Top, new Vector2(470, -200), new Vector2(150, 150));
                     badge.gameObject.AddComponent<PopIn>().delay = 1.2f;
                 }
-                var size = new Vector2(270, 108);
-                UiKit.Button(panel, Loc.T("map"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-440, 36), size, game.ToMap, "glyph_map");
-                UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-150, 36), size, game.Retry, "glyph_retry");
-                UiKit.Button(panel, Loc.T("continue"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(300, 36), new Vector2(460, 108),
+                // Layout A: Map and Retry are square icon buttons; the next level is the one big button.
+                var square = new Vector2(120, 108);
+                UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.Bottom, new Vector2(-400, 36), square, game.ToMap, "glyph_map");
+                UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.Bottom, new Vector2(-250, 36), square, game.Retry, "glyph_retry");
+                UiKit.Button(panel, Loc.T("continue"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(150, 36), new Vector2(560, 108),
                     game.HasNextLevel ? game.NextLevel : (System.Action)game.ToMap, "glyph_next");
             }
             else

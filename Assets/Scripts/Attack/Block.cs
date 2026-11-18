@@ -165,11 +165,11 @@ namespace SealCatapult.Attack
                 default:
                     score = tuning.iceScore;
                     AudioManager.Sfx("pop");
-                    Fx.Burst("ice_shard", at, 10, 3.5f, 0.9f, 0.28f, 3f, 0.4f);
-                    Fx.Rubble("ice_shard", at, 4, 0.22f, sr.bounds.size.x * 0.5f);
+                    Fx.IceBreak(at, sr.bounds.size);
+                    Fx.HitRings(at);
                     break;
             }
-            Fx.Puff(at, 6);
+            if (Material != BlockMaterial.Ice) Fx.Puff(at, 6);   // ice: grey smoke balls come with HitRings
             Fx.Shake(tuning.shakeOnBreak);
             Broken?.Invoke(this, score);
             // Destroy waits for the end of the frame: without this a second physics step in the same frame (under 50 fps)

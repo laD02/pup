@@ -74,6 +74,16 @@ namespace SealCatapult.EditorTools
         /// save.json with `adb shell run-as` to reach later levels. Never upload it.</summary>
         public static void BuildApkQa() => BuildAndroid(false, true);
 
+        /// <summary>Re-applies the sprite import settings to every frame in Resources/Art. Frames the slicer adds later
+        /// import as "Multiple" by default and then fail to load as one Sprite (16/11: the new queue fidgets fell back
+        /// to old side-view frames and flickered). Run after Tools/slice_sheets.py.</summary>
+        [MenuItem("Seal Catapult/Configure Art Imports")]
+        public static void ConfigureArt()
+        {
+            ConfigureSprites();
+            AssetDatabase.SaveAssets();
+        }
+
         /// <summary>
         /// Store build: signed AAB for Google Play. Keystore comes from environment variables, never from the repo:
         /// SEAL_KEYSTORE (path), SEAL_KEYSTORE_PASS, SEAL_KEY_ALIAS, SEAL_KEY_PASS.
@@ -173,7 +183,7 @@ namespace SealCatapult.EditorTools
                 var settings = new TextureImporterSettings();
                 importer.ReadTextureSettings(settings);
                 float border = SliceBorder(name);
-                bool tiled = name == "rock_cobble" || name == "rock_top";   // drawn with SpriteDrawMode.Tiled
+                bool tiled = name.StartsWith("rock_cobble") || name == "rock_top" || name == "rope";   // drawn with SpriteDrawMode.Tiled (the rope tiles along its curved segments)
                 settings.spriteMeshType = border > 0 || tiled ? SpriteMeshType.FullRect : SpriteMeshType.Tight;
                 importer.SetTextureSettings(settings);
                 // beam.png is 320×90: only its ends are caps, so the border is horizontal (a 60 px top/bottom border would squash it).
@@ -189,7 +199,7 @@ namespace SealCatapult.EditorTools
         static float PixelsPerUnitFor(string name)
         {
             if (name.StartsWith("block_")) return PaintedBlockPixelsPerUnit;
-            if (name == "rock_cobble") return 1024f / 11f;   // the pit painting's own scale: 1024 px = 11 units
+            if (name.StartsWith("rock_cobble")) return 1024f / 11f;   // the pit painting's own scale: 1024 px = 11 units
             if (name == "rock_top") return 96f / 0.7f;
             return PixelsPerUnit;
         }
@@ -308,23 +318,9 @@ namespace SealCatapult.EditorTools
             EditorUtility.SetDirty(db);
         }
 
-        static void Apply(LevelData level, LevelDesigns.Design d, GameTuning tuning)
+        static void Apply(LevelData level, LevelBlueprint d, GameTuning tuning)
         {
-            level.pufferCount = d.puffers;
-            level.requiredBears = d.requiredBears;
-            level.launcher = d.launcher;
-            level.caveFrom = d.caveFrom;
-            level.caveTo = d.caveTo;
-            level.gapFrom = d.gapFrom;
-            level.gapTo = d.gapTo;
-            level.kind = d.kind;
-            level.zone = d.zone;
-            level.showTutorial = d.tutorial;
-            level.terrain = d.terrain.ToList();
-            level.blocks = d.blocks.ToList();
-            level.bears = d.bears.ToList();
-            level.objects = d.objects.ToList();
-            level.threeStarScore = LevelDesigns.ThreeStarScore(d, tuning);
+            d.Fill(level, tuning);
             EditorUtility.SetDirty(level);
         }
 

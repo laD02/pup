@@ -83,6 +83,27 @@ it), launch it once, stop it, then push a save: `adb push save.json /sdcard/Andr
 (Unity's persistentDataPath on Android is the external files dir, not `files/` under run-as). A level unlocks when the
 one before it has ≥ 1 star, e.g. `"stars":[3,3,3,3,0,3,3,0,3,3,3,0]` opens 5, 8 and 12.
 
+**Castle scenery for both phases:** per world `<w>` put three ChatGPT pictures in `Assets/Art/Reference`:
+`pit_<w>.png` (an edit of `pit_bg_wide5.png` that keeps every outline, 1672×941; the colliders are measured on the
+original), `arena_sky_<w>.png` (same composition as `arena_sky.png`) and `wall_<w>.png` (an edit of
+`pit_side_walls_box.png`). `python3 -I Tools/prep_backgrounds.py` writes `bg_pit_<w>`, `bg_arena_sky_<w>` and
+`rock_cobble_<w>` to `Resources/Art`; `WorldTheme.Scene` picks them, a missing one falls back to the Frost Bay art tinted.
+
+**World maps (one per castle, 10 castles):** every map has exactly ONE road, no fork, no dead end. ChatGPT left to
+design the road itself always paints a fork, so the road is designed here and ChatGPT only paints it:
+1. `python3 Tools/map_plan.py <dir>` draws `plan_<world>.png`: grey land, one black road (spline through the points in
+   `P`), brown bridges, S = village, F = fortress. Keep far-apart passes of the road ≥ 250 px apart (the tool prints
+   `closest`), or ChatGPT merges them into a junction.
+2. In ChatGPT attach `Assets/Art/Reference/map_world.png` (style) + the plan and ask it to paint the world along the
+   plan with small pure-red dots on the road centre; nothing else in the picture pure red (bridges, banners, lava).
+3. `python3 Tools/map_roadcheck.py <image>` must print PASS (one chain of dots, 2 ends, no fork); then look at it too:
+   village at one end, fortress gate at the other. On FAIL tell ChatGPT what is wrong and repaint.
+4. Save as `Assets/Art/Reference/map_<world>_dots.png`, then
+   `python3 -I Tools/map_trail.py canyon forest harbour caves volcano blossom palace tundra throne` (writes
+   `Assets/Scripts/UI/MapTrails.cs`: the trails, the clean `map_<world>.png`, and `<World>Water`, the open-water points
+   where the map's fish leap, for the worlds in `SEA`; a world's start/end are `ENDS` in the tool), then
+   `python3 -I Tools/prep_backgrounds.py` copies `map_<world>.png` to `Resources/Art/map_bg_<world>.png`.
+
 ## Analytics (Firebase)
 
 Firebase Analytics without the Firebase Unity SDK: `Assets/Scripts/Analytics/` (JNI), dependency

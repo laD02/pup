@@ -17,7 +17,7 @@ import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from slice_sheets import remove_background  # noqa: E402  (same background rule as the hero sheets)
+from slice_sheets import keep_body, remove_background  # noqa: E402  (same background rule as the hero sheets)
 
 ROOT = Path(__file__).resolve().parent.parent
 REF = ROOT / "Assets/Art/Reference"
@@ -29,7 +29,10 @@ PAD = 4
 
 # sheet -> names in reading order (None = drop that blob)
 SHEETS: dict[str, list[str | None]] = {
-    "catapult_parts.png": ["catapult_arm", "catapult_base", "snowball"],
+    "catapult_parts.png": ["catapult_arm", None, "snowball"],
+    # 16/11: the cart redrawn with a flat standing deck for the operator in place of the boiler (user: "thiết kế lại xe
+    # bắn để hải cẩu đứng đúng chỗ"); arm and snowball stay from the first sheet
+    "catapult_parts_2.png": [None, "catapult_base", None],
     "arena_props.png": [
         # names the game already loads; the heavy "stone" block is drawn as a wooden crate, the wedge is unused
         "block_ice", None, "block_snow", "block_stone",
@@ -48,13 +51,19 @@ SHEETS: dict[str, list[str | None]] = {
     "map_ui_kit.png": ["hud_pup", "node_stone", "node_star", "node_glow", "hud_bear", "ui_card"],
     # hat knocked off a pup, ice wedge (rises to the right), dent left in rock (report §16.2, §17.1)
     "arena_extras.png": ["pup_hat", "block_wedge", "dent"],
+    # CPC ice break (video 17/11): chunks that pile up where a block broke and fly up, gold impact rings, grey smoke, twinkle
+    "ice_fx.png": [
+        "ice_chunk_0", "ice_chunk_1", "ice_chunk_2", "ice_chunk_3",
+        "ice_chunk_4", "ice_chunk_5", "ice_chunk_6", "ice_chunk_7", None, "ice_chunk_8",   # the last chunk was drawn with a speck and a tiny cube beside it
+        "impact_ring", "impact_ring_small", "smoke_ball", "twinkle",
+    ],
 }
 
 
 # Enclosed background (holes, gaps between beams) is not connected to the border, so it is cleared from seed points
 # given in the cut part's own pixels (measure on the output PNG).
 HOLES: dict[str, list[tuple[int, int]]] = {
-    "catapult_base": [(400, 200), (392, 75)],
+    "catapult_base": [(380, 62), (370, 150), (325, 225), (440, 175)],   # hub hole and the A-frame gaps (cart of 16/11)
     "catapult_arm": [(48, 100)],
 }
 
@@ -87,7 +96,7 @@ def clear_holes(part: Image.Image, seeds: list[tuple[int, int]]) -> Image.Image:
 
 WHITE_HOLE = 225
 # Parts with no white of their own (bars, rings): every near-white pixel is background seen through them.
-CLEAR_LIGHT = {"cage", "cage_open", "hud_badge"}
+CLEAR_LIGHT = {"cage", "cage_open", "hud_badge", "impact_ring", "impact_ring_small"}
 
 
 def blobs(alpha: np.ndarray) -> list[tuple[int, int, int, int]]:
@@ -151,6 +160,8 @@ def cut(sheet: str, names: list[str | None]) -> None:
         canvas.alpha_composite(part, (PAD, PAD))
         if name in HOLES:
             canvas = clear_holes(canvas, HOLES[name])
+        if name.startswith("ice_chunk_"):
+            canvas = keep_body(canvas, share=0.99)   # only the chunk itself; chunks drawn close together: drop a neighbour's corner caught in the box
         if name in CLEAR_LIGHT:
             x = np.asarray(canvas).copy()
             x[(x[..., :3] > 238).all(axis=2), 3] = 0

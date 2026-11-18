@@ -36,7 +36,9 @@ namespace SealCatapult.Progress
 
     /// <summary>How the pup hangs in the launch pit: swinging on the rope (pendulum), or bobbing up and down on a
     /// bungee straight above the catapult (report §10.4, the genre's second launcher).</summary>
-    public enum LaunchStyle { Swing, Bungee }
+    /// <summary>How a pup reaches the catapult: swinging on the rope, bobbing on a bungee, or jumping off the bridge with
+    /// no rope at all (user 16/11: "3 kiểu: đu dây, dây lên xuống và hải cẩu nhảy xuống ko dây, tùy màn").</summary>
+    public enum LaunchStyle { Swing, Bungee, Drop }
 
     [Serializable]
     public struct BearSpec

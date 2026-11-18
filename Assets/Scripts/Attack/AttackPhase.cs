@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using SealCatapult.Core;
 using SealCatapult.Progress;
+using SealCatapult.UI;
 using UnityEngine;
 
 namespace SealCatapult.Attack
@@ -113,6 +114,7 @@ namespace SealCatapult.Attack
             (new Color(0.95f, 0.6f, 0.35f), new Color(0.9f, 0.7f, 0.5f), new Color(0.72f, 0.5f, 0.38f)),
         };
         static Color rockTint = Color.white;
+        static string rockSprite = "rock_cobble";   // this castle's rock texture
 
         /// <summary>Builds ground and fortress at level start; damage stays off until Arm().</summary>
         public void Build(LevelData level, GameTuning tuning)
@@ -122,10 +124,16 @@ namespace SealCatapult.Attack
             var arena = new GameObject("Arena").transform;
             // Backdrop of this area: one ChatGPT painting (sunset sky, icebergs, pack ice: bg_arena_sky), wide enough for
             // 20:9 at the arena zoom, its horizon (70% down the picture) just above the floor.
+            // The castle's colour over the zone palette (user 17/11: "các pha cx phải theo màu của thành").
             var pal = Palettes[Mathf.Clamp(level.zone, 0, Palettes.Length - 1)];
-            rockTint = pal.rock;
-            var sky = Art.Spawn("bg_arena_sky", arena, Origin + new Vector2(ArenaWidth * 0.5f, SkyHeight * 0.2f + HorizonAboveFloor), SkyWidth, -70);
-            sky.color = pal.sky;
+            // A castle with its own backdrop and rock (WorldTheme.Scene) shows them as painted; the zone palette and the
+            // castle tint only colour the shared Frost Bay art.
+            int castle = LevelCatalog.CastleOf(SceneLoader.CurrentLevel);
+            rockSprite = WorldTheme.Scene("rock_cobble", castle);
+            rockTint = rockSprite == "rock_cobble" ? pal.rock * WorldTheme.Tint(castle) : Color.white;
+            string skySprite = WorldTheme.Scene("bg_arena_sky", castle);
+            var sky = Art.Spawn(skySprite, arena, Origin + new Vector2(ArenaWidth * 0.5f, SkyHeight * 0.2f + HorizonAboveFloor), SkyWidth, -70);
+            sky.color = skySprite == "bg_arena_sky" ? pal.sky * WorldTheme.Tint(castle) : Color.white;
             // Cobble floor across the whole view and a snow-capped cobble cliff on the LEFT, sloping down onto the floor
             // (reference, 12/11: the rock is on the left, the right side is open sky with floating ice ledges). Pups glide
             // in above the cliff.
@@ -181,7 +189,7 @@ namespace SealCatapult.Attack
             if (g0 > a) RockBlock(parent, Rect.MinMaxRect(a, roof, g0, Origin.y));
             if (b > g1) RockBlock(parent, Rect.MinMaxRect(g1, roof, b, Origin.y));
             RockBlock(parent, Rect.MinMaxRect(a, bottom, b, floorTop));
-            var back = Art.Spawn("rock_cobble", parent, new Vector2((a + b) * 0.5f, (floorTop + roof) * 0.5f), 1f, 7);
+            var back = Art.Spawn(rockSprite, parent, new Vector2((a + b) * 0.5f, (floorTop + roof) * 0.5f), 1f, 7);
             back.name = "Cave";
             back.transform.localScale = Vector3.one;   // Spawn fits the sprite to 1 unit wide; the tiled size is in world units
             back.drawMode = SpriteDrawMode.Tiled;
@@ -257,7 +265,7 @@ namespace SealCatapult.Attack
         {
             // One unbroken piece of the pit's painted wall, mirrored sideways so it never shows a seam; its height
             // (11 units) spans from below the floor to above the tallest rock, so it never repeats vertically.
-            var tile = Art.Get("rock_cobble");
+            var tile = Art.Get(rockSprite);
             Vector2 tileSize = tile.bounds.size;
             tile.texture.wrapModeU = TextureWrapMode.Mirror;
             tile.texture.wrapModeV = TextureWrapMode.Clamp;
@@ -280,12 +288,14 @@ namespace SealCatapult.Attack
             };
             root.gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
             var mr = root.gameObject.AddComponent<MeshRenderer>();
-            if (cobbleMaterial == null) cobbleMaterial = new Material(Shader.Find("Sprites/Default")) { mainTexture = tile.texture };
-            mr.sharedMaterial = cobbleMaterial;
+            // One material per rock texture: each castle has its own rock (a single shared material kept the first castle's).
+            if (!cobbleMaterials.TryGetValue(tile.texture, out var material) || material == null)
+                cobbleMaterials[tile.texture] = material = new Material(Shader.Find("Sprites/Default")) { mainTexture = tile.texture };
+            mr.sharedMaterial = material;
             mr.sortingOrder = order;
         }
 
-        static Material cobbleMaterial;
+        static readonly Dictionary<Texture, Material> cobbleMaterials = new Dictionary<Texture, Material>();
 
         /// <summary>Top edges of every rock piece built this level (block tops, ramp slopes), for the snow rim.</summary>
         static readonly List<(Vector2 a, Vector2 b)> surface = new List<(Vector2 a, Vector2 b)>();
@@ -485,7 +495,8 @@ namespace SealCatapult.Attack
             if (hits >= 2)
             {
                 // Several bears with one pup: the big combo call-out, like the genre's level screens.
-                Fx.FloatingText($"×{hits}", ViewCenter + new Vector2(0f, 0.6f), new Color(0.55f, 0.32f, 0.1f), 16f, 1.3f);
+                // CPC: the count pops up tilted right where the bear went down.
+                Fx.FloatingText($"×{hits}", (Vector2)bear.transform.position + new Vector2(0f, 1.6f), new Color(0.55f, 0.32f, 0.1f), 14f, 1.3f, 12f, 0.6f);
                 AudioManager.Sfx("combo", 0.1f);
             }
             if (BearsLeft == 0 && !ended && kind != LevelKind.Boss)

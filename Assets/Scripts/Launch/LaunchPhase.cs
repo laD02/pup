@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using SealCatapult.Core;
 using SealCatapult.Progress;
+using SealCatapult.UI;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace SealCatapult.Launch
 {
@@ -18,7 +20,7 @@ namespace SealCatapult.Launch
     /// </summary>
     public class LaunchPhase : MonoBehaviour
     {
-        // Painting → world: bg_pit is one 1672x941 painting (Assets/Art/Reference/pit_bg_wide3.png) spanning
+        // Painting → world: bg_pit is one 1672x941 painting (Assets/Art/Reference/pit_bg_wide5.png: wide4 with the bridge one bay longer, user 16/11 "cho toàn màn") spanning
         // PaintingHeight units of height, centred on ViewCenter. Every layout number below was measured on it in pixels
         // and converted with W(px), H(px). The scale puts the hollow's floor one rope + catapult below the bridge; the
         // painting is then 22.5 units wide (covers 20:9).
@@ -41,23 +43,25 @@ namespace SealCatapult.Launch
         static readonly Vector2 SlopeTip = new Vector2(W(1030f), H(270f)), SlopeEnd = new Vector2(W(1672f), H(-60f));
         // The floor: a rock block under the bridge with a steep face, a slope down into the hollow where the catapult
         // stands, a low bank rising to the foot of the right column.
-        static readonly float BlockTop = H(505f), BlockEndX = W(625f), BlockFaceY = H(640f), HollowFromX = W(790f), HollowToX = W(1190f), BankTop = H(690f);
+        // pit_bg_wide4 (user 16/11: "cắt bớt đất đá bên dưới"): the block now ends under the middle of the bridge, so the
+        // swinging pup never passes over rock; measured on the new painting.
+        static readonly float BlockTop = H(505f), BlockEndX = W(478f), BlockFaceY = H(680f), HollowFromX = W(620f), HollowToX = W(1190f), BankTop = H(690f);
         static readonly float FloorY = H(772f);                // snow in the hollow
         static readonly float BridgeTop = H(402f);
-        static readonly float BridgeEndX = W(722f);
+        static readonly float BridgeEndX = W(935f);   // pit_bg_wide5 (16/11): the bridge painted one bay longer, tip 727 → 940 px
         const float WallThickness = 6f;      // covers the screen edge on 21:9 phones
-        public static readonly Vector2 RopeAnchor = new Vector2(W(706f), BridgeTop - 0.05f);
+        public static readonly Vector2 RopeAnchor = new Vector2(W(919f), BridgeTop - 0.05f);
         // The catapult hub sits under the swing bottom so a cup released at ~22° meets the pup at the bottom
         // (see WhackerMachine: Reach * (cos 40°, sin 40°) from the hub is the swing bottom).
         static readonly float SwingBottomY = RopeAnchor.y - SwingRope.IdleLength - PupRig.HangReach;
         static readonly float HubY = SwingBottomY - WhackerMachine.Reach * 0.643f;
         static readonly Vector2 MachinePos = new Vector2(RopeAnchor.x + WhackerMachine.Reach * 0.766f, HubY - WhackerMachine.HubOffsetY);
-        static readonly Vector2 OperatorPos = new Vector2(MachinePos.x + 1.75f, FloorY + PupRig.StandHeight);
+        static readonly Vector2 OperatorPos = MachinePos + WhackerMachine.OperatorSeat + new Vector2(0f, PupRig.StandHeight);
         public const float PupRadius = 0.91f * PupRig.Scale;
         const float MaxFlightTime = 5f;
         const float FlyOffTime = 1.5f;      // an escaped pup flies on this long at most before it leaves the pit view
         const float BumpGrace = 0.06f;      // ignore contacts right at the launch
-        const float LaunchArtAngle = 35f;   // the Launched frames are drawn flying up-right at about 35°
+        const float LaunchWobble = 18f;     // degrees of tumble right after the strike
         const float BungeeAimDrop = 0f;      // bungee rail: 40° with the default 48° strikeAngle (escapes from the bob's lower half)
         const float BungeeAssist = 0.7f;     // 0.85 let blind taps through 13 of 14 (QA 12/11, levels 5 and 8); the bob's phase now matters
 
@@ -65,6 +69,9 @@ namespace SealCatapult.Launch
         public event Action<int> PassedChanged;    // pups out through the gap
 
         readonly List<PupRig> queue = new List<PupRig>();
+        // Queue fidgets (CPC, live 16/11: each waiting penguin does its own idle): pup → (time the fidget ends, next one).
+        readonly Dictionary<PupRig, Vector2> fidget = new Dictionary<PupRig, Vector2>();
+        const float FidgetMin = 1.2f, FidgetMax = 3.5f, FidgetLength = 1.5f;   // two back-and-forth cycles at ~8 fps; several pups busy at once
         GameTuning tuning;
         SwingRope rope;
         WhackerMachine machine;
@@ -86,9 +93,21 @@ namespace SealCatapult.Launch
         /// <summary>Velocity given by the most recent hit (for tuning and tests).</summary>
         public Vector2 LastLaunch { get; private set; }
         public int Waiting => queue.Count + (hanging != null ? 1 : 0);
-        public bool CanFire => hanging != null && machine.Ready && !busy && GameInput.GameplayEnabled;
+        public bool CanFire => hanging != null && machine.Ready && !busy && GameInput.GameplayEnabled
+            && (style != LaunchStyle.Drop || DropInReach());   // drop: a tap counts only when the swing will meet the pup
+
+        /// <summary>Where the falling pup will be when a swing started now reaches it, close enough to the strike point.
+        /// Early or late taps are ignored rather than wasting the swing.</summary>
+        bool DropInReach()
+        {
+            float vy = dropVelocity.y, y = hanging.transform.position.y;
+            float t = SwingLead;
+            float fallT = Mathf.Max(0f, Mathf.Min(t, (vy + DropMaxSpeed) / DropGravity));   // still speeding up for this long
+            float predicted = y + vy * fallT - 0.5f * DropGravity * fallT * fallT - DropMaxSpeed * (t - fallT);
+            return Mathf.Abs(predicted - DropStrikeY) < DropHitBand;
+        }
         /// <summary>The hanging pup is right of the swing bottom and heading back toward it: the moment a player should tap (for bots and tests).</summary>
-        public bool ApproachingBottom => hanging != null && rope.Velocity.x < 0f && HangingPosition.x > RopeAnchor.x + 0.85f && HangingPosition.x < RopeAnchor.x + 1.6f;   // measured on the box pit (13/11): shots from here leave at 34°–41° and get out
+        public bool ApproachingBottom => hanging != null && (style == LaunchStyle.Drop ? DropInReach() : rope.Velocity.x < 0f && HangingPosition.x > RopeAnchor.x + 0.85f && HangingPosition.x < RopeAnchor.x + 1.6f);   // measured on the box pit (13/11): shots from here leave at 34°–41° and get out
         public Vector2 HangingPosition => hanging != null ? (Vector2)hanging.transform.position : RopeAnchor;
         public Vector2 SwingVelocity => hanging != null ? rope.Velocity : Vector2.zero;
 
@@ -107,10 +126,11 @@ namespace SealCatapult.Launch
             if (pupMaterial == null) pupMaterial = new PhysicsMaterial2D("Pup") { bounciness = 0.45f, friction = 0.3f };
             total = pupCount;
             BuildPit();
+            queueGap = pupCount > 1 ? Mathf.Min(MaxQueueGap, QueueSpan / (pupCount - 1)) : MaxQueueGap;
             for (int i = 0; i < pupCount; i++)
             {
                 // Each pup gets its own band of sorting orders so limbs never interleave between pups.
-                queue.Add(PupRig.Create(transform, QueueSlot(i), 60 - i * 8));
+                queue.Add(PupRig.Create(transform, QueueSlot(i), 60 - i * QueueOrderStep));
             }
             Report();
             StartCoroutine(NextPup(0.4f));
@@ -121,8 +141,11 @@ namespace SealCatapult.Launch
         void BuildPit()
         {
             // The painting is the whole stage; its sides were widened for 20:9 by Tools/prep_backgrounds.py.
-            var bg = Art.Spawn("bg_pit", transform, ViewCenter, 1f, -50);
+            // Every castle has its own pit painting, same outlines, its own rock and scenery (WorldTheme.Scene).
+            int castle = LevelCatalog.CastleOf(SceneLoader.CurrentLevel);
+            var bg = Art.Spawn(WorldTheme.Scene("bg_pit", castle), transform, ViewCenter, 1f, -50);
             bg.name = "Pit Painting";
+            bg.color = WorldTheme.SceneTint("bg_pit", castle);
             float k = PaintingHeight / bg.sprite.bounds.size.y;
             bg.transform.localScale = new Vector3(k, k, 1f);
 
@@ -136,14 +159,19 @@ namespace SealCatapult.Launch
             Poly("Column Slope", new Vector2(RightWallX, RightWallTop), ColumnSlopeEnd + (ColumnSlopeEnd - new Vector2(RightWallX, RightWallTop)) * 0.5f, new Vector2(ColumnSlopeEnd.x + WallThickness, RightWallTop));
             Poly("Right Bank", new Vector2(HollowToX, FloorY), new Vector2(RightWallX, BankTop), new Vector2(RightWallX, FloorY));
             // Solid only where the pups queue: the tip the rope hangs from is scenery a launched pup flies past.
-            Solid("Bridge", Rect.MinMaxRect(LeftWallX, BridgeTop - 1.0f, BridgeEndX - 0.35f, BridgeTop));   // the painted truss, short of the tip the rope hangs from
+            // No bridge collider (user 17/11: "ko có kiểu dính vào thanh, phải bay qua thanh"): a struck pup flies past the
+            // truss, as in CPC; only the rock stops it.
 
             rope = SwingRope.Create(RopeAnchor, transform);
             rope.Bungee = style == LaunchStyle.Bungee;
+            if (style == LaunchStyle.Drop)
+            {
+                rope.gameObject.SetActive(false);   // no rope: the pups jump off the bridge, from its lengthened tip
+
+            }
             machine = WhackerMachine.Create(MachinePos, transform, tuning.launcherReloadTime);
             operatorPup = PupRig.Create(transform, OperatorPos, 40);
-            operatorPup.Face(false);
-            operatorPup.SetPose(PupRig.Pose.LeverReady);
+            operatorPup.SetPose(PupRig.Pose.OpWait);   // front view, its lever on the deck's outer side
         }
 
         void Poly(string name, params Vector2[] points)
@@ -161,11 +189,37 @@ namespace SealCatapult.Launch
             go.AddComponent<BoxCollider2D>().size = r.size;
         }
 
-        /// <summary>Queue on the bridge, front pup nearest the rope (the bridge is long enough for every pup).</summary>
-        static Vector2 QueueSlot(int i) =>
-            new Vector2(Mathf.Max(LeftWallX + 0.45f, BridgeEndX - 1.05f - i * 0.6f), BridgeTop + PupRig.StandHeight - 0.05f);   // shortcut: the bridge holds 8; later pups bunch at the wall end (each keeps its own sorting band)
+        /// <summary>Queue on the bridge, front pup nearest the rope. Roomy spacing (user 16/11: "cho hàng đứng thoáng ra"):
+        /// the front row holds <see cref="FrontRow"/> pups; the rest wait in a back row a little higher, between them.</summary>
+        /// <summary>One even row, as roomy as the level's pup count allows (a back row overlapped the front pups: user
+        /// 16/11 "đang lỗi khá nhiều"). The gap is fixed when the queue is built, so pups only step forward afterwards.</summary>
+        Vector2 QueueSlot(int i) =>
+            new Vector2(Mathf.Max(LeftWallX + 0.45f, BridgeEndX - 1.05f - i * queueGap), BridgeTop + PupRig.StandHeight - 0.05f);
+
+        float queueGap = MaxQueueGap;
+        const float MaxQueueGap = 0.85f;
+        const float QueueSpan = 7.23f;   // from the first slot (BridgeEndX - 1.05) to the wall margin (LeftWallX + 0.45)
+        const int QueueOrderStep = 4;    // 12 pups (8 + School 3 + ad 1) stay above the rope (6) and the machine (8-10)
 
         void Report() => QueueChanged?.Invoke(Waiting);
+
+        static readonly PupRig.Pose[] Fidgets = { PupRig.Pose.Wave, PupRig.Pose.HatTip, PupRig.Pose.Look, PupRig.Pose.Hop, PupRig.Pose.Dance, PupRig.Pose.Yawn, PupRig.Pose.Sneeze };   // front view, like the idle (Cheer is side view)
+        readonly Dictionary<PupRig, PupRig.Pose> fidgetPose = new Dictionary<PupRig, PupRig.Pose>();
+
+        /// <summary>A waiting pup now and then waves, tips its helmet, looks around, hops, dances, yawns or sneezes, each on
+        /// its own clock.</summary>
+        PupRig.Pose IdleFidget(PupRig pup)
+        {
+            float now = Time.time;
+            if (!fidget.TryGetValue(pup, out var f)) f = new Vector2(0f, now + Random.Range(FidgetMin, FidgetMax));
+            if (now >= f.y)
+            {
+                f = new Vector2(now + FidgetLength, now + FidgetLength + Random.Range(FidgetMin, FidgetMax));
+                fidgetPose[pup] = Fidgets[Random.Range(0, Fidgets.Length)];
+            }
+            fidget[pup] = f;
+            return now < f.x && fidgetPose.TryGetValue(pup, out var pose) ? pose : PupRig.Pose.Idle;
+        }
 
         void Update()
         {
@@ -174,10 +228,16 @@ namespace SealCatapult.Launch
                 var t = queue[i].transform;
                 var slot = QueueSlot(i);
                 bool moving = ((Vector2)t.position - slot).sqrMagnitude > 0.0025f;
-                queue[i].SetPose(moving ? PupRig.Pose.Walk : PupRig.Pose.Idle);
+                if (moving) fidget.Remove(queue[i]);   // a fresh, random wait once it stops: no fidgets in unison after a shift
+                queue[i].SetPose(moving ? PupRig.Pose.Walk : IdleFidget(queue[i]));
                 t.position = Vector2.MoveTowards(t.position, slot, 1.6f * Time.deltaTime);
             }
-            if (hanging != null) hanging.SwingSpeed = rope.Omega;
+            if (hanging != null)
+            {
+                hanging.SwingSpeed = rope.Omega;
+                hanging.DrivenPhase = rope.Phase;
+                hanging.SwingLean = style == LaunchStyle.Swing ? rope.Lean : (float?)null;
+            }
         }
 
         // ---------- flow ----------
@@ -200,13 +260,24 @@ namespace SealCatapult.Launch
             queue.RemoveAt(0);
             var tr = pup.transform;
             // Walk to the end of the bridge, bend down, grab the rope with both flippers and slide onto it.
+            fidget.Remove(pup);
+            fidgetPose.Remove(pup);
             pup.SetPose(PupRig.Pose.Walk);
-            yield return MoveTo(tr, new Vector2(BridgeEndX - 0.75f, QueueSlot(0).y), 1.6f);
-            pup.SetPose(PupRig.Pose.Grab);
-            yield return new WaitForSeconds(0.42f);
+            yield return MoveTo(tr, new Vector2((style == LaunchStyle.Drop ? DropX - 0.35f : BridgeEndX - 0.75f), QueueSlot(0).y), style == LaunchStyle.Drop ? 3f : 1.6f);
+            // CPC (live 16/11): a short crouch at the bridge tip, flippers forward, before reaching for the rope.
+            pup.SetPose(PupRig.Pose.Crouch);
+            yield return new WaitForSeconds(style == LaunchStyle.Drop ? EdgeCrouch * 0.4f : EdgeCrouch);
+            if (style == LaunchStyle.Drop)
+            {
+                yield return JumpOff(pup);
+                yield break;
+            }
+            // Then it springs up into the hanging grip and rides the rope end down (the front-view reach frames, shown while
+            // the body moved down to the rope, looked like the pup sinking through the bridge: user 16/11 queue check).
+            pup.SetPose(style == LaunchStyle.Bungee ? PupRig.Pose.Bungee : PupRig.Pose.Hang);   // each launcher has its own drawn ride
+            tr.position += Vector3.up * GrabHop;   // the hanging picture is taller than the standing one: lift it clear of the bridge
             AudioManager.Sfx("splash", 0.15f, 0.5f);
             yield return rope.Grab(tr, rope.EndPoint);
-            pup.SetPose(PupRig.Pose.Hang);
             rope.Carry(tr, total > 1 ? launchedCount / (float)(total - 1) : 0f);
             launchedCount++;
             hanging = pup;
@@ -227,7 +298,7 @@ namespace SealCatapult.Launch
             busy = true;
             bool hit = false;
             LastLaunch = Vector2.zero;
-            operatorPup.SetPose(PupRig.Pose.LeverPull);
+            operatorPup.SetPose(PupRig.Pose.OpPull);
             StartCoroutine(BackToLever());
             yield return machine.Swing(
                 () => hanging != null ? (Vector2?)hanging.transform.position : null,
@@ -237,7 +308,13 @@ namespace SealCatapult.Launch
                     hit = true;
                     // Timing grade: a hit near the bottom of the swing is the golden shot, aimed straight at the gap.
                     bool great = rope.AtSweetSpot;
-                    Vector2 swing = rope.Release();
+                    Vector2 swing = style == LaunchStyle.Drop ? dropVelocity : rope.Release();
+                    // CPC (video 17/11): a white flash where the snowball meets the pup, and gold sparkles left at the
+                    // empty rope end.
+                    if (hanging != null) Fx.Flash(hanging.transform.position, 0.8f);
+                    if (style != LaunchStyle.Drop)
+                        Fx.Burst("spark", rope.EndPoint + Vector2.up * PupRig.HangReach, 8, 1.4f, 0.45f, 0.14f, 0f, 0.4f, new Color(1f, 0.85f, 0.25f));
+                    dropVelocity = Vector2.zero;
                     var pup = hanging;
                     hanging = null;
                     Report();
@@ -248,7 +325,7 @@ namespace SealCatapult.Launch
                     float rawAngle = Mathf.Atan2(raw.y, raw.x) * Mathf.Rad2Deg;
                     // A bungee pup has no sideways swing to flatten the hit, so the snowball would knock it almost straight up
                     // into the icicles: its rail aims lower and pulls harder (QA 12/11 on the emulator: 6/6 shots stuck).
-                    bool bungee = style == LaunchStyle.Bungee;
+                    bool bungee = style != LaunchStyle.Swing;   // bungee and drop: no sideways swing, the same lower rail
                     float aim = bungee ? tuning.strikeAngle - BungeeAimDrop : tuning.strikeAngle;
                     float assist = great ? 1f : bungee ? BungeeAssist : tutorial ? TutorialAssist : tuning.aimAssist;
                     float angle = Mathf.Clamp(Mathf.Lerp(rawAngle, aim, assist), 20f, 100f) * Mathf.Deg2Rad;
@@ -264,8 +341,9 @@ namespace SealCatapult.Launch
         }
 
         /// <summary>The big call-out in the middle of the pit: GREAT / OK / OOPS (always with a picture to match).</summary>
+        // CPC (live 16/11): the grade sits tilted under the bridge on the left and holds still, not drifting up mid-screen.
         static void CallOut(string key, Color color) =>
-            Fx.FloatingText(Loc.T(key), ViewCenter + new Vector2(0f, 1.2f), color, 13f, 1.1f);
+            Fx.FloatingText(Loc.T(key), new Vector2((LeftWallX + BridgeEndX) * 0.5f + 0.4f, BridgeTop - 1.7f), color, 13f, 1.1f, 10f, 0f);
 
         IEnumerator Fly(PupRig pup, Vector2 velocity, bool great)
         {
@@ -296,9 +374,10 @@ namespace SealCatapult.Launch
                 age += Time.deltaTime;
                 Vector2 p = tr.position;
                 Vector2 v = rb.linearVelocity;
-                // Knocked spinning by the snowball for the first moment, then it levels out along its flight.
-                float lean = Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - LaunchArtAngle;
-                tr.rotation = Quaternion.Euler(0, 0, age < 0.35f ? lean - (0.35f - age) / 0.35f * 540f : lean);
+                // CPC (video at 60 fps, 17/11): no spin. Head first along the flight, flippers back, with a small wobble
+                // that dies out as the pup leaves.
+                float lean = Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - pup.ArtAngle;
+                tr.rotation = Quaternion.Euler(0, 0, lean + LaunchWobble * Mathf.Sin(age * 18f) * Mathf.Exp(-age * 3f));
                 trail -= Time.deltaTime;
                 if (trail <= 0f)
                 {
@@ -338,7 +417,7 @@ namespace SealCatapult.Launch
                 for (float t = 0f; t < FlyOffTime && OnScreen(tr.position); t += Time.deltaTime)
                 {
                     Vector2 v = rb.linearVelocity;
-                    tr.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - LaunchArtAngle);
+                    tr.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - pup.ArtAngle);
                     trail -= Time.deltaTime;
                     if (trail <= 0f)
                     {
@@ -353,7 +432,7 @@ namespace SealCatapult.Launch
             {
                 yield return KnockedOut(pup, rb, col);
             }
-            if (machine.Ready) operatorPup.SetPose(PupRig.Pose.LeverReady);
+            if (machine.Ready) operatorPup.SetPose(PupRig.Pose.OpWait);
             else StartCoroutine(BackToLever());   // the arm is still swinging back: let go once it is home
             busy = false;
             StartCoroutine(NextPup(0.3f));
@@ -366,34 +445,151 @@ namespace SealCatapult.Launch
         {
             var tr = pup.transform;
             int n = rb.GetContacts(contactBuffer);
-            if (n == 0)
+            col.enabled = false;
+            Vector2 normal, contact;
+            if (n > 0)
             {
-                // Timed out in the air (MaxFlightTime), or a graze that had ended by this frame: nothing to stick to, so it is a miss
+                normal = contactBuffer[0].normal;   // out of the rock, toward the pup
+                contact = contactBuffer[0].point;
+            }
+            else if (!NearestRock(tr.position, out contact, out normal))
+            {
+                // Timed out in the air (MaxFlightTime) with no rock in reach: nothing to stick to, so it is a miss
                 // that drops out of the picture instead of freezing mid-air.
-                col.enabled = false;
                 CallOut("oops_hit", new Color(0.95f, 0.25f, 0.2f));
                 for (float t = 0f; t < FlyOffTime && OnScreen(tr.position); t += Time.deltaTime) yield return null;
                 Destroy(pup.gameObject);
                 yield break;
             }
-            Vector2 normal = contactBuffer[0].normal;
-            col.enabled = false;
             Destroy(rb);
             CallOut("oops_hit", new Color(0.95f, 0.25f, 0.2f));
             AudioManager.Sfx("zap");
             Fx.Burst("star_full", tr.position, 5, 2.5f, 0.6f, 0.2f, 2f, 0.15f);
             Fx.Puff(tr.position, 4, 0.2f);
             Fx.Shake(0.1f);
+            pup.GoBare();   // CPC (live 16/11): a stuck penguin has lost its helmet
+            KnockHatOff(tr.position, normal);
+            Vector2 spot = contact;   // user 17/11: "dính đè nhau cx đc" — pups may pile on the same spot
+            // One splat for every rock face (user 17/11: "kiểu nằm dính hình như bị sai, vẽ lại"; CPC: flat as a pancake,
+            // limbs spread): the frames have the pup's back on their top line (HangReach above the root), laid on the rock.
             pup.SetPose(PupRig.Pose.Stuck);
-            // The stuck frames are drawn head down, feet up: turned so "up" is the surface normal.
-            tr.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(normal.y, normal.x) * Mathf.Rad2Deg - 90f);
-            tr.position -= (Vector3)(normal * StuckSink);   // head a little way into the rock, not hovering off it
+            float scale = tr.lossyScale.y;
+            tr.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(-normal.y, -normal.x) * Mathf.Rad2Deg - 90f);   // up = into the rock
+            float reach = PupRig.HangReach * scale;
+            tr.position = (Vector3)(spot + normal * (reach - StuckSink));
             yield return Squash(tr, 0.25f);
-            Fx.DizzyOrbit(tr, (Vector2)(tr.up * 0.5f), 2.5f);
+            Fx.DizzyOrbit(tr, (Vector2)normal * 0.1f, 2.5f);   // over the face
             stuck.Add(pup);
         }
 
-        const float StuckSink = 0.22f;
+        /// <summary>A graze whose contact had already ended by this frame (QA 17/11: the second pup at the same spot
+        /// bounced off and fell, helmet on): stick it to the closest rock face within reach instead.</summary>
+        static bool NearestRock(Vector2 at, out Vector2 point, out Vector2 normal)
+        {
+            point = normal = Vector2.zero;
+            int n = Physics2D.OverlapCircle(at, PupRadius * GrazeReach, ContactFilter2D.noFilter, overlapBuffer);
+            float best = float.MaxValue;
+            for (int i = 0; i < n; i++)
+            {
+                var c = overlapBuffer[i];
+                if (c.isTrigger || (c.attachedRigidbody != null && c.attachedRigidbody.bodyType != RigidbodyType2D.Static)) continue;   // rock only, not the snowball
+                Vector2 p = c.ClosestPoint(at);
+                float d = (p - at).sqrMagnitude;
+                if (d < 1e-6f || d >= best) continue;   // inside a collider: no direction to read
+                best = d;
+                point = p;
+                normal = (at - p).normalized;
+            }
+            return best < float.MaxValue;
+        }
+
+        const float GrazeReach = 1.8f;   // × pup radius
+        static readonly Collider2D[] overlapBuffer = new Collider2D[8];
+
+        /// <summary>The helmet flies off on its own and tumbles down out of the picture (CPC: it never stays on the
+        /// stuck penguin).</summary>
+        static void KnockHatOff(Vector2 at, Vector2 normal)
+        {
+            if (!Art.Has("pup_hat")) return;
+            var hat = Fx.Particle("pup_hat", at + normal * 0.2f, HatSize, 16);
+            hat.velocity = normal * 1.5f + new Vector2(Random.Range(-1f, 1f), 1.5f);
+            hat.gravity = 9f;
+            hat.drag = 0.2f;
+            hat.spin = Random.Range(-500f, 500f);
+            hat.life = 1.6f;
+        }
+
+
+        const float HatSize = 0.42f;
+
+        // ---------- drop launch (no rope) ----------
+
+        Vector2 dropVelocity;
+        // Drop levels: the bridge reaches a little further (user 16/11: "cây cầu nối dài ra") and the pup jumps from its
+        // new tip straight down a line the snowball crosses at 60° of its sweep, high and fast, aimed up at the gap.
+        static readonly float DropX = RopeAnchor.x + DropReach;
+        const float DropReach = 0.47f;                     // just past the tip: the pup jumps off its end
+        static float DropStrikeY => HubY + WhackerMachine.Reach * Mathf.Sin(DropStrikeAngle * Mathf.Deg2Rad);
+        const float DropStrikeAngle = 60f;
+        const float SwingLead = 0.31f;                     // tap → snowball at 60° (0.08 s wind-up + most of the sweep)
+        const float DropHitBand = 0.75f;                   // the predicted pup must be this close to the strike point
+        // User 16/11 "cho hải cẩu nhảy nhanh vào": a quick hop and a brisk fall, still about 0.35 s in the snowball's reach.
+        const float DropGravity = 14f, DropMaxSpeed = 7.5f;
+        const float DropHopTime = 0.18f, DropHopHeight = 0.4f;
+
+
+        /// <summary>The pup jumps off the bridge tip and falls straight past the catapult's swing: the player whacks it
+        /// on the way down. Missed, it lands dazed on the snow and the next pup comes.</summary>
+        IEnumerator JumpOff(PupRig pup)
+        {
+            var tr = pup.transform;
+            Vector2 from = tr.position, to = new Vector2(DropX, from.y + DropHopHeight);
+            pup.SetPose(PupRig.Pose.DropJump);
+            AudioManager.Sfx("boing", 0.1f, 0.6f);
+            for (float t = 0f; t < DropHopTime; t += Time.deltaTime)
+            {
+                float k = t / DropHopTime;
+                tr.position = Vector2.Lerp(from, to, k) + Vector2.up * Mathf.Sin(k * Mathf.PI) * 0.3f;
+                yield return null;
+            }
+            pup.SetPose(PupRig.Pose.DropFall);
+            launchedCount++;
+            hanging = pup;
+            busy = false;
+            Report();
+            dropVelocity = Vector2.zero;
+            float landY = FloorY + PupRig.StandHeight;
+            while (hanging == pup)
+            {
+                dropVelocity.y = Mathf.Max(dropVelocity.y - DropGravity * Time.deltaTime, -DropMaxSpeed);
+                tr.position += (Vector3)(dropVelocity * Time.deltaTime);
+                if (tr.position.y <= landY && hanging == pup)
+                {
+                    // Missed: it plops on the snow, dazed, and fades; no pup left the pit.
+                    hanging = null;
+                    tr.position = new Vector3(tr.position.x, landY, tr.position.z);
+                    Report();
+                    CallOut("oops_hit", new Color(0.95f, 0.25f, 0.2f));
+                    Fx.Puff(tr.position, 6, 0.3f);
+                    AudioManager.Sfx("thud", 0.1f);
+                    pup.SetPose(PupRig.Pose.Dizzy);
+                    Fx.DizzyOrbit(tr, new Vector2(0f, 0.55f), 1.2f);
+                    for (float t = 0f; t < 1.2f; t += Time.deltaTime)
+                    {
+                        pup.SetAlpha(1f - Mathf.Clamp01((t - 0.8f) / 0.4f));
+                        yield return null;
+                    }
+                    Destroy(pup.gameObject);
+                    StartCoroutine(NextPup(0.2f));
+                    yield break;
+                }
+                yield return null;
+            }
+        }
+
+        const float StuckSink = 0.05f;   // a hair into the rock
+        const float EdgeCrouch = 0.25f;
+        const float GrabHop = 0.22f;
         static readonly ContactPoint2D[] contactBuffer = new ContactPoint2D[4];
 
         /// <summary>The operator lets go of the lever once the arm is back.</summary>
@@ -401,7 +597,7 @@ namespace SealCatapult.Launch
         {
             yield return null;
             while (!machine.Ready) yield return null;
-            if (operatorPup.Current == PupRig.Pose.LeverPull) operatorPup.SetPose(PupRig.Pose.LeverReady);
+            if (operatorPup.Current == PupRig.Pose.OpPull) operatorPup.SetPose(PupRig.Pose.OpWait);
         }
 
         /// <summary>Still inside the fixed phase-1 view (generous: the widest 21:9 screen).</summary>

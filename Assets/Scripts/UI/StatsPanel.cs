@@ -12,9 +12,7 @@ namespace SealCatapult.UI
             var overlay = UiKit.Overlay(canvas, "Stats");
             var panel = UiKit.Panel(overlay, new Vector2(1000, 640)).transform;
             panel.gameObject.AddComponent<PopIn>();
-            var ribbon = UiKit.Image(panel, "ribbon", UiKit.Top, new Vector2(0, 60), new Vector2(720, 180));
-            UiKit.Text(ribbon.transform, Loc.T("stats"), 60, UiKit.Center, new Vector2(0, 8), new Vector2(560, 100),
-                Color.white, TMPro.TextAlignmentOptions.Center, true);
+            UiKit.Ribbon(panel, Loc.T("stats"), 720, 60);
             (string key, int value)[] rows =
             {
                 ("stats_total", data.totalBears),

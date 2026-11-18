@@ -45,7 +45,12 @@ namespace SealCatapult.UI
             return true;
         }
 
-        GameObject popup;   // the stats card or the erase confirmation, while one is open
+        GameObject popup;
+        /// <summary>Raised after "Erase progress": screens showing progress rebuild.</summary>
+        public static event System.Action ProgressErased;
+        /// <summary>Shows the About page; the screen that owns one sets it (the main menu). Null hides the button.</summary>
+        public System.Action OnAbout;
+        const float PageHeight = 820f + 140f;   // panel plus the ribbon above it   // the stats card or the erase confirmation, while one is open
 
         void Rebuild()
         {
@@ -53,9 +58,14 @@ namespace SealCatapult.UI
             if (content != null) Destroy(content.gameObject);
             var overlay = UiKit.Overlay(canvas.transform, "Overlay");
             content = overlay;
-            var panel = UiKit.Panel(overlay, new Vector2(1300, 820)).transform;
-
-            UiKit.Text(panel, Loc.T("settings"), 80, UiKit.Top, new Vector2(0, -30), new Vector2(900, 110));
+            // Fitted to the canvas height like the info pages, so the ribbon overhanging the top stays on 21:9 phones.
+            var holder = UiKit.Place(UiKit.Node(overlay, "Fit"), UiKit.Center, Vector2.zero, Vector2.zero);
+            float height = ((RectTransform)canvas.transform).rect.height;
+            float fit = height > 1f ? Mathf.Min(1f, height / PageHeight) : 1f;
+            holder.localScale = new Vector3(fit, fit, 1f);
+            var panel = UiKit.Panel(holder, new Vector2(1300, 820)).transform;
+            panel.gameObject.AddComponent<PopIn>();
+            UiKit.Ribbon(panel, Loc.T("settings"), 760, 60);   // the same title ribbon as every popup (GAME_DESIGN.md §R10)
             Row(panel, Loc.T("music"), -140);
             UiKit.Slider(panel, UiKit.Top, new Vector2(200, -150), new Vector2(560, 60), SaveSystem.Data.musicVolume, v =>
             {
@@ -81,6 +91,9 @@ namespace SealCatapult.UI
             UiKit.Button(panel, Loc.T("reset"), ButtonStyle.Warm, UiKit.Top, new Vector2(260, -490), new Vector2(460, 100), ConfirmReset);
             UiKit.Text(panel, Loc.T("credits"), 26, UiKit.Bottom, new Vector2(0, 140), new Vector2(1100, 60));
             UiKit.Button(panel, Loc.T("back"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(0, 30), new Vector2(340, 100), Close, "glyph_back");
+            // About (version, credits) moved here from the old menu: Settings closes and the About page opens.
+            if (OnAbout != null)
+                UiKit.Button(panel, Loc.T("about"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(420, 30), new Vector2(340, 100), () => { Close(); OnAbout(); });
             // Ad consent can be changed later where UMP requires it (EU/UK; privacy.html promises this row).
             if (Ads.AdMob.PrivacyOptionsRequired)
                 UiKit.Button(panel, Loc.T("privacy"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-420, 30), new Vector2(340, 100), Ads.AdMob.ShowPrivacyOptions);
@@ -99,6 +112,7 @@ namespace SealCatapult.UI
             {
                 SaveSystem.ResetProgress();
                 AudioManager.NotifyChanged();
+                ProgressErased?.Invoke();
                 Rebuild();   // the sliders were bound to the old data; this also removes the confirm overlay
             });
             UiKit.Button(panel, Loc.T("no"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(180, 50), new Vector2(300, 110),

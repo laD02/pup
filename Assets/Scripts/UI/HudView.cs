@@ -42,18 +42,23 @@ namespace SealCatapult.UI
             hud.puffers = UiKit.Text(root, "× 0", 68, UiKit.TopLeft, new Vector2(24 + Portrait + 14, -30), new Vector2(220, 100), Color.white,
                 TextAlignmentOptions.Left, true);
 
-            // Centre: sound, music, help, pause.
-            // One MinHit apart, so the padded touch areas do not overlap (at 110 a miss next to Pause fired a pup).
-            float pitch = UiKit.MinHit;
-            var cluster = UiKit.Place(UiKit.Node(root, "Cluster"), UiKit.Top, new Vector2(0, -16), new Vector2(pitch * 4f, 100));
-            AudioButton(cluster, new Vector2(-pitch * 1.5f, 0), false);
-            AudioButton(cluster, new Vector2(-pitch * 0.5f, 0), true);
-            UiKit.Button(cluster, null, ButtonStyle.Teal, UiKit.Center, new Vector2(pitch * 0.5f, 0), new Vector2(96, 96), hud.ToggleHelp, "glyph_help");
-            UiKit.Button(cluster, null, ButtonStyle.Warm, UiKit.Center, new Vector2(pitch * 1.5f, 0), new Vector2(96, 96), game.TogglePause, "glyph_pause");
-            hud.game = game;
+            // Layout A (GAME_DESIGN.md §R10, like Angry Birds 2): one Pause in the top-right corner; sound and music live in
+            // the pause menu. Top centre: the bar toward the third star (arena only).
+            UiKit.Button(root, null, ButtonStyle.Warm, UiKit.TopRight, new Vector2(-24, -24), new Vector2(110, 110), game.TogglePause, "glyph_pause");
+            hud.starBar = UiKit.Place(UiKit.Node(root, "Star bar"), UiKit.Top, new Vector2(0, -28), new Vector2(StarBarWidth, 40));
+            var track = UiKit.Image(hud.starBar, "ui_bar", UiKit.Center, Vector2.zero, new Vector2(StarBarWidth, 32));
+            track.preserveAspect = false;
+            track.type = Image.Type.Sliced;
+            track.color = new Color32(0x0b, 0x1e, 0x3f, 0xb0);
+            hud.starFill = UiKit.Image(hud.starBar, "ui_bar", new Vector2(0f, 0.5f), Vector2.zero, new Vector2(0f, 32));
+            hud.starFill.preserveAspect = false;
+            hud.starFill.type = Image.Type.Sliced;
+            hud.starFill.color = new Color32(0xff, 0xd3, 0x4d, 0xff);
+            hud.starIcon = UiKit.Image(hud.starBar, "star_empty", new Vector2(1f, 0.5f), new Vector2(34, 0), new Vector2(72, 72));
+            hud.starBar.gameObject.SetActive(false);
 
-            // Right (arena only): the bear's face, the all-time total above the mission counter.
-            var right = UiKit.Place(UiKit.Node(root, "Bears"), UiKit.TopRight, new Vector2(-24, -20), new Vector2(360, Portrait));
+            // Right (arena only), left of Pause: the bear's face, the all-time total above the mission counter.
+            var right = UiKit.Place(UiKit.Node(root, "Bears"), UiKit.TopRight, new Vector2(-24 - 110 - 24, -20), new Vector2(360, Portrait));
             hud.bearBadge = Badge(right, "hud_bear", UiKit.TopRight, Vector2.zero);
             hud.totalBears = UiKit.Text(right, "", 36, UiKit.TopRight, new Vector2(-(Portrait + 14), 0), new Vector2(230, 46), Color.white,
                 TextAlignmentOptions.Right, true);   // 30 px was about 11sp on a phone
@@ -172,16 +177,13 @@ namespace SealCatapult.UI
             if (icon != null) icon.color = off ? new Color(1f, 1f, 1f, 0.55f) : Color.white;
         }
 
-        /// <summary>The ? button: shows the tip for the current phase in the caption bar for a few seconds (both tips
-        /// at once shrank to about 9sp in German).</summary>
-        public void ToggleHelp()
-        {
-            helpUntil = 0f;
-            SetHintText(game.HelpText);
-            helpUntil = Time.unscaledTime + 4f;
-        }
-        float helpUntil;
-        GameManager game;
+        const float StarBarWidth = 520f;
+        RectTransform starBar;
+        Image starFill, starIcon;
+        int threeStarScore;
+
+        /// <summary>The score that earns the third star (0: no bar, e.g. the fish run).</summary>
+        public void SetStarTarget(int target) => threeStarScore = target;
 
         public void SetPuffers(int n)
         {
@@ -198,9 +200,26 @@ namespace SealCatapult.UI
         }
 
         /// <summary>The bear counter belongs to the arena: hidden in the pit, shown when the attack starts.</summary>
-        public void ShowBears(bool show) => bearBadge.parent.gameObject.SetActive(show);
+        public void ShowBears(bool show)
+        {
+            bearBadge.parent.gameObject.SetActive(show);
+            starBar.gameObject.SetActive(show && threeStarScore > 0);
+        }
 
-        public void SetScore(int n) => score = n;
+        /// <summary>Destruction score; fills the bar toward the third star (event-driven, not per frame).</summary>
+        public void SetScore(int n)
+        {
+            score = n;
+            if (threeStarScore <= 0) return;
+            float k = Mathf.Clamp01(n / (float)threeStarScore);
+            starFill.rectTransform.sizeDelta = new Vector2(StarBarWidth * k, 32f);
+            string icon = k >= 1f ? "star_full" : "star_empty";
+            if (starIcon.sprite != Art.Get(icon))
+            {
+                starIcon.sprite = Art.Get(icon);
+                if (k >= 1f) Bump(starIcon.rectTransform);
+            }
+        }
 
         void OnEnable() => SealCatapult.Attack.Bear.Defeated += OnBearDown;
         void OnDisable() => SealCatapult.Attack.Bear.Defeated -= OnBearDown;
@@ -258,7 +277,9 @@ namespace SealCatapult.UI
             // The hero bows down and comes up saluting (report §14.3: the reference's hero stoops for its hat, then
             // salutes). Without the art, the old spin.
             var hero = UiKit.Image(card, Art.Has("pup_salute_0") ? "pup_salute_0" : "pup", UiKit.Top, new Vector2(0, -100), new Vector2(220, 220));
-            if (Art.Has("pup_salute_3") && Art.Has("pup_leap_0")) hero.gameObject.AddComponent<FrameLoop>().Set(5f, ("pup_leap_", 1), ("pup_leap_", 1), ("pup_salute_", 4), ("pup_salute_", 4));   // a crouch, then the salute (the grab frames show the rope)
+            // CPC (live 16/11): bare-headed, it bends for its helmet, puts it on and stands proud (sheet I, front view).
+            if (Art.Has("pup_pickhat_3")) hero.gameObject.AddComponent<FrameLoop>().Set("pup_pickhat_", 4, 2.5f);
+            else if (Art.Has("pup_salute_3") && Art.Has("pup_leap_0")) hero.gameObject.AddComponent<FrameLoop>().Set(5f, ("pup_leap_", 1), ("pup_leap_", 1), ("pup_salute_", 4), ("pup_salute_", 4));   // a crouch, then the salute (the grab frames show the rope)
             else if (Art.Has("pup_salute_0")) hero.gameObject.AddComponent<FrameLoop>().Set("pup_salute_", 4, 5f);
             else hero.gameObject.AddComponent<Spin>();
             UiKit.Text(card, required > 0 ? Loc.T("hit_bears", required) : Loc.T("collect_fish"), 46, UiKit.Top, new Vector2(0, -340), new Vector2(900, 110), Color.white, TextAlignmentOptions.Center, true);
@@ -269,6 +290,8 @@ namespace SealCatapult.UI
         }
 
         RectTransform curtain;
+        RectTransform curtainRider;
+        const float RiderHang = 520f;   // the curtain rider hangs this far past the wave edge
         const float CurtainHeight = 1500f;   // taller than any canvas (1080 design height, up to ~1300 on 4:3)
 
         /// <summary>Water curtain between the phases: drops from the top to cover the screen, or lifts away again.</summary>
@@ -290,6 +313,13 @@ namespace SealCatapult.UI
                 curtain.anchoredPosition = new Vector2(0f, CurtainHeight);
                 curtain.localScale = new Vector3(1f, -1f, 1f);   // wavy edge leads the way down
                 curtain.SetSiblingIndex(1);                       // over the game, under the HUD's own controls
+                // CPC (live 16/11): a giant pup rides the curtain down, hanging by its flippers from the wave's edge.
+                // The curtain is flipped, so local "top" is the wavy edge on screen and the rider is flipped back upright.
+                if (Art.Has("pup_hang_0"))
+                {
+                    curtainRider = UiKit.Image(curtain, "pup_hang_0", UiKit.Top, new Vector2(0f, -60f), new Vector2(460f, 460f)).rectTransform;
+                    curtainRider.localScale = new Vector3(1f, -1f, 1f);
+                }
                 AudioManager.Sfx("splash", 0f, 0.8f);
             }
             // Flipped, the panel hangs down from its pivot: at 0 it covers the screen, at CurtainHeight it is all above it.
@@ -297,11 +327,13 @@ namespace SealCatapult.UI
             for (float t = 0f; t < Seconds; t += Time.deltaTime)
             {
                 float k = t / Seconds;
-                curtain.anchoredPosition = new Vector2(0f, CurtainHeight * (down ? 1f - k : k));
+                // Lifting goes a rider's height further, so the hanging pup leaves the top before the curtain is removed.
+                curtain.anchoredPosition = new Vector2(0f, down ? CurtainHeight * (1f - k) : (CurtainHeight + RiderHang) * k);
+                if (curtainRider != null) curtainRider.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(k * Mathf.PI * 2f) * 8f);
                 yield return null;
             }
             if (down) curtain.anchoredPosition = Vector2.zero;
-            else { Destroy(curtain.gameObject); curtain = null; }
+            else { curtain.anchoredPosition = new Vector2(0f, CurtainHeight + RiderHang); Destroy(curtain.gameObject); curtain = null; }
         }
 
         public void DismissMission()
@@ -324,10 +356,9 @@ namespace SealCatapult.UI
             Destroy(card.gameObject);
         }
 
-        /// <summary>Bottom caption; empty hides it (a help tip keeps it open for a moment).</summary>
+        /// <summary>Bottom caption; empty hides it.</summary>
         public void SetHintText(string text)
         {
-            if (Time.unscaledTime < helpUntil) return;
             bool show = !string.IsNullOrEmpty(text);
             if (hintBar.gameObject.activeSelf != show) hintBar.gameObject.SetActive(show);
             if (show && hintText.text != text) hintText.text = text;
