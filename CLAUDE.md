@@ -30,6 +30,19 @@ roles, camera size) that every new screen follows.
 **Android Back works on every screen** (audit 2026-11-15: it only worked inside a level). A new screen or popup gets a
 `HandleBack()` called from its scene's root view; `GAME_DESIGN.md` §R9 lists what Back does where.
 
+**Layout is checked by arithmetic, not by eye** (audit 2026-11-20: 41 map stones were off screen on 4:3 and under buttons at
+16:9, touch areas overlapped, a caption ate gameplay taps). A screen that covers the display with a painting must pan;
+`python3 Tools/map_reach.py` must print PASS after any change to a map trail, the stone count or a map button (its button
+boxes mirror `MapView.Build`: change both together); controls
+stand ≥ `UiKit.MinHit` (130) apart; read-only pictures and text have `raycastTarget = false`; a tall panel sits in a holder
+scaled by `UiKit.CanvasSize()`. `GAME_DESIGN.md` "Rà soát 20/11" has the full list.
+
+**A failed save is never silent.** Callers may ignore `SaveSystem.Save()`'s result because `SaveSystem` itself tracks the
+failure, raises `Problem` (shown by `UI/SaveNotice`) and retries; do not add a write path that bypasses it.
+
+**Numbers shown to the player come from the code that uses them** (`Shop.Effect` feeds both the shop text and
+`PufferController`): the shop once showed the level number where the game used a different value.
+
 **Level content is checked by physics, not by eye.** Anything placed in `LevelDesigns.cs` must stay put in the PlayMode
 settle test (blocks, bears, TNT): a TNT crate sat buried inside a ramp in level 7 until that test covered it.
 

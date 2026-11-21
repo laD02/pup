@@ -121,6 +121,32 @@ namespace SealCatapult.Tests
             Assert.IsFalse(Shop.TryBuy(d, Spiky));
             Assert.AreEqual(19, d.spentStars);
         }
+
+        [Test]
+        public void EffectIsTheNumberTheGameUses()
+        {
+            // Ice Spikes adds to the pierce every pup has; Blaze doubles per level and melts everything at the top.
+            Assert.AreEqual(2, Shop.Effect(UpgradeId.Spiky, 1, basePierce: 1));
+            Assert.AreEqual(4, Shop.Effect(UpgradeId.Spiky, 3, basePierce: 1));
+            Assert.AreEqual(2, Shop.Effect(UpgradeId.Blaze, 1, basePierce: 1));
+            Assert.AreEqual(4, Shop.Effect(UpgradeId.Blaze, 2, basePierce: 1));
+            Assert.AreEqual(Shop.BlazeAll, Shop.Effect(UpgradeId.Blaze, UpgradeData.MaxLevel, basePierce: 1));
+            Assert.AreEqual(1, Shop.Effect(UpgradeId.School, 1, basePierce: 1));
+            Assert.AreEqual(3, Shop.Effect(UpgradeId.Ninja, 3, basePierce: 1));
+        }
+
+        [Test]
+        public void EveryUpgradeHasItsDescriptionTexts()
+        {
+            foreach (UpgradeId id in System.Enum.GetValues(typeof(UpgradeId)))
+            {
+                Assert.IsTrue(Loc.Has("up_" + id), "name of " + id);
+                Assert.IsTrue(Loc.Has("upd_" + id), "description of " + id);
+            }
+            Assert.IsTrue(Loc.Has("upd_Blaze_all"));
+            Assert.IsTrue(Loc.Has("upd_PuffUp_one"));
+            Assert.IsTrue(Loc.Has("upd_School_one"));
+        }
     }
 
     public class SaveSystemTests
@@ -165,9 +191,54 @@ namespace SealCatapult.Tests
         {
             File.WriteAllText(path, "{ not json");
             UnityEngine.TestTools.LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("Save file unreadable"));
-            var d = SaveSystem.LoadFrom(path);
+            var d = SaveSystem.LoadFrom(path, out bool damaged);
             Assert.AreEqual(0, d.stars[0]);
-            Assert.AreEqual(1, Directory.GetFiles(Path.GetDirectoryName(path), Path.GetFileName(path) + ".*.corrupt").Length);
+            Assert.IsTrue(damaged);
+            Assert.IsTrue(File.Exists(path + ".corrupt"));
+        }
+
+        [Test]
+        public void EmptyFileCountsAsDamagedAndIsBackedUp()
+        {
+            // A crash while the file was created leaves zero bytes: JsonUtility returns null without throwing.
+            File.WriteAllText(path, "");
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("Save file unreadable"));
+            var d = SaveSystem.LoadFrom(path, out bool damaged);
+            Assert.AreEqual(SaveData.LevelCount, d.stars.Length);
+            Assert.IsTrue(damaged);
+            Assert.IsTrue(File.Exists(path + ".corrupt"));
+        }
+
+        [Test]
+        public void MissingFileIsNotDamaged()
+        {
+            SaveSystem.LoadFrom(path, out bool damaged);
+            Assert.IsFalse(damaged);
+        }
+
+        [Test]
+        public void CompleteTempFileIsNewerThanTheSaveItNeverReplaced()
+        {
+            // A kill after the temp file was flushed but before the swap: the temp holds the last result.
+            var old = new SaveData();
+            old.stars[0] = 1;
+            SaveSystem.SaveTo(path, old);
+            var newer = new SaveData();
+            newer.stars[0] = 3;
+            File.WriteAllText(path + ".tmp", JsonUtility.ToJson(newer));
+            Assert.AreEqual(3, SaveSystem.LoadFrom(path).stars[0]);
+        }
+
+        [Test]
+        public void CutOffTempFileFallsBackToTheSave()
+        {
+            var old = new SaveData();
+            old.stars[0] = 2;
+            SaveSystem.SaveTo(path, old);
+            File.WriteAllText(path + ".tmp", "{ \"stars\": [3,");
+            var d = SaveSystem.LoadFrom(path, out bool damaged);
+            Assert.AreEqual(2, d.stars[0]);
+            Assert.IsFalse(damaged);
         }
 
         [Test]

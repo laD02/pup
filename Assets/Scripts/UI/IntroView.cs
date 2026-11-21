@@ -63,8 +63,13 @@ namespace SealCatapult.UI
             next = Layer(black, "B");
             var bar = UiKit.Place(UiKit.Node(black, "Caption bar"), UiKit.Bottom, new Vector2(0, 30), new Vector2(1500, 110));
             var barImg = bar.gameObject.AddComponent<Image>();
-            barImg.color = new Color(0f, 0f, 0f, 0.45f);
+            // The same frosted caption pill as the HUD's hint and the shop's description (it was a plain black box).
+            barImg.sprite = Art.Get("ui_pill");
+            barImg.type = Image.Type.Sliced;
             barImg.raycastTarget = false;
+            var backing = UiKit.Image(bar, "ui_pill", UiKit.Center, Vector2.zero, new Vector2(1500, 110));   // translucent: doubled, the text reads over a bright painting
+            backing.preserveAspect = false;
+            backing.type = Image.Type.Sliced;
             caption = UiKit.Text(bar, "", 42, UiKit.Center, new Vector2(0, 2), new Vector2(1440, 100), Color.white,
                 TMPro.TextAlignmentOptions.Center, true);
             var safe = UiKit.SafeRoot(canvas);

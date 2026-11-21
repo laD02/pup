@@ -30,14 +30,15 @@ namespace SealCatapult.Attack
         const float NextPupDelay = 0.6f;
         const float WinDelay = 1.6f;
         const float SettleTimeout = 2.5f;
+        const float SettleExtra = 3f;   // longer only while a bear is still sliding or toppling (it may yet go down)
 
         /// <summary>Arena floor level; the rock floor strip sits just under it.</summary>
         public static Vector2 Origin => new Vector2(FortressX, Backdrop.GroundY + FloorHeight);
         /// <summary>Pups enter at the left edge near the top and glide right across the arena.</summary>
-        public static Vector2 SpawnPoint => Origin + new Vector2(-1.5f, 9.6f);
+        public static Vector2 SpawnPoint => Origin + new Vector2(-1.5f, 8.2f);
         public static Vector2 SpawnVelocity => new Vector2(4.5f, 0f);
         // Each pup enters on the flight it left phase 1 with: a steep exit comes in high and slow, a flat one low and fast.
-        const float EntryLow = 8.8f, EntryHigh = 10.4f;      // entry height above the floor (SpawnPoint is 9.6); user 13/11: fly higher (twice)
+        const float EntryLow = 7.6f, EntryHigh = 8.8f;       // entry height above the floor (SpawnPoint is 8.2), just over the tallest fortress (bear heads reach ~7); user 20/11: like CPC, closer but everything in view (13/11 was 8.8-10.4)
         const float ExitFlat = 25f, ExitSteep = 80f;         // exit angles mapped onto that height range, degrees
         const float EntrySpeedKeep = 0.55f;                  // share of the exit's sideways speed kept as glide speed
         const float EntrySpeedMin = 3.2f, EntrySpeedMax = 6.2f;
@@ -48,7 +49,7 @@ namespace SealCatapult.Attack
             ? Mathf.Max(Origin.x + ArenaWidth + 1.5f, ViewCenter.x + Camera.main.orthographicSize * Camera.main.aspect) : Origin.x + ArenaWidth + 1.5f;
 
         /// <summary>Camera centre for the fixed arena view: the whole arena plus a strip of rock floor fits one screen.</summary>
-        public static Vector2 ViewCenter => Origin + new Vector2(ArenaWidth * 0.5f - ViewShift, 5.3f);   // the wider view shows the higher flight
+        public static Vector2 ViewCenter => Origin + new Vector2(ArenaWidth * 0.5f - ViewShift, 4.7f);   // floor to the entry flight in one screen (GameManager.AttackZoom)
         const float ViewShift = 0.5f;            // the view leans left so the cliff shows and the far-right perch is half cut, as in the reference
         const float CliffReach = 14f;   // how far left the cliff runs: past the arena view, short of the pit view (30 showed in the pit on 20:9)
         const float CliffHeight = 4.2f, CliffSlope = 1.8f, CliffFoot = 0.6f;   // the left cliff: block + steep slope ending on the floor at x = CliffFoot
@@ -434,9 +435,18 @@ namespace SealCatapult.Attack
             StartCoroutine(After(NextPupDelay, SpawnNext));
         }
 
+        static bool AnyBearMoving()
+        {
+            foreach (var bear in Bear.All)
+                if (bear != null && bear.Moving) return true;
+            return false;
+        }
+
         IEnumerator WaitForSettleThenJudge()
         {
             for (float t = 0f; t < SettleTimeout && !ended; t += Time.deltaTime) yield return null;
+            // A bear whose support just broke may be knocked out a moment later: a loss judged now would be final.
+            for (float t = 0f; t < SettleExtra && !ended && AnyBearMoving(); t += Time.deltaTime) yield return null;
             // Out of pups: the mission passes when enough bears are down (a perfect run ended earlier).
             // Bonus levels cannot be failed; the boss must be beaten.
             // A beaten king wins even if its finale (cage burst) is still playing when the last pup settles.

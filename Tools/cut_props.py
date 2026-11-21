@@ -37,7 +37,7 @@ SHEETS: dict[str, list[str | None]] = {
         # names the game already loads; the heavy "stone" block is drawn as a wooden crate, the wedge is unused
         "block_ice", None, "block_snow", "block_stone",
         "crate_tnt", "bumper", "button_up", "button_down",
-        "fish", "cage", "cage_open", "hud_badge",
+        "fish", None, None, None,   # cage/cage_open: cage_cpc.png now; the HUD badge is no longer used
     ],
     # UI kit: panel, ribbon, 3 pill buttons (green = primary), 6 round icon buttons, stars, bear face, tap hint, medal
     "ui_kit.png": [
@@ -47,6 +47,27 @@ SHEETS: dict[str, list[str | None]] = {
         "star_full", "star_empty", None, "hud_bear", "glyph_tap", "badge_perfect",
     ],
     # map + HUD kit (report §15): hero portrait, "?" stone node, cleared star node, "you are here" glow pad,
+    # 18/11: the brand logo, one for every language (home, boot, About)
+    "logo.png": ["logo"],
+    # 19/11: CPC's tall slim bird cage on a red base, closed and opened ("xem lại hoạt họa trong lồng của cpc")
+    "cage_cpc.png": ["cage", "cage_open"],
+    # 18/11: the red X that closes a modal (top-right corner of every panel)
+    "ui_close.png": ["icon_close"],
+    # 18/11: pieces of the redesigned modals (pause, result, settings, stats, how to play), Ice crystal style
+    "ui_modal_kit.png": [
+        None, None, "mark_box", "ui_row", None,   # rays, tick and bulb are no longer used (19/11)
+        "row_music", "row_sound", "row_globe", "row_chart", "row_trash",
+        "row_bear", "row_paw1", "row_paw2", "row_paw3", "row_star",
+        "step_1", "step_2", "step_3", "step_4",
+    ],
+    # 18/11: the icons drawn on the buttons, painted in the ice-crystal UI style (replace make_art's flat SVG glyphs)
+    "ui_icons.png": [
+        "glyph_back", "glyph_gear", "glyph_help", "glyph_lock",
+        "glyph_map", "glyph_music", "glyph_next", "glyph_pause",
+        "glyph_play", "glyph_retry", "glyph_shop", "glyph_sound",
+    ],
+    # 20/11: the Story button's own icon, an open book in the ui_icons.png style (it shared the Play triangle)
+    "ui_icon_book.png": ["glyph_book"],
     # bear portrait (replaces the ui_kit one, same ring as the hero), plain card for the mission panel
     "map_ui_kit.png": ["hud_pup", "node_stone", "node_star", "node_glow", "hud_bear", "ui_card"],
     # hat knocked off a pup, ice wedge (rises to the right), dent left in rock (report §16.2, §17.1)
@@ -96,7 +117,7 @@ def clear_holes(part: Image.Image, seeds: list[tuple[int, int]]) -> Image.Image:
 
 WHITE_HOLE = 225
 # Parts with no white of their own (bars, rings): every near-white pixel is background seen through them.
-CLEAR_LIGHT = {"cage", "cage_open", "hud_badge", "impact_ring", "impact_ring_small"}
+CLEAR_LIGHT = {"cage", "cage_open", "impact_ring", "impact_ring_small"}
 
 
 def blobs(alpha: np.ndarray) -> list[tuple[int, int, int, int]]:

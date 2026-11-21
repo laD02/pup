@@ -804,16 +804,6 @@ def ice_ledge():
     return svg(W, H, face + facets + strata + bubbles + icicles + chute + snowtop, defs)
 
 
-def sign():
-    """Wooden counter board on a post, capped with snow (the number is drawn in-game)."""
-    return svg(200, 220,
-               '<rect x="92" y="120" width="16" height="100" rx="4" fill="#7a4a2b" stroke="#3e2414" stroke-width="3"/>'
-               '<rect x="14" y="40" width="172" height="100" rx="14" fill="url(#wood)" stroke="#3e2414" stroke-width="5"/>'
-               '<rect x="30" y="56" width="140" height="68" rx="10" fill="#2a1a10" opacity="0.55"/>'
-               '<path d="M18,48 C40,24 80,30 100,38 C130,24 170,28 184,48 C150,44 120,52 100,48 C70,54 40,44 18,48 Z" fill="#ffffff" stroke="#9cc7e6" stroke-width="2"/>'
-               '<path d="M30,92 h8 M162,92 h8" stroke="#c99a6a" stroke-width="5" stroke-linecap="round"/>',
-               lg("wood", [(0, "#c98d5b"), (1, "#8a5631")]))
-
 
 def rope():
     """Braided rope segment, tiles vertically when stretched (anchor at the top)."""
@@ -833,40 +823,6 @@ def beam():
                lg("bw", [(0, "#c98d5b"), (1, "#7a4a2b")]))
 
 
-def whacker_base():
-    """The whacker: a snow sled with a timber A-frame, gears and a spring; the arm pivots on the top hub."""
-    W, H = 300, 260
-    sled = ('<path d="M20,214 L262,214 C286,214 292,196 284,186" fill="none" stroke="#3e4757" stroke-width="10" stroke-linecap="round"/>'
-            '<path d="M20,214 L262,214 C286,214 292,196 284,186" fill="none" stroke="#c0c8d4" stroke-width="5" stroke-linecap="round"/>'
-            '<rect x="30" y="170" width="230" height="34" rx="8" fill="url(#wood)" stroke="#3e2414" stroke-width="4"/>'
-            '<path d="M40,190 h210" stroke="#e0b07a" stroke-width="3" opacity="0.6"/>'
-            '<path d="M60,204 v10 M230,204 v10" stroke="#3e4757" stroke-width="6"/>')
-    frame = ('<path d="M70,172 L150,70 L230,172" fill="none" stroke="#3e2414" stroke-width="20" stroke-linejoin="round"/>'
-             '<path d="M70,172 L150,70 L230,172" fill="none" stroke="url(#wood)" stroke-width="13" stroke-linejoin="round"/>'
-             '<path d="M100,134 L200,134" stroke="#3e2414" stroke-width="10"/><path d="M100,134 L200,134" stroke="#b07a4a" stroke-width="5"/>')
-    gear = "".join(f'<rect x="{88-5}" y="{150-26}" width="10" height="12" rx="2" fill="#8a8f99" stroke="#3e4757" stroke-width="2" '
-                   f'transform="rotate({a} 88 150)"/>' for a in range(0, 360, 45))
-    gear += ('<circle cx="88" cy="150" r="20" fill="#a3abb8" stroke="#3e4757" stroke-width="4"/><circle cx="88" cy="150" r="6" fill="#3e4757"/>')
-    spring = '<path d="M196,170 ' + " ".join(f"l8,-6 l-16,-6" for _ in range(5)) + '" fill="none" stroke="#c0c8d4" stroke-width="5" stroke-linejoin="round"/>'
-    hub = ('<circle cx="150" cy="70" r="24" fill="#a3abb8" stroke="#3e4757" stroke-width="5"/>'
-           '<circle cx="150" cy="70" r="9" fill="#3e4757"/><circle cx="143" cy="63" r="5" fill="#fff" opacity="0.6"/>')
-    snow = ('<path d="M30,172 C70,158 120,166 160,160 C200,154 240,164 260,172 Z" fill="#fff" stroke="#9cc7e6" stroke-width="2"/>'
-            '<path d="M134,58 C140,44 160,44 166,58 Z" fill="#fff"/>')
-    # No lever on the machine: the operator pup's frames draw the lever, and the pup stands at the sled's end.
-    return svg(W, H, shadow(150, 226, 130, 10) + sled + frame + gear + spring + snow + hub,
-               lg("wood", [(0, "#c98d5b"), (1, "#7a4a2b")]))
-
-
-def whacker_arm():
-    """Catapult arm: pole from the hub (left end) to an open cup (right end) that carries the snowball."""
-    W, H = 360, 140
-    pole = ('<rect x="10" y="60" width="250" height="20" rx="10" fill="url(#pole)" stroke="#3e2414" stroke-width="4"/>'
-            '<path d="M20,66 h230" stroke="#e0b07a" stroke-width="3" opacity="0.6"/>'
-            + "".join(f'<rect x="{x}" y="56" width="10" height="28" rx="3" fill="#8a8f99" stroke="#3e4757" stroke-width="2"/>' for x in (60, 170)))
-    cup = ('<path d="M236,24 A64,64 0 1 0 236,116 L258,116 A42,42 0 1 1 258,24 Z" fill="url(#cupg)" stroke="#3e2414" stroke-width="5" stroke-linejoin="round"/>'
-           '<path d="M244,34 A52,52 0 1 0 244,106" fill="none" stroke="#e0b07a" stroke-width="3" opacity="0.6"/>')
-    return svg(W, H, pole + cup,
-               lg("pole", [(0, "#c98d5b"), (1, "#7a4a2b")]) + lg("cupg", [(0, "#a86b3c"), (1, "#5e3a1c")]))
 
 
 def snowball():
@@ -970,44 +926,7 @@ def rock_top():
                f'<path d="M0,2 H512" stroke="{ROCK_EDGE}" stroke-width="4"/>')
 
 
-def rock_ramp():
-    """Right triangle of cobble rising toward +x (right angle bottom-right), snow rim on the slope. flipX for the mirror."""
-    rnd = random.Random(52)
-    W = 512
-    clip = f'<clipPath id="tri"><path d="M0,{W} L{W},{W} L{W},0 Z"/></clipPath>'
-    body = (f'<g clip-path="url(#tri)"><rect width="{W}" height="{W}" fill="{ROCK_BASE}"/>' + pebbles(rnd, 0, 0, W, W, 160) + '</g>')
-    rim = (f'<path d="M0,{W} L{W},0 L{W},44 L44,{W} Z" fill="#eef6fc" clip-path="url(#tri)"/>'
-           f'<path d="M0,{W} L{W},0" stroke="{ROCK_EDGE}" stroke-width="6"/>'
-           f'<path d="M44,{W} L{W},44" stroke="#9cc7e6" stroke-width="3"/>')
-    return svg(W, W, body + rim, clip)
 
-
-def bg_dusk():
-    """Sunset sky for the arena, top to bottom: orange, gold, cream, pale ice blue."""
-    return svg(64, 1024, '<rect width="64" height="1024" fill="url(#dusk)"/>',
-               lg("dusk", [(0, "#ff8a3d"), (0.35, "#ffb347"), (0.62, "#ffd66e"), (0.82, "#fff1bd"), (1, "#dff3ff")]))
-
-
-def bg_floes():
-    """Arena horizon band (tiles horizontally): orange dune hills, a strip of distant icebergs, then pack ice floes."""
-    rnd = random.Random(53)
-    W, H = 1024, 480
-    hills = "".join(f'<path d="M{x},120 C{x+20},{120-h} {x+60},{120-h} {x+90},120 Z" fill="{c}"/>'
-                    for x, h, c in ((rnd.randint(-40, W), rnd.randint(30, 80), rnd.choice(("#f28c2b", "#ffa63a", "#ff9a2e")))
-                                    for _ in range(40)))
-    band = f'<rect x="0" y="100" width="{W}" height="24" fill="#ffd66e" opacity="0.6"/>'
-    horizon = (f'<rect x="0" y="120" width="{W}" height="50" fill="#e8f6ff"/>'
-               + "".join(f'<path d="M{x},170 L{x+w*0.3:.0f},{170-h} L{x+w*0.55:.0f},{170-h*0.6:.0f} L{x+w*0.8:.0f},{170-h*0.9:.0f} L{x+w},170 Z" '
-                         f'fill="#ffffff" stroke="#bfe3f7" stroke-width="2"/>'
-                         for x, w, h in ((rnd.randint(0, W - 90), rnd.randint(40, 90), rnd.randint(14, 36)) for _ in range(26))))
-    sea = f'<rect x="0" y="170" width="{W}" height="{H-170}" fill="#a9d8f0"/>'
-    floes = "".join(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="#f4fbff" stroke="#7fc3e8" stroke-width="2"/>'
-                    for x, y, rx, ry in ((rnd.randint(0, W), rnd.randint(185, H - 10), rnd.randint(26, 80), rnd.randint(8, 22))
-                                         for _ in range(90)))
-    shade = "".join(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="#8cc6e6" opacity="0.5"/>'
-                    for x, y, rx, ry in ((rnd.randint(0, W), rnd.randint(185, H - 10), rnd.randint(20, 60), rnd.randint(6, 14))
-                                         for _ in range(30)))
-    return svg(W, H, hills + band + horizon + sea + shade + floes)
 
 
 # ---------------------------------------------------------------- arena objects
@@ -1290,18 +1209,12 @@ ASSETS = {
     # hero sprites (pup, pup_ball, pup_dizzy, pup_<anim>_<i>) come from Tools/slice_sheets.py and are never deleted here
     "fg_snow": fg_snow(),
     "vignette": vignette(),
-    "sign": sign(),
     "rope": rope(),
     "map_bg": map_bg(),
     "cave_wall": cave_wall(),
     "rock_cobble": rock_cobble(),
     "rock_top": rock_top(),
-    "rock_ramp": rock_ramp(),
-    "bg_dusk": bg_dusk(),
-    "bg_floes": bg_floes(),
     "icicles": icicles(),
-    "whacker_base": whacker_base(),
-    "whacker_arm": whacker_arm(),
     "snowball": snowball(),
     "beam": beam(),
     "crack": crack(),

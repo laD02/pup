@@ -42,8 +42,8 @@ namespace SealCatapult.Core
     }
 
     /// <summary>
-    /// Scene wipe like the genre's: water with a wavy edge rises over the screen, a bear runs past carrying the caged
-    /// pup while the next scene loads, then the water drains away. Blocks input while covered.
+    /// Scene wipe like the genre's: water with a wavy edge rises over the screen, the pup runs on its rolling snowball
+    /// over "Loading…" while the next scene loads, then the water drains away. Blocks input while covered.
     /// </summary>
     public class ScreenFader : MonoBehaviour
     {
@@ -52,6 +52,7 @@ namespace SealCatapult.Core
         const float MinCovered = 0.5f;
         RectTransform water;
         RectTransform runner;
+        TMPro.TextMeshProUGUI label;
         float height;
 
         static ScreenFader instance;
@@ -103,20 +104,20 @@ namespace SealCatapult.Core
                     var r = new GameObject("Runner", typeof(RectTransform)).GetComponent<RectTransform>();
                     r.SetParent(go.transform, false);
                     r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
-                    r.sizeDelta = new Vector2(260f, 260f);
-                    var cage = new GameObject("Cage", typeof(RectTransform)).GetComponent<RectTransform>();
-                    cage.SetParent(r, false);
-                    cage.anchoredPosition = new Vector2(-150f, -10f);
-                    cage.sizeDelta = new Vector2(150f, 160f);
-                    var ci = cage.gameObject.AddComponent<Image>();
-                    ci.sprite = Art.Get("cage");
-                    ci.preserveAspect = true;
-                    var bear = new GameObject("Bear", typeof(RectTransform)).GetComponent<RectTransform>();
-                    bear.SetParent(r, false);
-                    bear.sizeDelta = new Vector2(220f, 260f);
-                    var bi = bear.gameObject.AddComponent<Image>();
-                    bi.sprite = Art.Get("bear_taunt_1");
-                    bi.preserveAspect = true;
+                    r.sizeDelta = new Vector2(340f, 340f);
+                    r.anchoredPosition = new Vector2(0f, 50f);
+                    // The loading act (redesign 18/11: "cả những spinner chuyển cảnh nữa"): the pup running on a rolling
+                    // snowball, drawn for this (pup_sheet_16_loader.png, 16 frames), over the word "Loading…".
+                    var act = new GameObject("Loader", typeof(RectTransform)).GetComponent<RectTransform>();
+                    act.SetParent(r, false);
+                    act.sizeDelta = new Vector2(460f, 460f);
+                    var ai = act.gameObject.AddComponent<Image>();
+                    ai.sprite = Art.Get(Art.Has("pup_loader_0") ? "pup_loader_0" : "pup_ball");
+                    ai.preserveAspect = true;
+                    ai.raycastTarget = false;
+                    if (Art.Has("pup_loader_15")) act.gameObject.AddComponent<UI.FrameLoop>().Set("pup_loader_", 16, 18f);
+                    instance.label = UI.UiKit.Text(r, "", 68, UI.UiKit.Center, new Vector2(0f, -290f), new Vector2(900f, 90f), Color.white,
+                        TMPro.TextAlignmentOptions.Center, true);
                     instance.runner = r;
                     r.gameObject.SetActive(false);
                     instance.SetAlpha(0f);
@@ -164,6 +165,7 @@ namespace SealCatapult.Core
                 yield return null;
             }
             SetWater(1f);
+            label.text = Loc.T("loading");   // read here: the language may have changed since the fader was built
             runner.gameObject.SetActive(true);
             float covered = 0f;
             var load = SceneManager.LoadSceneAsync(scene);
@@ -188,7 +190,6 @@ namespace SealCatapult.Core
             {
                 if (load.isDone) loading = pending != null;   // the new scene runs from here on
                 covered += Time.unscaledDeltaTime;
-                runner.anchoredPosition = new Vector2(Mathf.Lerp(-700f, 700f, (covered / 1.6f) % 1f), -40f + Mathf.Abs(Mathf.Sin(covered * 14f)) * 24f);
                 yield return null;
             }
             runner.gameObject.SetActive(false);

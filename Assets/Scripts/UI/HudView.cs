@@ -71,6 +71,7 @@ namespace SealCatapult.UI
             var hb = hud.hintBar.gameObject.AddComponent<Image>();
             hb.sprite = Art.Get("ui_pill");
             hb.type = Image.Type.Sliced;
+            hb.raycastTarget = false;   // a caption: a tap on it must still fire or dive (GameInput ignores taps over UI)
             // The pill is translucent: a second one under the text keeps the hint readable over the catapult and the rocks.
             var backing = UiKit.Image(hud.hintBar, "ui_pill", UiKit.Center, Vector2.zero, new Vector2(900, 90));
             backing.preserveAspect = false;
@@ -164,7 +165,7 @@ namespace SealCatapult.UI
             var bar = UiKit.Image(button.transform, "ui_bar", UiKit.Center, Vector2.zero, new Vector2(96, 14));
             bar.preserveAspect = false;
             bar.type = Image.Type.Sliced;
-            bar.color = new Color(0.9f, 0.15f, 0.15f);
+            bar.color = UiKit.Danger;
             bar.rectTransform.localRotation = Quaternion.Euler(0, 0, 45f);
             return bar;
         }
@@ -262,7 +263,8 @@ namespace SealCatapult.UI
         /// <summary>Between the phases, as in the reference: "Mission N", the hero, "Hit X bears to continue to the next
         /// level", "Total bears: Y" (all time), the pups that made it, and a Continue button. Stays until Continue (or a
         /// tap anywhere): <see cref="DismissMission"/>.</summary>
-        public void MissionCard(int levelNumber, int required, int total, int pups, Action onContinue)
+        /// <param name="boss">A boss level is won by beating the boss alone, whatever the guard count.</param>
+        public void MissionCard(int levelNumber, int required, int total, int pups, Action onContinue, bool boss = false)
         {
             var card = UiKit.Place(UiKit.Node(transform.GetChild(0), "Mission"), UiKit.Center, new Vector2(0, 20), new Vector2(1000, 640));
             mission = card;
@@ -270,8 +272,7 @@ namespace SealCatapult.UI
             img.sprite = Art.Get(Art.Has("ui_card") ? "ui_card" : "ui_panel");
             img.type = Image.Type.Sliced;
             img.raycastTarget = false;   // a tap on the card itself counts as Continue (only the button is UI)
-            UiKit.Text(card, Loc.T("mission_n", levelNumber), 56, UiKit.Top, new Vector2(0, -24), new Vector2(800, 70), Color.white,
-                TextAlignmentOptions.Center, true);
+            UiKit.Ribbon(card, Loc.T("mission_n", levelNumber), 620, 60);   // the title ribbon every panel wears (GAME_DESIGN.md "Bảng")
             var pedestal = UiKit.Image(card, "powder", UiKit.Top, new Vector2(0, -290), new Vector2(320, 80));
             pedestal.color = new Color(0.7f, 0.9f, 1f, 0.9f);
             // The hero bows down and comes up saluting (report §14.3: the reference's hero stoops for its hat, then
@@ -279,13 +280,12 @@ namespace SealCatapult.UI
             var hero = UiKit.Image(card, Art.Has("pup_salute_0") ? "pup_salute_0" : "pup", UiKit.Top, new Vector2(0, -100), new Vector2(220, 220));
             // CPC (live 16/11): bare-headed, it bends for its helmet, puts it on and stands proud (sheet I, front view).
             if (Art.Has("pup_pickhat_3")) hero.gameObject.AddComponent<FrameLoop>().Set("pup_pickhat_", 4, 2.5f);
-            else if (Art.Has("pup_salute_3") && Art.Has("pup_leap_0")) hero.gameObject.AddComponent<FrameLoop>().Set(5f, ("pup_leap_", 1), ("pup_leap_", 1), ("pup_salute_", 4), ("pup_salute_", 4));   // a crouch, then the salute (the grab frames show the rope)
             else if (Art.Has("pup_salute_0")) hero.gameObject.AddComponent<FrameLoop>().Set("pup_salute_", 4, 5f);
             else hero.gameObject.AddComponent<Spin>();
-            UiKit.Text(card, required > 0 ? Loc.T("hit_bears", required) : Loc.T("collect_fish"), 46, UiKit.Top, new Vector2(0, -340), new Vector2(900, 110), Color.white, TextAlignmentOptions.Center, true);
-            UiKit.Text(card, Loc.T("bears_all_time", total), 40, UiKit.Top, new Vector2(0, -455), new Vector2(900, 60), new Color32(0x2a, 0x6f, 0xb0, 0xff), TextAlignmentOptions.Center, true);
-            UiKit.Text(card, pups == 1 ? Loc.T("through_one") : Loc.T("through", pups), 32, UiKit.Top, new Vector2(-170, -530), new Vector2(560, 60), new Color32(0x56, 0x63, 0x7b, 0xff), TextAlignmentOptions.Left);
-            UiKit.Button(card, Loc.T("continue"), ButtonStyle.Gold, UiKit.BottomRight, new Vector2(-30, 30), new Vector2(320, 104), onContinue, "glyph_next");
+            UiKit.Text(card, boss ? Loc.T("beat_boss") : required > 0 ? Loc.T("hit_bears", required) : Loc.T("collect_fish"), 46, UiKit.Top, new Vector2(0, -340), new Vector2(900, 110), Color.white, TextAlignmentOptions.Center, true);
+            UiKit.Text(card, Loc.T("bears_all_time", total), 40, UiKit.Top, new Vector2(0, -455), new Vector2(900, 60), UiKit.Accent, TextAlignmentOptions.Center, true);
+            UiKit.Text(card, pups == 1 ? Loc.T("through_one") : Loc.T("through", pups), 36, UiKit.Top, new Vector2(-190, -530), new Vector2(520, 60), UiKit.Muted, TextAlignmentOptions.Left);
+            UiKit.Button(card, Loc.T("continue"), ButtonStyle.Gold, UiKit.BottomRight, new Vector2(-30, 30), new Vector2(380, 110), onContinue, "glyph_next");
             card.gameObject.AddComponent<SlideIn>().from = new Vector2(0, 120);
         }
 

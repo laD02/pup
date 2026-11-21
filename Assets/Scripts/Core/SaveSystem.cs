@@ -101,9 +101,31 @@ namespace SealCatapult.Core
 
         static bool loaded;
 
+        /// <summary>Editor play mode without a domain reload keeps statics: start each play from the file again.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            loaded = false;
+            SaveFailed = LoadFailed = false;
+            Problem = null;
+        }
+
+        /// <summary>True while the last write did not reach the disk (storage full): the game retries on the next save
+        /// and when it goes to the background, and tells the player once (<see cref="Problem"/>).</summary>
+        public static bool SaveFailed { get; private set; }
+
+        /// <summary>True when the save file was there but unreadable, so progress started from zero.</summary>
+        public static bool LoadFailed { get; private set; }
+
+        /// <summary>A save problem the player must hear about, as a Loc key ("save_failed", "save_damaged"); UI/SaveNotice
+        /// shows it. Raised on the main thread.</summary>
+        public static event Action<string> Problem;
+
         public static void Load()
         {
-            Data = LoadFrom(DefaultPath);
+            Data = LoadFrom(DefaultPath, out bool damaged);
+            LoadFailed = damaged;
+            if (damaged) Problem?.Invoke("save_damaged");
             loaded = true;
         }
 
@@ -113,7 +135,20 @@ namespace SealCatapult.Core
             if (!loaded) Load();
         }
 
-        public static bool Save() => SaveTo(DefaultPath, Data);
+        public static bool Save()
+        {
+            bool ok = SaveTo(DefaultPath, Data);
+            bool first = !ok && !SaveFailed;
+            SaveFailed = !ok;
+            if (first) Problem?.Invoke("save_failed");   // told once per failure streak, not on every retry
+            return ok;
+        }
+
+        /// <summary>Writes again when the last save failed (called as the app goes to the background).</summary>
+        public static void RetryIfFailed()
+        {
+            if (SaveFailed) Save();
+        }
 
         public static void ResetProgress()
         {
@@ -129,29 +164,43 @@ namespace SealCatapult.Core
             Save();
         }
 
-        public static SaveData LoadFrom(string path)
+        public static SaveData LoadFrom(string path) => LoadFrom(path, out _);
+
+        /// <param name="damaged">True when a save file existed but none could be read: progress starts from zero.</param>
+        public static SaveData LoadFrom(string path, out bool damaged)
         {
-            // The .tmp is a complete save written just before the swap: use it when the swap never happened.
-            var data = TryRead(path) ?? TryRead(path + ".tmp") ?? new SaveData();
+            // A .tmp only exists when a save was cut off before its swap. Complete (it parses): it is the newest save,
+            // newer than save.json. Cut off mid-write: it does not parse and save.json is used.
+            string temp = path + ".tmp";
+            var data = TryRead(temp, backup: false) ?? TryRead(path, backup: true);
+            damaged = data == null && (File.Exists(path) || File.Exists(temp));
+            data ??= new SaveData();
             data.Normalize();
             return data;
         }
 
-        /// <summary>Null when the file is missing or unreadable (a broken file is kept as a timestamped .corrupt copy).</summary>
-        static SaveData TryRead(string path)
+        /// <summary>Null when the file is missing or unreadable. With <paramref name="backup"/> a broken file is kept as
+        /// one .corrupt copy (the newest; a copy per launch filled the folder).</summary>
+        static SaveData TryRead(string path, bool backup)
         {
             if (!File.Exists(path)) return null;
+            string problem;
             try
             {
-                return JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+                // An empty file (a crash while it was created) parses to null without an exception.
+                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+                if (data != null) return data;
+                problem = "empty";
             }
             catch (Exception e)
             {
-                // Keep the broken file for inspection instead of silently overwriting it.
-                Debug.LogWarning($"[SealCatapult] Save file unreadable ({path}). {e.Message}");
-                TryCopy(path, $"{path}.{DateTime.UtcNow:yyyyMMddHHmmss}.corrupt");
-                return null;
+                problem = e.Message;
             }
+            if (!backup) return null;
+            // Keep the broken file for inspection instead of silently overwriting it.
+            Debug.LogWarning($"[SealCatapult] Save file unreadable ({path}). {problem}");
+            TryCopy(path, path + ".corrupt");
+            return null;
         }
 
         /// <summary>Writes a temp file, then swaps it in atomically, so a kill mid-save never leaves no save at all.</summary>

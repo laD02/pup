@@ -21,8 +21,7 @@ OUT = ROOT / "Assets" / "Resources" / "Art"
 PAINTINGS = {"bg_pit": "pit_bg_wide5.png", "bg_arena_sky": "arena_sky.png",
              "map_bg": "map_island.png", "bg_menu": "menu_bay.png",
              **{f"story_{i}": f"story_{i}.png" for i in range(1, 6)},
-             "rock_cobble": "pit_side_walls_box.png", "rock_top": "pit_side_walls_box.png",
-             "rock_ramp": "pit_side_walls_box.png"}
+             "rock_cobble": "pit_side_walls_box.png", "rock_top": "pit_side_walls_box.png"}
 
 
 def build_pit() -> None:
@@ -49,7 +48,7 @@ def draw_snow(out: Path) -> None:
     """rock_top.png: the painted snow cap of the launch pit (right half of pit_side_walls_box.png), cut out column by
     column between its navy top outline and its navy scalloped underside, made to tile sideways. The arena's rims are
     then the very same snow as the pit's (user 13/11: a drawn vector rim did not match the painted pit).
-    snow_knob.png: a round joint in the cap's own colours for the ends of slope rims."""
+"""
     wall = np.asarray(Image.open(REF / "pit_side_walls_box.png").convert("RGB")).astype(int)
     x0, x1, y0, depth = 800, 1500, 330, 110
     band = wall[y0:y0 + depth, x0:x1]
@@ -74,17 +73,10 @@ def draw_snow(out: Path) -> None:
     body[:, :overlap] = rgba[:, -overlap:] * (1 - t) + body[:, :overlap] * t
     Image.fromarray(body.round().astype(np.uint8), "RGBA").resize(RIM_SIZE, Image.LANCZOS).save(out / "rock_top.png", optimize=True)
     print(f"rock_top.png from the pit cap: {body.shape[1]}x{body.shape[0]} px")
-    n, line = 192, 12
-    knob = Image.new("RGBA", (n, n), (0, 0, 0, 0))
-    d = ImageDraw.Draw(knob)
-    d.ellipse([0, 0, n - 1, n - 1], fill=(14, 62, 160, 255))                       # the cap's outline blue
-    d.ellipse([line, line, n - 1 - line, n - 1 - line], fill=(196, 224, 252, 255))  # its shaded snow
-    d.ellipse([line, line, n - 1 - line, n - 1 - line - 34], fill=(246, 250, 254, 255))
-    knob.resize((96, 96), Image.LANCZOS).save(out / "snow_knob.png", optimize=True)
 
 
 def build_terrain() -> None:
-    """Arena rock: cobble texture and snow rim from the pit's own painting (pit_side_walls_box.png), plus a ramp mask."""
+    """Arena rock: cobble texture and snow rim from the pit's own painting (pit_side_walls_box.png)."""
     path = REF / "pit_side_walls_box.png"
     if not path.exists():
         print("skip rock_*: pit_side_walls_box.png not in Assets/Art/Reference yet")
@@ -97,17 +89,12 @@ def build_terrain() -> None:
     # doubled, smeared stones that cross-fading a small tile produced (user 13/11: "nhìn vẫn lộ là bị ghép").
     tex = wall.crop((0, 0, 760, 1024))
     tex.save(OUT / "rock_cobble.png", optimize=True)
-    # Snow rim and its round joint, drawn here in the pit painting's snow colours (white, pale blue shade, navy
+    # Snow rim, drawn here in the pit painting's snow colours (white, pale blue shade, navy
     # outline). The strip cut from arena_terrain.png carried a band of that sheet's brown rock along its top, which
     # showed as a brown edge outside the snow on every slope (user 13/11).
     draw_snow(OUT)
-    # Ramp: only a white triangle (right angle bottom-right, rising to the right). AttackPhase uses it as a sprite mask
-    # over the same tiled cobble as the blocks and lays the same snow rim along the slope, so ramps and blocks are one stone.
-    n = 256
-    tri = Image.new("RGBA", (n, n), (255, 255, 255, 0))
-    ImageDraw.Draw(tri).polygon([(0, n), (n, n), (n, 0)], fill=(255, 255, 255, 255))
-    tri.save(OUT / "rock_ramp.png", optimize=True)
-    print("rock_cobble.png rock_top.png rock_ramp.png")
+    # (Ramps are cobble meshes now, AttackPhase.Cobble: the rock_ramp mask and the snow_knob joint are no longer made.)
+    print("rock_cobble.png rock_top.png")
 
 
 def crop_16_9(name: str, source: str) -> None:

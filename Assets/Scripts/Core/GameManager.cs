@@ -24,7 +24,7 @@ namespace SealCatapult.Core
         /// <summary>Half the visible height on 16:9 and wider; wider screens just see more rock and sky.</summary>
         const float MinViewSize = 5f;
         /// <summary>The fortress view is tighter than the pit so blocks and bears read bigger.</summary>
-        const float AttackZoom = 1.3f;    // user 13/11: the arena view a bit further out (was 0.9)
+        const float AttackZoom = 1.05f;    // user 20/11: closer, so the pup and its fling styles read (CPC's penguin is ~9 % of the screen height); 1.1 cut the floor and the bears off while the pup glides (emulator); 13/11 was 1.3, before that 0.9
         /// <summary>How far the arena camera follows the pup up and down from the arena's centre.</summary>
         const float FollowUp = 0.3f, FollowDown = 1.0f;   // 1.6 up pushed the floor and the bears under an arch off the screen (emulator 13/11)
         const float CaveFollow = 1.6f;
@@ -114,7 +114,8 @@ namespace SealCatapult.Core
         {
             if (Current != State.Attack) return;
             Haptics.Tap();
-            StartCoroutine(TimeDip(attack.BearsLeft == 0));
+            // On a boss level the guards are not the last blow: the boss's own fall is (OnBossDown).
+            StartCoroutine(TimeDip(attack.BearsLeft == 0 && level.kind != LevelKind.Boss));
         }
 
         /// <summary>The boss is not a Bear: its fall is the level's last blow.</summary>
@@ -285,7 +286,8 @@ namespace SealCatapult.Core
                 StartCoroutine(hud.Curtain(false));
                 missionGo = false;
                 missionShownAt = Time.time;
-                hud.MissionCard(LevelIndex + 1, level.kind == LevelKind.Bonus ? 0 : attack.BearsRequired, SaveSystem.Data.totalBears, ammo, ContinueMission);
+                hud.MissionCard(LevelIndex + 1, level.kind == LevelKind.Bonus ? 0 : attack.BearsRequired, SaveSystem.Data.totalBears, ammo, ContinueMission,
+                    level.kind == LevelKind.Boss);
                 while (!missionGo) yield return null;   // the reference waits for Continue (a tap anywhere also counts)
                 hud.DismissMission();
             }
@@ -311,6 +313,7 @@ namespace SealCatapult.Core
             if (ScreenFader.LoadPending) return;   // Retry/Map was tapped: this level is being left, record nothing
             Current = won ? State.Won : State.Lost;
             GameInput.GameplayEnabled = false;
+            Application.targetFrameRate = BootView.StillFps;   // the result card is a still screen (heat, battery)
             hud.ShowHint(false);
             if (won)
             {
@@ -358,6 +361,7 @@ namespace SealCatapult.Core
             if (ScreenFader.LoadPending) return;   // Back during the wipe must not unpause the level being left
             paused = !paused;
             Time.timeScale = paused ? 0f : 1f;
+            Application.targetFrameRate = paused ? BootView.StillFps : BootView.GameFps;   // a frozen screen needs no 60 fps
             GameInput.GameplayEnabled = !paused;
             pause.SetVisible(paused);
         }
@@ -365,7 +369,9 @@ namespace SealCatapult.Core
         /// <summary>The whole level again, from the launch pit (pause menu, win card).</summary>
         public void Retry()
         {
-            if (leaving) return;   // an ad is opening for this card: its callback decides where to go
+            // leaving: an ad is opening for this card, its callback decides where to go. LoadPending: another button
+            // of this card was tapped in the same frame (two fingers), and a second load would spend the ad's bonus pup.
+            if (leaving || ScreenFader.LoadPending) return;
             SceneLoader.PlayLevel(LevelIndex);
         }
 
@@ -376,7 +382,7 @@ namespace SealCatapult.Core
         /// meant batting every pup out again). With no pup out there is nothing to keep: the whole level.</summary>
         public void RetryLost()
         {
-            if (leaving) return;
+            if (leaving || ScreenFader.LoadPending) return;
             if (CanRetryAttack) SceneLoader.RetryAttack(LevelIndex, exits);
             else Retry();
         }
@@ -427,7 +433,7 @@ namespace SealCatapult.Core
 
         public void ToMap()
         {
-            if (leaving) return;
+            if (leaving || ScreenFader.LoadPending) return;
             SceneLoader.Load(SceneLoader.LevelMap);
         }
 

@@ -5,13 +5,13 @@ using UnityEngine.UI;
 
 namespace SealCatapult.UI
 {
-    /// <summary>End of mission, laid out like the reference (report §15): "Mission N" over "Congratulations!" (or
-    /// "Mission failed!"), the hero standing on a knocked-out bear, "Bears hit: d/r", Continue.
-    /// No score, as in the reference; this game adds its three stars (the shop's currency), each with a line saying
-    /// what earns it, and the Retry/Map buttons. The all-time bear total lives on the mission card and the stats page.</summary>
+    /// <summary>End of mission: the win or loss card. No score, as in the reference; this game's three stars (the shop's
+    /// currency) each come with the rule that earns it. The all-time bear total lives on the stats page.</summary>
     public class ResultView : MonoBehaviour
     {
-        const float StarPitch = 380f;   // room under each star for its rule in the longest language
+        const float PanelWidth = 1040f;   // near-square like CPC's card; room for the loss row (2 round + ad + main)
+        const float StarPitch = 310f;     // room under each star for its rule
+        const float PageHeight = 2f * 500f + 40f;   // the ribbon's top is 500 above the centre; a little air round it
 
         GameManager game;
         Canvas canvas;
@@ -35,125 +35,117 @@ namespace SealCatapult.UI
         {
             canvas.enabled = true;
             var overlay = UiKit.Overlay(canvas.transform, "Overlay");
-            var panel = UiKit.Panel(overlay, new Vector2(1240, 860)).transform;
+            // CPC's result card, studied frame by frame (video, 18/11; user: "xem lại thật kĩ các modal cpc để thiết kế
+            // lại"): a near-square, airy panel; the headline on the ribbon, "Mission N" inside at the top, a small cast centred on a white snow oval (the pup on the knocked-out
+            // bear's belly; Perfect: more pups round it), centred stat lines with big blue numbers, and ONE main button
+            // at the bottom right. This game adds its three stars with their rules, a loss scene (the bear laughing at
+            // the dazed pup) and small round Map/Retry buttons at the bottom left.
+            // Fitted to the canvas height like the info pages: on 20:9 and wider the ribbon was cut off the top and the
+            // buttons touched the bottom edge.
+            var holder = UiKit.Place(UiKit.Node(overlay, "Fit"), UiKit.Center, Vector2.zero, Vector2.zero);
+            float fit = Mathf.Min(1f, UiKit.CanvasSize().y / PageHeight);
+            holder.localScale = new Vector3(fit, fit, 1f);
+            var panel = UiKit.Panel(holder, new Vector2(PanelWidth, 900), new Vector2(0, -20)).transform;
             panel.localScale = Vector3.one * 0.6f;
             StartCoroutine(PopIn(panel));
-            UiKit.Text(panel, Loc.T("mission_n", levelNumber), 50, UiKit.Top, new Vector2(0, -34), new Vector2(900, 64), Color.white,
-                TMPro.TextAlignmentOptions.Center, true);
-            var title = UiKit.Logo(panel, Loc.T(perfect ? "perfect_mission" : won ? "congrats" : "mission_failed"), 84, UiKit.Top, new Vector2(0, -92), new Vector2(1100, 120));
+            // The headline on the ribbon (user 18/11: "vẫn thêm ruy băng"), "Mission N" inside under it.
+            var title = UiKit.Ribbon(panel, Loc.T(perfect ? "perfect_mission" : won ? "congrats" : "mission_failed"), 760, 70);
             title.enableAutoSizing = true;
-            title.fontSizeMin = 40;
-            title.fontSizeMax = 84;
+            UiKit.Text(panel, Loc.T("mission_n", levelNumber), 60, UiKit.Top, new Vector2(0, -120), new Vector2(800, 80), Color.white,
+                TMPro.TextAlignmentOptions.Center, true);
+
+            // The stage: a pale snow oval, the small cast's feet on it.
+            const float Feet = -455f;
+            var patch = UiKit.Image(panel, "powder", UiKit.Top, new Vector2(0, Feet + 50), new Vector2(560, 130));
+            patch.preserveAspect = false;
+            patch.color = new Color(0.70f, 0.85f, 0.97f, 0.9f);   // CPC's oval is white on a flat panel; on this icy panel white vanishes
             if (won)
             {
                 StartCoroutine(Confetti(overlay));
-                // The winners' pile: a knocked-out bear with pups hopping on it, like the reference's result card.
-                var pile = UiKit.Place(UiKit.Node(panel, "Pile"), UiKit.Top, new Vector2(0, -215), new Vector2(360, 230));
-                UiKit.Image(pile, "bear_ko_0", UiKit.Bottom, new Vector2(0, 30), new Vector2(300, 180));
-                // CPC (live 16/11): one pup cheers on a plain win; on a Perfect four bare-headed pups dance, flippers up,
-                // and stars twinkle round the title.
-                int dancers = perfect ? 4 : 1;
-                string loop = perfect && Art.Has("pup_cheer_bare_3") ? "pup_cheer_bare_" : "pup_cheer_";
-                for (int i = 0; i < dancers; i++)
-                {
-                    float x = dancers == 1 ? 0f : -120 + i * 80;
-                    var pup = UiKit.Image(pile, loop + "0", UiKit.Bottom, new Vector2(x, 130 + (i % 2) * 20), new Vector2(dancers == 1 ? 120 : 96, dancers == 1 ? 120 : 96));
-                    if (Art.Has(loop + "3")) pup.gameObject.AddComponent<FrameLoop>().Set(loop, 4, 6f + i);
-                    var bob = pup.gameObject.AddComponent<Bob>();
-                    bob.amplitude = 14f;
-                    bob.speed = 4f + i;
-                }
+                UiKit.Cast(panel, "bear_modal_ko", UiKit.Top, new Vector2(0, Feet), 150f, 1.6f, true);
+                // CPC: the winner stands on the bear's belly; on a Perfect more pups stand round the bear.
+                UiKit.Cast(panel, "pup_modal_win", UiKit.Top, new Vector2(20, Feet + 70), 125f, 3.2f);
                 if (perfect)
+                {
+                    UiKit.Cast(panel, "pup_modal_win", UiKit.Top, new Vector2(-190, Feet + 10), 120f, 2.9f);
+                    UiKit.Cast(panel, "pup_modal_win", UiKit.Top, new Vector2(200, Feet + 10), 120f, 3.5f, true);
+                    // Sparkles round the gold line, as on CPC's "Perfect!".
                     for (int i = 0; i < 4; i++)
                     {
-                        var star = UiKit.Image(panel, "star_full", UiKit.Top, new Vector2(i < 2 ? -560 + i * 60 : 500 + (i - 2) * 60, -70 - (i % 2) * 50), new Vector2(54, 54));
+                        var star = UiKit.Image(panel, "star_full", UiKit.Top, new Vector2(i < 2 ? -330 + i * 50 : 280 + (i - 2) * 50, -120 - (i % 2) * 50), new Vector2(40, 40));
                         star.gameObject.AddComponent<PopIn>().delay = 0.3f + i * 0.15f;
                         var twinkle = star.gameObject.AddComponent<Bob>();
-                        twinkle.amplitude = 8f;
+                        twinkle.amplitude = 6f;
                         twinkle.speed = 5f + i;
                     }
+                }
             }
             else
             {
-                // The failed card (CPC): two bears laughing over a flattened pup.
-                for (int i = 0; i < 2; i++)
-                {
-                    // Both point at the pup on the left: the laugh frames point right, so a flipped holder mirrors them
-                    // (PopIn owns the image's own scale).
-                    var holder = UiKit.Place(UiKit.Node(panel, "Laugher"), UiKit.Top, new Vector2(i == 0 ? 40 : 240, -220), new Vector2(220, 220));
-                    holder.localScale = new Vector3(-1f, 1f, 1f);
-                    var bear = UiKit.Image(holder, Art.Has("bear_laugh_0") ? "bear_laugh_0" : "bear_helmet", UiKit.Center, Vector2.zero, new Vector2(220, 220));
-                    if (Art.Has("bear_laugh_3")) bear.gameObject.AddComponent<FrameLoop>().Set("bear_laugh_", 4, 6f + i);
-                    bear.gameObject.AddComponent<PopIn>().delay = 0.2f + i * 0.15f;
-                }
-                // The beaten pup lies on its back, bare-headed and kicking (sheet T), between the laughing bears.
-                bool kicking = Art.Has("pup_stuck_wall_7");
-                var loser = UiKit.Image(panel, kicking ? "pup_stuck_wall_0" : "pup_stuck_0", UiKit.Top, new Vector2(-170, -300), new Vector2(170, 170));
-                if (kicking) loser.gameObject.AddComponent<FrameLoop>().Set("pup_stuck_wall_", 8, 10f);
+                UiKit.Cast(panel, "pup_modal_lose", UiKit.Top, new Vector2(-120, Feet), 125f, 3.2f);
+                UiKit.Cast(panel, "bear_modal_mock", UiKit.Top, new Vector2(90, Feet), 200f, 1.6f, true);   // points left, at the pup
             }
 
-            // A cage boss frees its captive pups; the castle's own boss (last on the map) frees the castle.
+            // CPC's stat line: the label, then the number big and blue. A cage boss frees its captive pups; the castle's
+            // own boss (last on the map) frees the castle.
             int index = levelNumber - 1;
             string bossLine = Progress.LevelCatalog.IsFinal(index)
                 ? Loc.T("castle_freed", MapView.CastleName(Progress.LevelCatalog.CastleOf(index)))
                 : Loc.T("cage_freed");
-            string line = won && boss ? bossLine : Loc.T(bonus ? "fish_got" : "bears_hit", down, required);
-            UiKit.Text(panel, line, 44, UiKit.Top, new Vector2(0, -462), new Vector2(1100, 60), UiKit.Ink);
+            string line = won && boss ? bossLine
+                : Loc.T(bonus ? "fish_got" : "bears_hit", $"<size=140%><color=#{ColorUtility.ToHtmlStringRGB(UiKit.Accent)}>{down:00}", $"{required:00}</color></size>");
+            UiKit.Text(panel, line, 46, UiKit.Top, new Vector2(0, -500), new Vector2(940, 80), Color.white, TMPro.TextAlignmentOptions.Center, true);
 
-            // This game's own: the stars earned (they pay for upgrades), each over the rule that earns it, so a missing
-            // star explains itself. No score, as in the reference.
+            // This game's own: the stars (the shop's currency), each over the rule that earns it, so a missing star
+            // explains itself.
             bool[] earned = { rules.passed, rules.second, rules.third };
             int shown = 0;
             for (int i = 0; i < 3; i++)
             {
-                var at = new Vector2((i - 1) * StarPitch, -528);
-                var star = UiKit.Image(panel, earned[i] ? "star_full" : "star_empty", UiKit.Top, at, new Vector2(96, 96));
+                var at = new Vector2((i - 1) * StarPitch, -575);
+                var star = UiKit.Image(panel, earned[i] ? "star_full" : "star_empty", UiKit.Top, at, new Vector2(84, 84));
                 if (earned[i]) star.gameObject.AddComponent<PopIn>().delay = 0.4f + 0.25f * shown++;
                 // On the boss level the second star is for beating the boss with a pup left, not for every bear.
                 string key = bonus ? "star_fish_" + (i + 1) : boss && i == 1 ? "star_boss_2" : "star_rule_" + (i + 1);
-                var rule = UiKit.Text(panel, Loc.T(key), 30, UiKit.Top,
-                    at + new Vector2(0, -98), new Vector2(StarPitch - 20, 72), UiKit.Ink);
-                if (!earned[i]) rule.alpha = 0.7f;   // with the empty star above it: shape, not only colour
+                var rule = UiKit.Text(panel, Loc.T(key), 30, UiKit.Top, at + new Vector2(0, -86), new Vector2(StarPitch - 16, 80), UiKit.Ink);   // 26 px was under 10sp
+                rule.fontSizeMin = 24;
+                if (!earned[i]) rule.alpha = 0.6f;   // with the empty star above it: shape, not only colour
             }
+
+            // CPC: one main button at the bottom right. Map and Retry are small round buttons at the bottom left.
+            var round = new Vector2(110, 110);
+            UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.BottomLeft, new Vector2(50, 40), round, game.ToMap, "glyph_map");
             if (won)
             {
                 if (perfect)
                 {
-                    var badge = UiKit.Image(panel, "badge_perfect", UiKit.Top, new Vector2(470, -200), new Vector2(150, 150));
+                    var badge = UiKit.Image(panel, "badge_perfect", UiKit.TopRight, new Vector2(-50, -50), new Vector2(120, 120));
                     badge.gameObject.AddComponent<PopIn>().delay = 1.2f;
                 }
-                // Layout A: Map and Retry are square icon buttons; the next level is the one big button.
-                var square = new Vector2(120, 108);
-                UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.Bottom, new Vector2(-400, 36), square, game.ToMap, "glyph_map");
-                UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.Bottom, new Vector2(-250, 36), square, game.Retry, "glyph_retry");
-                UiKit.Button(panel, Loc.T("continue"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(150, 36), new Vector2(560, 108),
+                UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.BottomLeft, new Vector2(180, 40), round, game.Retry, "glyph_retry");
+                UiKit.Button(panel, Loc.T("continue"), ButtonStyle.Gold, UiKit.BottomRight, new Vector2(-50, 40), new Vector2(440, 110),
                     game.HasNextLevel ? game.NextLevel : (System.Action)game.ToMap, "glyph_next");
+                return;
+            }
+            // The free retry is the main button. The opt-in rewarded ad (GAME_DESIGN.md §13b) is a smaller one and says
+            // "Ad" in its label; no ad means the label turns into a note, never a free pup.
+            TMPro.TextMeshProUGUI adLabel = null;
+            System.Action showAd = () => game.RetryWithBonusPup(() => adLabel.text = Loc.T("ad_none"));
+            Button ad;
+            if (game.CanRetryAttack)
+            {
+                // Pups got out: "Attack again" keeps them and is the main button. The whole level stays one tap away
+                // (the round Retry), or a player with too few pups could never redo the pit from here.
+                UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.BottomLeft, new Vector2(180, 40), round, game.Retry, "glyph_retry");
+                ad = UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Warm, UiKit.BottomRight, new Vector2(-420, 40), new Vector2(320, 110), showAd);   // no glyph: the label ("Ad: +1 pup") needs the width
+                UiKit.Button(panel, Loc.T("retry_attack"), ButtonStyle.Gold, UiKit.BottomRight, new Vector2(-50, 40), new Vector2(360, 110), game.RetryLost, "glyph_next");
             }
             else
             {
-                // The free retry is the main button, where Continue sits on the win card. The opt-in rewarded ad
-                // (GAME_DESIGN.md §13b) is a smaller one and says "Ad" in its label; no ad means the label turns
-                // into a note, never a free pup.
-                TMPro.TextMeshProUGUI adLabel = null;
-                System.Action showAd = () => game.RetryWithBonusPup(() => adLabel.text = Loc.T("ad_none"));
-                Button ad;
-                if (game.CanRetryAttack)
-                {
-                    // Pups got out: "Attack again" keeps them. The whole level stays one tap away (plain Retry), or a
-                    // player with too few pups could never redo the pit from here; Map shrinks to its icon for room.
-                    UiKit.Button(panel, null, ButtonStyle.Teal, UiKit.Bottom, new Vector2(-542, 36), new Vector2(120, 108), game.ToMap, "glyph_map");
-                    UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-332, 36), new Vector2(270, 108), game.Retry, "glyph_retry");
-                    ad = UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Warm, UiKit.Bottom, new Vector2(13, 36), new Vector2(390, 108), showAd, "glyph_play");   // the longest label of the row
-                    UiKit.Button(panel, Loc.T("retry_attack"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(413, 36), new Vector2(380, 108), game.RetryLost, "glyph_next");
-                }
-                else
-                {
-                    UiKit.Button(panel, Loc.T("map"), ButtonStyle.Teal, UiKit.Bottom, new Vector2(-480, 36), new Vector2(240, 108), game.ToMap, "glyph_map");
-                    ad = UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Warm, UiKit.Bottom, new Vector2(-135, 36), new Vector2(410, 108), showAd, "glyph_play");
-                    UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Gold, UiKit.Bottom, new Vector2(345, 36), new Vector2(490, 108), game.RetryLost, "glyph_retry");
-                }
-                adLabel = ad.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                ad = UiKit.Button(panel, Loc.T("ad_bonus_pup"), ButtonStyle.Warm, UiKit.BottomRight, new Vector2(-420, 40), new Vector2(360, 110), showAd);
+                UiKit.Button(panel, Loc.T("retry"), ButtonStyle.Gold, UiKit.BottomRight, new Vector2(-50, 40), new Vector2(360, 110), game.RetryLost, "glyph_retry");
             }
+            adLabel = ad.GetComponentInChildren<TMPro.TextMeshProUGUI>();
         }
 
         /// <summary>UI confetti of stars and snowflakes bursting from the top of the screen.</summary>

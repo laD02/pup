@@ -16,12 +16,12 @@ namespace SealCatapult.Attack
     public class PufferController : MonoBehaviour
     {
         /// <summary>Arena pups are drawn smaller than phase-1 pups (user 12/11: "ở pha 2 hải cẩu to quá"); colliders scale with them.</summary>
-        public const float ArenaScale = 0.75f;
+        public const float ArenaScale = 1.0f;   // user 20/11: CPC's penguin is about one ice block tall and ~9 % of the screen (was 0.75)
+        const int BodyOrder = 30;
         const float GlideRadius = 0.91f * PupRig.Scale;
         const float BallRadius = 1.09f * PupRig.Scale;
         const float RestSpeed = 0.35f;
         const float InputGrace = 0.2f;
-        const float DazedTime = 1.1f;      // sitting dazed after the get-up, fading over its last 30 %
         const float WrapMargin = 1.5f;
 
         public event Action<PufferController> Finished;
@@ -56,7 +56,7 @@ namespace SealCatapult.Attack
 
         public static PufferController Spawn(Vector2 position, GameTuning tuning, int[] upgrades, Vector2 velocity)
         {
-            var rig = PupRig.Create(null, position, 30);
+            var rig = PupRig.Create(null, position, BodyOrder);
             rig.name = "Puffer";
             rig.SetPose(PupRig.Pose.Fly);
             var go = rig.gameObject;
@@ -129,7 +129,8 @@ namespace SealCatapult.Attack
                 if (blazing) Fx.Burst("spark", transform.position, 1, 1.5f, 0.35f, 0.3f, -2f, 0.15f, new Color(1f, 0.6f + 0.3f * UnityEngine.Random.value, 0.1f));
                 else if (Dived && !Landed && v.sqrMagnitude > 25f) Fx.WindStreak(transform.position, v);   // diving: wind lines
                 else if (sliding > 0f) Fx.Burst("spark", transform.position, 1, 1.2f, 0.25f, 0.18f, -1f, 0.1f, new Color(1f, 0.55f, 0.15f));   // friction fire on a slope
-                else if (Landed) Fx.Smoke(transform.position);   // the balled-up pup trails grey smoke while it bounces
+                else if (rig.Current == PupRig.Pose.Flung) Fx.BodySmoke(transform.position, BodyOrder + 1);   // CPC: grey puffs ride on the flung pup
+                else if (Landed) Fx.Smoke(transform.position);
                 else Fx.Trail(transform.position);
             }
         }
@@ -211,7 +212,7 @@ namespace SealCatapult.Attack
         }
 
         const float TurnTime = 0.12f;   // nose-down turn at the start of a dive
-        const float DiveArtAngle = -70f;   // heading of the held pup_dive_1 frame, nose toward bottom-right
+        const float DiveArtAngle = -70f;   // heading of the held dive frames (pup_dive_1, or 10..15 of the 16-frame set), nose toward bottom-right
         const float BallPhysicsAfter = 0.2f;   // when the old dive curled up: the ball's collider and mass from then on
         bool ballPhysics;
 
@@ -297,7 +298,8 @@ namespace SealCatapult.Attack
         void Ignite()
         {
             blazing = true;
-            pierceLeft = blazeLevel >= 3 ? 99 : blazeLevel * 2;
+            // Never fewer than the pup still had: Ice Spikes 2-3 gave 3-4 and Blaze 1 cut that down to 2 (audit 20/11).
+            pierceLeft = Mathf.Max(pierceLeft, Shop.BlazePierce(blazeLevel));
             AudioManager.Sfx("launch", 0.3f);
             Fx.Burst("spark", transform.position, 10, 4f, 0.5f, 0.3f, 0f, 0.3f, new Color(1f, 0.7f, 0.2f));
         }
@@ -322,28 +324,28 @@ namespace SealCatapult.Attack
             Tumble();
         }
 
-        /// <summary>CPC (video at 20–30 fps, 17/11, user: "xem lại cách văng của cpc … quan sát thật kĩ"): a struck
-        /// penguin keeps one flailing pose and the WHOLE body spins, about a turn every half second, the way it travels.
-        /// It never curls up and never switches to a drawn somersault.</summary>
+        /// <summary>CPC's fling, tracked at 60 fps with the camera locked on the penguin (19/11; user: "xem thật kĩ là văng
+        /// và vật lí của pha cpc và vẽ lại hoạt ảnh văng"; this corrects the 17/11 reading of "one drawing spinning"): the
+        /// struck penguin tumbles through DRAWN views, back to the viewer curled with its feet out, three-quarter, side
+        /// with the face and belly showing, head down, back again; one turn takes about 0.65 s and follows the way it
+        /// travels. A small grey dust puff trails behind it all the way; every wall or floor strike gives a big white
+        /// poof and gold rings, and keeps most of the speed.</summary>
         void Tumble()
         {
-            // CPC (60 fps, 17/11, checked twice): ONE flung drawing, hunched forward like sitting in mid-air, feet out in
-            // front, flippers swept back; the whole sprite turns about once a second.
-            rig.Face(true);
             rig.SetPose(PupRig.Pose.Flung);
-            rb.freezeRotation = false;
+            styleAt = Time.time;
+            rig.NextStyle();   // the first fling too: SetPose alone would always start on the same style
             Spin();
         }
 
-        /// <summary>CPC (55.6–57.9 s of the video, frame by frame): in the air the penguin tumbles every which way, head
-        /// down, on its side, upside down, and each strike sends it turning a new way at a new speed.</summary>
+        /// <summary>The drawn somersault carries the turn (pup_sheet_16_flung.png): the body itself does not rotate, it
+        /// only faces the way it travels (the frames tumble forward, drawn travelling right).</summary>
         void Spin()
         {
-            Vector2 v = rb.linearVelocity;
-            float dir = UnityEngine.Random.value < 0.35f ? (rb.angularVelocity >= 0f ? -1f : 1f)   // sometimes flips the turn
-                : Mathf.Abs(v.x) > 0.1f ? -Mathf.Sign(v.x) : 1f;
-            rb.angularVelocity = dir * Mathf.Clamp(v.magnitude * SpinPerSpeed, SpinMin, SpinMax) * UnityEngine.Random.Range(0.6f, 1.4f);
-            if (UnityEngine.Random.value < 0.5f) rig.Face(!rig.FacingRight);   // flips over side to side too
+            rb.angularVelocity = 0f;
+            rb.freezeRotation = true;
+            transform.rotation = Quaternion.identity;
+            if (Mathf.Abs(rb.linearVelocity.x) > 0.1f) rig.Face(rb.linearVelocity.x > 0f);
         }
 
         /// <summary>CPC: once it is down on the ground with speed left, the penguin curls round and rolls like a wheel
@@ -357,13 +359,21 @@ namespace SealCatapult.Attack
         }
 
         Vector2 rollNormal = Vector2.up;
+        float styleAt = -1f;
+        const float StyleHold = 0.12f;   // seconds a fling style stays before the next strike may change it
 
-        const float SpinPerSpeed = 70f, SpinMin = 250f, SpinMax = 650f;   // degrees/s
         const float RollMinSpeed = 1.2f;   // slower than this on the ground: it just comes to rest
 
         void OnCollisionEnter2D(Collision2D collision)
         {
             if (done || leaving) return;
+            // Every strike (rock, ice, bear, TNT) throws the pup into another fling style, picked at random (user 20/11:
+            // "sau khi va chạm thì sẽ random kiểu văng"). Not twice within a moment: one crash often touches two things.
+            if (rig.Current == PupRig.Pose.Flung && Time.time - styleAt > StyleHold)
+            {
+                styleAt = Time.time;
+                rig.NextStyle();
+            }
             BallUpOnImpact();
             var other = collision.collider;
             // Bumpers fling the pup straight back out along the contact, hard.
@@ -448,7 +458,7 @@ namespace SealCatapult.Attack
                 rb.linearDamping = tuning.airDrag;
                 if (!Dived && rig.Current != PupRig.Pose.Flung) rig.SetPose(PupRig.Pose.Flail);   // bonked mid-glide (a flung pup keeps tumbling)
                 // The ball, the flung rag doll and the roll turn with the body; the other drawn frames do the turning.
-                rb.freezeRotation = rig.Current != PupRig.Pose.Ball && rig.Current != PupRig.Pose.Flung && rig.Current != PupRig.Pose.Roll;
+                rb.freezeRotation = rig.Current != PupRig.Pose.Ball && rig.Current != PupRig.Pose.Roll;   // Flung: the drawn tumble turns
                 if (collision.contactCount > 0) StartCoroutine(Squash(collision.GetContact(0).normal));
                 AudioManager.Sfx("thud");
                 Fx.Shake(tuning.shakeOnBreak * (Dived ? 2f : 1f));
@@ -542,7 +552,7 @@ namespace SealCatapult.Attack
             hatDropped = true;
             if (Art.Has("pup_ball_bare")) rig.SetBallSprite("pup_ball_bare");   // the ball goes on bare-headed
             rig.GoBare();
-            var hat = Art.Spawn("pup_hat", null, (Vector2)transform.position + Vector2.up * 0.3f, 0.45f, 16);
+            var hat = Art.Spawn("pup_hat", null, (Vector2)transform.position + Vector2.up * 0.3f * ArenaScale, 0.6f * ArenaScale, 16);
             if (onto != null)
             {
                 flyingHat = hat;   // if this pup is gone before the hat lands, OnDestroy lets it fly loose
@@ -659,32 +669,37 @@ namespace SealCatapult.Attack
             if (!done && !leaving) transform.localScale = target;
         }
 
-        /// <summary>Came to rest: sit up dazed where it landed, stars and a smoke puff over its head, then fade out in
-        /// place (CPC, live 16/11: the penguin stays on the field dizzy; it never walks away).</summary>
+        /// <summary>Came to rest: CPC's exit, studied frame by frame (video 19/11; user: "khi hải cẩu hết nhiệm vụ thì nó nảy
+        /// lên và rơi xuống như cpc"): a white poof, the pup turns to the viewer scratching its head sheepishly, hops a
+        /// little and drops straight down through the ground and out of the picture, in front of the rock.</summary>
         IEnumerator WalkOff()
         {
             leaving = true;
             rb.simulated = false;
             transform.rotation = Quaternion.identity;
             transform.localScale = Vector3.one * ArenaScale;
-            Fx.Puff(transform.position, 3, 0.3f);
-            // Two ways to come to rest, picked by the pup's style (user 17/11: several styles per action): sit up dazed,
-            // or stay knocked flat on its back, twitching.
-            bool lieFlat = rig.Variant % 2 == 1;
-            Fx.DizzyOrbit(transform, new Vector2(0f, lieFlat ? 0.35f : 0.55f), DazedTime + 0.55f);
-            rig.SetPose(lieFlat ? PupRig.Pose.Flat : PupRig.Pose.GetUp);
-            yield return new WaitForSeconds(0.55f);
-            if (done) yield break;
-            if (!lieFlat) rig.SetPose(PupRig.Pose.Dizzy);
-            Fx.Puff(transform.position + Vector3.up * 0.6f, 4, 0.25f);
-            for (float t = 0f; t < DazedTime; t += Time.deltaTime)
+            Fx.Puff(transform.position + Vector3.up * 0.25f, 5, 0.45f);   // a quick poof around it, not over it
+            rig.SetPose(PupRig.Pose.Exit);
+            rig.SetOrder(ExitOrder);
+            var cam = Camera.main;
+            float bottom = cam != null ? cam.transform.position.y - cam.orthographicSize - 1.5f : transform.position.y - 12f;
+            float vy = ExitHop, x = transform.position.x, drift = UnityEngine.Random.Range(0.3f, 0.7f) * (UnityEngine.Random.value < 0.5f ? -1f : 1f);
+            yield return new WaitForSeconds(ExitPause);   // the poof clears: it stands there a beat, caught out
+            while (!done && transform.position.y > bottom)
             {
-                if (done) yield break;
-                rig.SetAlpha(1f - Mathf.Clamp01((t / DazedTime - 0.7f) / 0.3f));
+                float dt = Time.deltaTime;
+                vy -= ExitGravity * dt;
+                x += drift * dt;
+                transform.position = new Vector3(x, transform.position.y + vy * dt, transform.position.z);
                 yield return null;
             }
             Finish();
         }
+
+        const float ExitPause = 0.4f;     // seconds standing after the poof, caught out (CPC: ~0.4 s)
+        const float ExitHop = 4.5f;       // upward speed of the little hop, world units/s
+        const float ExitGravity = 11f;    // then it drops (CPC: about 0.6 s from the hop out of the picture)
+        const int ExitOrder = 30;         // in front of the rock and the blocks while it drops out
 
         void Finish()
         {

@@ -10,7 +10,7 @@ namespace SealCatapult.Core
     /// </summary>
     public class PupRig : MonoBehaviour
     {
-        public enum Pose { Idle, Walk, Crouch, Leap, Hang, Flail, Launched, Fall, Cheer, Glide, Ball, Dizzy, LeverReady, LeverPull, Fly, Dive, GetUp, NinjaHang, Grab, Stuck, Flinch, Spin, Wave, HatTip, Look, Hop, Dance, Yawn, Sneeze, OpWait, OpPull, DropJump, DropFall, Slide, Tumble, Flat, Bungee, StuckSlope, Flung, Roll }
+        public enum Pose { Idle, Walk, Crouch, Hang, Flail, Launched, Cheer, Ball, Dizzy, Fly, Dive, NinjaHang, Stuck, Spin, Wave, HatTip, Look, Hop, Dance, Yawn, Sneeze, OpWait, OpPull, DropJump, DropFall, Slide, Bungee, Flung, Roll, ThrowBall, HitBall, Exit }
 
         enum Anchor { Bottom, Rope, Center }
 
@@ -22,7 +22,7 @@ namespace SealCatapult.Core
         public const float StandHeight = 1.5f * Scale;
         public const float BallWidth = 2.28f * Scale;
 
-        const float WalkStep = 0.11f;      // world units walked per walk frame
+        const float WalkCycle = 0.88f;     // world units walked per full walk cycle, whatever the frame count (8 frames x 0.11)
         static readonly int[] Breath = { 0, 1, 2, 1 };
         const int IdleStill = 2;            // pup_idle_2: the frame used for the still idle
         const float BreathDepth = 0.018f;   // squash and stretch of the code breath
@@ -39,18 +39,18 @@ namespace SealCatapult.Core
             public float ArtAngle;          // heading the frames are drawn flying at, degrees (flight sets)
         }
 
-        static Anim hangFast, opWait, opPull, dropJump, dropFall;
-        const float FastSwing = 1.8f, FastSwingOff = 1.4f;   // rope rad/s: into the excited kicking set and back out (the carried swing peaks near 2.3)
-        static Anim idle, walk, crouch, leap, hang, flail, launched, fall, cheer, glide, dizzy, leverReady, leverPull, fly, dive, getUp, ninjaHang, grab, stuck, flinch, spin, wave, hatTip, look, hop, dance, yawn, sneeze;
-        static Anim walkBare, cheerBare, dizzyBare, getUpBare, idleBare, flailBare, stuckBare;
-        static Anim slide, tumble, stuckWall, flat;   // arena, after the first hit (always bare-headed by then)
+        static Anim opWait, opPull, dropJump, dropFall;
+        static Anim throwBall, hitBall, exitHop;   // the home screen's snowball fight (sheet pup_sheet_throw.png)
+        static Anim idle, walk, crouch, hang, flail, launched, cheer, dizzy, fly, dive, ninjaHang, stuck, spin, wave, hatTip, look, hop, dance, yawn, sneeze;
+        static Anim dizzyBare, idleBare, flailBare, stuckBare;
+        static Anim slide;   // arena, after the first hit (always bare-headed by then)
         // Several drawn styles per action (user 17/11: "mỗi loại hoạt ảnh sẽ có nhiều kiểu"): each pup picks one of each
         // at random (Variant), so no two pups fly, crash or tumble alike. Sets not drawn yet are left out.
         static Anim[] launchedSets, flungSets;
         // Sheet T2 (user 17/11: "học kiểu của cpc"; CPC live: a penguin under the ceiling lies on its back, face and belly
         // showing, flippers spread; one on a slope lies flat along it on its belly). Ceiling frames hang from their top
         // line (the back), slope frames stand on their bottom line (the belly).
-        static Anim stuckCeiling, stuckSlope;
+        static Anim stuckCeiling;
         // Sheets F2 + R2 (user 17/11: "phải vẽ lại văng … cpc có kiểu văng lộn lung tung các hướng và kiểu lộn tròn"):
         // hunched flung pose the code tumbles in the air, and a curled-round pup the code rolls along the ground.
         static Anim flung, roll;
@@ -100,12 +100,11 @@ namespace SealCatapult.Core
             idle = Load("idle", 1, 1f, 0, Anchor.Bottom, IdleStill) ?? Load("idle", 4, 3f, 0, Anchor.Bottom);
             walk = LoadAll("walk", 1f);   // front-view waddle (sheet O: 8 frames); steps follow the distance walked
             if (walk != null) walk.PingPong = false;
-            crouch = Load("ready", 1, 0f, 0, Anchor.Bottom) ?? Load("leap", 1, 0f, 0, Anchor.Bottom);   // sheet K front view, else leap_0
-            leap = Load("leap", 3, 10f, 2, Anchor.Center, 1);       // leap_1..3 once, then hold the grab pose
+            // 16-frame redraw (20/11): stand -> crouch once in LaunchPhase's 0.25 s edge pause, then hold the crouch.
+            crouch = Art.Has("pup_ready_15") ? Load("ready", 16, 64f, 15, Anchor.Bottom) : Load("ready", 1, 0f, 0, Anchor.Bottom);   // sheet K front view
             hang = Swing(Load("hang", 4, 5f, 0, Anchor.Rope));
-            hangFast = Swing(Load("hang_fast", 4, 9f, 0, Anchor.Rope)) ?? hang;
             swingDrawn = Loop("swing", 1f, Anchor.Rope);
-            if (swingDrawn != null) hang = hangFast = swingDrawn;   // one drawn swing replaces the plain and fast sets
+            if (swingDrawn != null) hang = swingDrawn;   // the drawn swing replaces the plain hang
             bungee = Loop("bungee", 1f, Anchor.Rope) ?? hang;
             // Sheets P and Q (16/11, drawn for these jobs, not borrowed): the operator at its own lever on the cart's deck,
             // and the no-rope launch.
@@ -114,51 +113,48 @@ namespace SealCatapult.Core
             if (dropFall != null) dropFall.Anchor = Anchor.Center;   // sheet K: legs kicking on a fast swing
             flail = Load("flail", 4, 10f, 0, Anchor.Center);
             launched = Load("launch", 4, 10f, 0, Anchor.Center);
-            fall = Load("fall", 4, 8f, 0, Anchor.Center);
-            leverReady = Load("lever", 4, 3f, 0, Anchor.Bottom);
-            leverPull = Load("lever", 4, 14f, 3, Anchor.Bottom, 4);  // lever_4..7 once, then hold the release
             // Below their fallbacks, which must be loaded first.
-            opWait = LoadAll("op_wait", 2.6f, pingPong: false) ?? leverReady;
-            opPull = Load("op_pull", 8, 12f, 7, Anchor.Bottom) ?? leverPull;   // once, then hold the last frame
+            opWait = LoadAll("op_wait", 2.6f, pingPong: false);
+            opPull = Load("op_pull", 8, 12f, 7, Anchor.Bottom);   // once, then hold the last frame
             cheer = Load("cheer", 4, 8f, 0, Anchor.Bottom);
-            glide = Load("glide", 4, 8f, 0, Anchor.Center);
             dizzy = Load("dizzy", 4, 6f, 1, Anchor.Bottom);
             // Sheet E (docs/pup-art-brief-2.md): level flight with flapping flippers, the nose-down turn, getting up after
             // a landing, the ninja hang. Until it is drawn, the nearest older set stands in (see Fallback).
-            fly = Load("fly", 4, 9f, 0, Anchor.Center) ?? glide;
-            dive = Load("dive", 2, 10f, 1, Anchor.Center) ?? launched;
-            getUp = Load("getup", 4, 7f, 3, Anchor.Bottom) ?? dizzy;
-            ninjaHang = Load("ninja", 1, 1f, 0, Anchor.Center) ?? flail;
-            // Sheet F (v10): bend down and grab the rope (frame 3, already on the rope, is left to the hang set),
-            // stuck on its back kicking, startled by a stray snowball, curled ball spinning.
-            grab = Load("reach", 3, 7f, 2, Anchor.Bottom) ?? Load("grab", 3, 7f, 2, Anchor.Bottom) ?? crouch;   // sheet K front view
+            fly = Load("fly", 4, 9f, 0, Anchor.Center);
+            // 16-frame redraw (20/11): 0..9 tip nose-down once (0.25 s), 10..15 loop the held torpedo, scarf fluttering
+            // (8..9 are drawn a touch steeper than 10..15: looping them would jerk every cycle).
+            dive = (Art.Has("pup_dive_15") ? Load("dive", 16, 40f, 10, Anchor.Center) : Load("dive", 2, 10f, 1, Anchor.Center)) ?? launched;
+            ninjaHang = Loop("ninja", 0.8f, Anchor.Center) ?? flail;   // one frame, or the 16-frame hover (20/11)
+            // Sheet F (v10): stuck on its back kicking, startled by a stray snowball, curled ball spinning.
             stuck = Load("stuck", 4, 8f, 0, Anchor.Center) ?? dizzy;
-            flinch = Load("flinch", 4, 7f, 3, Anchor.Bottom) ?? dizzy;
             spin = Load("spin", 4, 12f, 0, Anchor.Center) ?? flail;
             idleBare = Load("idle_bare", 1, 1f, 0, Anchor.Bottom, IdleStill) ?? Load("idle_bare", 4, 3f, 0, Anchor.Bottom);   // still + code breath, like idle
             flailBare = Load("flail_bare", 4, 10f, 0, Anchor.Center);
-            walkBare = Load("walk_bare", 6, 0f, 0, Anchor.Bottom);
-            cheerBare = Load("cheer_bare", 4, 8f, 0, Anchor.Bottom);
             dizzyBare = Load("dizzy_bare", 4, 6f, 1, Anchor.Bottom);
-            getUpBare = Load("getup_bare", 4, 7f, 3, Anchor.Bottom);
             // Sheet H (CPC live study 16/11): queue fidgets and the stuck pup that lost its helmet (drawn lying beside it).
             wave = LoadAll("wave", 0.9f) ?? cheer;
+            // Snowball fight on the home screen (18/11): drawn for it, played once and held on the last frame.
+            throwBall = Load("throw", 8, 11f, 7, Anchor.Bottom) ?? wave;
+            hitBall = Load("hit", 8, 10f, 7, Anchor.Bottom);
+            // CPC's exit (video 19/11): after its turn the pup turns to the viewer scratching its head, hops and drops out.
+            exitHop = Loop("exit", 0.8f, Anchor.Center) ?? flail;
             hatTip = LoadAll("hattip", 1.3f) ?? idle;
             look = LoadAll("look", 1.5f) ?? idle;
             stuckBare = Load("stuck_bare", 4, 6f, 0, Anchor.Center);
-            // Sheet T (17/11): flat on its back against the rock, kicking; the frame bottom is the rock surface.
-            stuckWall = Loop("stuck_wall", 0.8f, Anchor.Bottom);
-            // Sheets U-X (17/11, CPC-like variety): flung rag-doll styles in place of the curled ball, a knocked-flat rest,
+            // Sheets U-X (17/11, CPC-like variety): flung rag-doll styles in place of the curled ball,
             // two more launch flights, two more ways to be stuck in the rock (head at the frame top = the rock).
-            flat = Loop("flat", 1f, Anchor.Bottom);
-            flungSets = Sets(tumble, Loop("fling_cartwheel", 1f, Anchor.Center)   /* drawn as two turns */, Loop("fling_backflip", 0.57f, Anchor.Center),
-                Loop("fling_corkscrew", 0.57f, Anchor.Center));
             launchedSets = Sets(Angled(launched, 35f), Angled(Loop("launch_panic", 0.57f, Anchor.Center), 25f),
                 Angled(Loop("launch_hero", 0.8f, Anchor.Center), 15f));
             // Sheet X2: head in a snow splat at the frame top (anchored there like a rope frame), kicking or hanging limp.
             stuckCeiling = Loop("stuck_splat", 1f, Anchor.Rope) ?? Loop("stuck_ceiling", 0.8f, Anchor.Rope);
-            stuckSlope = stuckCeiling;
-            flung = Loop("flung", 0.8f, Anchor.Center);
+            flung = Loop("flung", 0.65f, Anchor.Center);   // one drawn somersault, CPC's 0.65 s a turn
+            // CPC's two fling styles (video tracked at 60 fps, 20/11; user: "quan sát thật kĩ các kiểu văng của cpc và làm
+            // lại"): curled tight and tumbling through drawn 3D views, or stretched out and spinning like a pinwheel.
+            // Each strike switches style (NextStyle). Both are bare-headed and turn in the drawing, never by code.
+            // Four more of this game's own (user 20/11: "sáng tạo nhiều kiểu văng thì càng tốt"): a front-view cartwheel, a
+            // panicked doggy paddle, a drill roll and an upright spinning top.
+            flungSets = Sets(flung, Loop("fling_spin", 0.65f, Anchor.Center), Loop("fling_star", 0.8f, Anchor.Center),
+                Loop("fling_paddle", 0.5f, Anchor.Center), Loop("fling_drill", 0.45f, Anchor.Center), Loop("fling_top", 0.55f, Anchor.Center));
             roll = Loop("roll", 0.8f, Anchor.Center) ?? flung;
             // Sheet J (user 16/11: "nhiều hoạt ảnh ngộ nghĩnh"): more queue fidgets, front view (all cut feet-down,
             // so the hop reads as a squash-and-stretch on the spot).
@@ -168,7 +164,6 @@ namespace SealCatapult.Core
             sneeze = LoadAll("sneeze", 1.5f, pingPong: false) ?? hatTip;
             // Sheet S (CPC video 17/11): after the bounces the pup skids on its belly, or somersaults like a rag doll.
             slide = Loop("slide", 0.67f, Anchor.Center) ?? flailBare ?? flail;
-            tumble = Loop("tumble", 0.57f, Anchor.Center) ?? spin;
         }
 
         static Anim Angled(Anim a, float degrees)
@@ -193,7 +188,11 @@ namespace SealCatapult.Core
         /// <summary>Marks a set to loop back and forth (null passes through).</summary>
         static Anim Swing(Anim a)
         {
-            if (a != null) a.PingPong = true;
+            if (a == null) return null;
+            // A 16-frame redraw is drawn as the whole sway (out, back, other side, back): it loops straight through, at
+            // the pace the 4-frame ping-pong had (6 steps a cycle).
+            if (a.Frames.Length >= 16) a.Fps *= 4f / 6f;
+            else a.PingPong = true;
             return a;
         }
 
@@ -202,8 +201,9 @@ namespace SealCatapult.Core
         static Anim LoadAll(string name, float cycle, bool pingPong = true)
         {
             int count = 0;
-            while (count < 16 && Art.Has($"pup_{name}_{count}")) count++;
+            while (count < 32 && Art.Has($"pup_{name}_{count}")) count++;
             if (count == 0) return null;
+            if (count >= 16) pingPong = false;   // a 16-frame redraw is drawn as a seamless loop (18/11), not a there-and-back
             var a = Load(name, count, (pingPong ? count * 2 - 2 : count) / cycle, 0, Anchor.Bottom);
             a.PingPong = pingPong;
             return a;
@@ -222,6 +222,22 @@ namespace SealCatapult.Core
         static Anim Load(string name, int count, float fps, int loopFrom, Anchor anchor, int first = 0)
         {
             if (!Art.Has($"pup_{name}_{first}")) return null;
+            if (first == 0 && count > 1)
+            {
+                // A set redrawn with more frames (16-frame redraws, user 18/11: "tăng khung hình cho tất cả hoạt ảnh") keeps
+                // its timing: all its frames, played faster; the held tail starts at the same share of the set.
+                int drawn = count;
+                while (drawn < 32 && Art.Has($"pup_{name}_{drawn}")) drawn++;
+                // Only a full 16-frame redraw: sets that share one frame run (lever_0..3 ready, lever_4..7 pull; reach,
+                // grab) must keep their own slice.
+                if (drawn > count && drawn >= 16)
+                {
+                    float k = (float)drawn / count;
+                    fps *= k;
+                    loopFrom = Mathf.Min(drawn - 1, Mathf.RoundToInt(loopFrom * k + (loopFrom == count - 1 ? k - 1f : 0f)));
+                    count = drawn;
+                }
+            }
             var frames = new Sprite[count];
             for (int i = 0; i < count; i++) frames[i] = Art.Get($"pup_{name}_{first + i}");
             return new Anim { Frames = frames, Fps = fps, LoopFrom = loopFrom, Anchor = anchor };
@@ -262,6 +278,17 @@ namespace SealCatapult.Core
             Place();
         }
 
+        /// <summary>Switches to the next drawn style of the pose on show (a flung pup changes its tumble at every strike,
+        /// as CPC's penguin does), from that style's first frame.</summary>
+        public void NextStyle()
+        {
+            int styles = Current == Pose.Flung && flungSets != null ? flungSets.Length : 0;
+            variant += styles > 1 ? Random.Range(1, styles) : 1;   // 1..n-1 steps on: always a different style, at random
+            if (Current == Pose.Ball) return;
+            Play(For(Current));
+            Place();
+        }
+
         bool bare;
 
         /// <summary>The hat is gone (knocked off in the arena): from now on the bare-headed frame sets are used where
@@ -278,43 +305,34 @@ namespace SealCatapult.Core
                 {
                     case Pose.Idle: return idleBare ?? idle;
                     case Pose.Flail: return flailBare ?? flail;
-                    case Pose.Walk: return walkBare ?? walk;
-                    case Pose.Cheer: return cheerBare ?? cheer;
                     case Pose.Dizzy: return dizzyBare ?? dizzy;
-                    case Pose.GetUp: return getUpBare ?? getUp;
                     case Pose.Stuck: return stuckCeiling ?? stuckBare ?? stuck;
-                    case Pose.StuckSlope: return stuckSlope ?? stuckBare ?? stuck;
-                    case Pose.Flung: return flung ?? flailBare ?? flail;
+                    case Pose.Flung: return Pick(flungSets) ?? flailBare ?? flail;
                     case Pose.Roll: return roll ?? flailBare ?? flail;
                 }
             switch (pose)
             {
                 case Pose.Walk: return walk;
                 case Pose.Crouch: return crouch;
-                case Pose.Leap: return leap;
                 case Pose.Hang: return hang;
                 case Pose.Bungee: return bungee;
                 case Pose.Flail: return flail;
                 case Pose.Launched: return Pick(launchedSets) ?? launched;
-                case Pose.Fall: return fall;
-                case Pose.LeverReady: return leverReady;
-                case Pose.LeverPull: return leverPull;
                 case Pose.OpWait: return opWait;
                 case Pose.OpPull: return opPull;
                 case Pose.DropJump: return dropJump;
                 case Pose.DropFall: return dropFall;
                 case Pose.Cheer: return cheer;
-                case Pose.Glide: return glide;
                 case Pose.Dizzy: return dizzy;
                 case Pose.Fly: return fly;
                 case Pose.Dive: return dive;
-                case Pose.GetUp: return getUp;
                 case Pose.NinjaHang: return ninjaHang;
-                case Pose.Grab: return grab;
                 case Pose.Stuck: return stuck;
-                case Pose.Flinch: return flinch;
                 case Pose.Spin: return spin;
                 case Pose.Wave: return wave;
+                case Pose.ThrowBall: return throwBall;
+                case Pose.HitBall: return hitBall;
+                case Pose.Exit: return exitHop;
                 case Pose.HatTip: return hatTip;
                 case Pose.Look: return look;
                 case Pose.Hop: return hop;
@@ -322,9 +340,7 @@ namespace SealCatapult.Core
                 case Pose.Yawn: return yawn;
                 case Pose.Sneeze: return sneeze;
                 case Pose.Slide: return slide;
-                case Pose.Tumble: return Pick(flungSets) ?? tumble;
-                case Pose.Flat: return flat ?? dizzyBare ?? dizzy;
-                case Pose.Flung: return flung ?? flail;
+                case Pose.Flung: return Pick(flungSets) ?? flail;
                 default: return idle;
             }
         }
@@ -377,6 +393,13 @@ namespace SealCatapult.Core
             sr.transform.localScale = s;
         }
 
+        /// <summary>Draw order of the pup's sprites (the exit drops it in front of the rock).</summary>
+        public void SetOrder(int order)
+        {
+            sr.sortingOrder = order;
+            ballSr.sortingOrder = order;
+        }
+
         public void SetAlpha(float a)
         {
             var c = sr.color; c.a = a; sr.color = c;
@@ -394,18 +417,6 @@ namespace SealCatapult.Core
                 return;
             }
 
-            // A fast swing switches the hang to the excited, leg-kicking set (same rope anchor, same frame clock).
-            if (Current == Pose.Hang && hangFast != hang)
-            {
-                float speed = Mathf.Abs(SwingSpeed);
-                var want = current == hangFast ? (speed < FastSwingOff ? hang : hangFast) : (speed > FastSwing ? hangFast : hang);
-                if (current != want)
-                {
-                    current = want;
-                    Show(Mathf.Min(frame, current.Frames.Length - 1));
-                    Place();   // the two sets differ in height: keep the hands on the rope end
-                }
-            }
             int count = current.Frames.Length;
             if (SwingLean.HasValue && current == swingDrawn && current != null && count > SwingCentre)
             {
@@ -415,11 +426,11 @@ namespace SealCatapult.Core
             }
             else if (DrivenPhase.HasValue && (current == swingDrawn || current == bungee) && current != null)
                 frame = Mathf.Clamp((int)(Mathf.Repeat(DrivenPhase.Value, 1f) * count), 0, count - 1);
-            else if (current == walk || current == walkBare)
+            else if (current == walk)
             {
                 // Steps follow the ground covered, so a pup that stops also stops stepping.
                 walkDistance += Mathf.Abs(moved.x) + Mathf.Abs(moved.y);
-                frame = (int)(walkDistance / WalkStep) % count;
+                frame = (int)(walkDistance / WalkCycle * count) % count;
             }
             else if ((current == idle || current == idleBare) && count == 1)
             {
@@ -430,7 +441,7 @@ namespace SealCatapult.Core
                 Place();   // the feet stay on the ground while the body breathes
                 frame = 0;
             }
-            else if (current == idle || current == leverReady)
+            else if (current == idle)
             {
                 // Breathe 0-1-2-1; frame 3 is the blink.
                 frameTime += dt * current.Fps;
@@ -441,7 +452,7 @@ namespace SealCatapult.Core
             }
             else
             {
-                float fps = current == hang || current == hangFast ? current.Fps * (1f + Mathf.Abs(SwingSpeed) * 0.5f) : current.Fps;
+                float fps = current == hang ? current.Fps * (1f + Mathf.Abs(SwingSpeed) * 0.5f) : current.Fps;
                 frameTime += dt * fps;
                 int i = (int)frameTime;
                 if (current.PingPong && count > 2)

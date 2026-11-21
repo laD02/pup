@@ -16,6 +16,12 @@ namespace SealCatapult.UI
         public static readonly Color Ink = new Color32(0x1b, 0x2a, 0x49, 0xff);
         public static readonly Color White = Color.white;
         public static readonly Color Dim = new Color(0.03f, 0.08f, 0.18f, 0.86f);
+        /// <summary>Numbers and highlights inside panels (the result card's counts, the stats, the mission card).</summary>
+        public static readonly Color Accent = new Color32(0x2f, 0x9b, 0xe8, 0xff);
+        /// <summary>Secondary text inside panels: credits, the version, small notes.</summary>
+        public static readonly Color Muted = new Color32(0x56, 0x63, 0x7b, 0xff);
+        /// <summary>Warnings: the "off" slash on a sound button, the captive's cry.</summary>
+        public static readonly Color Danger = new Color(0.9f, 0.15f, 0.15f);
         public static readonly Vector2 Center = new Vector2(0.5f, 0.5f);
         public static readonly Vector2 Top = new Vector2(0.5f, 1f);
         public static readonly Vector2 Bottom = new Vector2(0.5f, 0f);
@@ -69,11 +75,25 @@ namespace SealCatapult.UI
             return canvas;
         }
 
+        /// <summary>The size every canvas of <see cref="CreateCanvas"/> has on this screen, in reference pixels (known
+        /// before the canvas has been laid out): 1920×1080 at 16:9, 1663×1247 at 4:3, 2147×966 at 20:9.</summary>
+        public static Vector2 CanvasSize()
+        {
+            float w = Mathf.Max(1, Screen.width), h = Mathf.Max(1, Screen.height);
+            float scale = Mathf.Sqrt(w / 1920f * (h / 1080f));   // CanvasScaler, match 0.5
+            return new Vector2(w, h) / scale;
+        }
+
         static void EnsureEventSystem()
         {
             if (EventSystem.current != null) return;
             var es = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             UnityEngine.Object.DontDestroyOnLoad(es);
+            // Unity's 10 px is a hair on a 480 dpi phone: a finger that slid that far while tapping lost its tap wherever
+            // a scroll view sits behind the button (the map). 0.07 inch instead (11dp): more made the Settings sliders
+            // wait too long before they follow a small drag.
+            float dpi = Screen.dpi > 0f ? Screen.dpi : 200f;
+            es.GetComponent<EventSystem>().pixelDragThreshold = Mathf.Max(10, Mathf.RoundToInt(dpi * 0.07f));
         }
 
         /// <summary>Child that fits Screen.safeArea, so HUD corners stay clear of phone notches and cutouts.</summary>
@@ -141,6 +161,22 @@ namespace SealCatapult.UI
             var rt = Stretch(Node(parent, name));
             rt.gameObject.AddComponent<Image>().color = Dim;
             return rt;
+        }
+
+        /// <summary>A full screen's painted background: the home painting covering any screen shape under a dark veil,
+        /// so white outlined text and ice panels read on it (the loading screen, the shop). Nothing when the painting
+        /// is missing: the caller's own flat colour shows.</summary>
+        public static void PaintedBackdrop(Transform parent, float veil)
+        {
+            if (!Art.Has("bg_menu")) return;
+            var bg = Image(parent, "bg_menu", Center, Vector2.zero, Vector2.zero);
+            bg.preserveAspect = false;
+            var fit = bg.gameObject.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fit.aspectRatio = bg.sprite.rect.width / bg.sprite.rect.height;
+            var shade = Stretch(Node(parent, "Veil")).gameObject.AddComponent<Image>();
+            shade.color = new Color(0.03f, 0.08f, 0.2f, veil);
+            shade.raycastTarget = false;
         }
 
         public static Image Panel(Transform parent, Vector2 size, Vector2 position = default)
@@ -271,12 +307,75 @@ namespace SealCatapult.UI
             var pill = stars.gameObject.AddComponent<Image>();
             pill.sprite = Art.Get("ui_pill");
             pill.type = UnityEngine.UI.Image.Type.Sliced;
+            pill.raycastTarget = false;   // a read-out: taps go through to a map stone under it
             Image(stars, "star_full", new Vector2(0f, 0.5f), new Vector2(12, 2), new Vector2(76, 76));
             starsLabel = Text(stars, starsText, 48, new Vector2(1f, 0.5f), new Vector2(-20, 2), new Vector2(160, 80), White, TextAlignmentOptions.Right, true);
             return bar;
         }
 
         /// <summary>The ribbon title every popup panel wears, overhanging the panel's top by <paramref name="overhang"/>.</summary>
+        /// <summary>The game's name as its painted brand logo (Assets/Art/Reference/logo.png, one logo for every language:
+        /// user 18/11 "tên game ko theo ngôn ngữ … thiết kế lại tên game nhìn thật đẹp và thương hiệu"), fitted into
+        /// <paramref name="box"/>; the gold text only when the picture is missing.</summary>
+        public static RectTransform Brand(Transform parent, Vector2 anchor, Vector2 position, Vector2 box)
+        {
+            if (!Art.Has("logo"))
+            {
+                var text = Logo(parent, Loc.T("title"), box.y * 0.75f, anchor, position, box);
+                text.enableAutoSizing = true;
+                text.fontSizeMin = 40;
+                text.fontSizeMax = box.y * 0.75f;
+                return text.rectTransform;
+            }
+            return Image(parent, "logo", anchor, position, box).rectTransform;   // preserveAspect: fits inside the box
+        }
+
+        /// <summary>The red X on a panel's top-right corner (user 18/11: "các modal ko có dấu x để tắt ak"): closes the
+        /// modal exactly like its Back button. Painted icon_close (Assets/Art/Reference/ui_close.png).</summary>
+        public static Button CloseButton(Transform panel, Action onClose) =>
+            Button(panel, null, ButtonStyle.Warm, TopRight, new Vector2(34, 34), new Vector2(104, 104), onClose, "glyph_close");
+
+        /// <summary>Makes a map character stand out from the painted map (user 19/11: "ở map chưa làm nổi bật hoạt ảnh vì nó là
+        /// chính, hiện tại đang bị hòa vào map"): a thick dark navy stroke around the sprite, a soft drop shadow, a warm halo
+        /// behind it and a dark contact shadow under its feet. <paramref name="feet"/> is the feet point in the parent of
+        /// <paramref name="img"/>, <paramref name="width"/> the character's width.</summary>
+        public static void StandOut(Image img, Vector2 feet, float width)
+        {
+            Stroke(img, 2.5f);
+            var drop = img.gameObject.AddComponent<Shadow>();
+            drop.effectColor = new Color(0f, 0.04f, 0.14f, 0.45f);
+            drop.effectDistance = new Vector2(3f, -6f);
+            Ground(img.rectTransform, feet, width);
+        }
+
+        /// <summary>A thick dark navy stroke round a sprite (UI Outline).</summary>
+        public static void Stroke(Image img, float px)
+        {
+            var stroke = img.gameObject.AddComponent<Outline>();
+            stroke.effectColor = new Color(0.04f, 0.09f, 0.24f, 0.95f);
+            stroke.effectDistance = new Vector2(px, -px);
+        }
+
+        /// <summary>The warm halo behind and the dark contact shadow under something standing at <paramref name="feet"/>.</summary>
+        public static void Ground(RectTransform target, Vector2 feet, float width)
+        {
+            var parent = target.parent;
+            int at = target.GetSiblingIndex();
+            var img = target;
+            var halo = Image(parent, "powder", Center, Vector2.zero, new Vector2(width * 1.5f, width * 1.5f));   // a soft round light
+            halo.rectTransform.anchorMin = halo.rectTransform.anchorMax = img.anchorMin;
+            halo.rectTransform.anchoredPosition = feet + new Vector2(0f, width * 0.55f);
+            halo.color = new Color(1f, 0.96f, 0.8f, 0.6f);
+            halo.transform.SetSiblingIndex(at);
+            var contact = Image(parent, "powder", Center, Vector2.zero, new Vector2(width * 0.85f, width * 0.26f));
+            contact.preserveAspect = false;
+            contact.rectTransform.anchorMin = contact.rectTransform.anchorMax = img.anchorMin;
+            contact.rectTransform.anchoredPosition = feet;
+            contact.color = new Color(0f, 0.05f, 0.15f, 0.5f);
+            contact.transform.SetSiblingIndex(at + 1);
+        }
+
+        /// <summary>A modal's title on the ice ribbon overhanging the panel's top (user 18/11: "vẫn thêm ruy băng").</summary>
         public static TextMeshProUGUI Ribbon(Transform panel, string title, float width, float overhang)
         {
             var ribbon = Image(panel, "ribbon", Top, new Vector2(0, overhang), new Vector2(width, width * 0.23f));
@@ -284,6 +383,45 @@ namespace SealCatapult.UI
                 TextAlignmentOptions.Center, true);
             t.fontSizeMin = 30;
             return t;
+        }
+
+        /// <summary>A modal's cast member (GAME_DESIGN.md "Bảng"): a looping animation drawn for that modal, standing
+        /// against the panel's side; every frame <paramref name="anim"/>_0.._N is played over <paramref name="cycle"/> s.
+        /// <paramref name="position"/> is where the feet stand, from <paramref name="anchor"/> (a panel corner puts the character
+        /// half outside the panel, against its side). <paramref name="flip"/> mirrors it (the bears are drawn facing right).
+        /// Null when the frames are missing.</summary>
+        public static Image Cast(Transform parent, string anim, Vector2 anchor, Vector2 position, float height, float cycle, bool flip = false)
+        {
+            string prefix = anim + "_";
+            int count = 0;
+            while (count < 32 && Art.Has(prefix + count)) count++;
+            if (count == 0) return null;
+            var first = Art.Get(prefix + "0");
+            float width = height * first.rect.width / first.rect.height;
+            var holder = Place(Node(parent, "Cast " + anim), anchor, position, new Vector2(width, height));
+            holder.pivot = new Vector2(0.5f, 0f);   // the position is where its feet stand
+            if (flip) holder.localScale = new Vector3(-1f, 1f, 1f);   // PopIn owns the image's own scale
+            var img = Image(holder, prefix + "0", Center, Vector2.zero, new Vector2(width, height));
+            img.preserveAspect = true;
+            if (count > 1) img.gameObject.AddComponent<FrameLoop>().Set(prefix, count, count / cycle);
+            img.gameObject.AddComponent<PopIn>().delay = 0.2f;
+            return img;
+        }
+
+        /// <summary>A list row on the frosted strip (stats, star rules): icon, label on the left, value or mark on the right.</summary>
+        public static RectTransform ListRow(Transform parent, string icon, string label, float y, float width, float height = 68f, float x = 0f)
+        {
+            var bar = Image(parent, "ui_row", Top, new Vector2(x, y), new Vector2(width, height));
+            bar.type = UnityEngine.UI.Image.Type.Sliced;
+            bar.preserveAspect = false;
+            var rt = bar.rectTransform;
+            if (icon != null) Image(rt, icon, new Vector2(0f, 0.5f), new Vector2(height * 0.3f, 0), new Vector2(height * 0.9f, height * 0.9f)).preserveAspect = true;   // x: left edge
+            var t = Text(rt, label, height * 0.5f, new Vector2(0f, 0.5f), new Vector2(height * 1.35f, 2),   // Place pivots on the anchor: x is the left edge
+                new Vector2(width - height * 3f, height), Ink, TextAlignmentOptions.Left);
+            t.enableAutoSizing = true;
+            t.fontSizeMin = 20;
+            t.fontSizeMax = height * 0.5f;
+            return rt;
         }
 
         public static Slider Slider(Transform parent, Vector2 anchor, Vector2 position, Vector2 size, float value, Action<float> onChange)
@@ -325,55 +463,119 @@ namespace SealCatapult.UI
     }
 
     /// <summary>Squash on press, pop on release. Uses unscaled time so it works while paused.</summary>
+    /// <summary>Press feedback (user 18/11: "khi nhấn các nút chưa có animation j cả"): the button sinks and darkens
+    /// while held, then springs back past full size and settles, like the top mobile games. Spring on unscaled time;
+    /// idle buttons do no work.</summary>
     public class ButtonJuice : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
     {
-        float target = 1f;
+        const float Pressed = 0.86f, Kick = 6f, Stiffness = 420f, Damping = 16f, Darken = 0.8f;
+        float target = 1f, velocity;
+        Graphic graphic;
+        Color restColor;
+        bool held;
 
-        public void OnPointerDown(PointerEventData e) => target = 0.9f;
-        public void OnPointerUp(PointerEventData e) => target = 1f;
-        public void OnPointerExit(PointerEventData e) => target = 1f;
-        void OnDisable() => target = 1f;   // hidden while held: no pointer-up follows, and it would come back squashed
+        void Awake() => graphic = GetComponent<Graphic>();
+
+        public void OnPointerDown(PointerEventData e)
+        {
+            target = Pressed;
+            velocity = -Kick;   // snaps down at once, not eased: a short tap still shows
+            if (graphic == null || held) return;
+            held = true;
+            restColor = graphic.color;
+            graphic.color = new Color(restColor.r * Darken, restColor.g * Darken, restColor.b * Darken, restColor.a);
+        }
+
+        public void OnPointerUp(PointerEventData e) => Release(Kick);
+        public void OnPointerExit(PointerEventData e) => Release(0f);
+
+        void Release(float kick)
+        {
+            target = 1f;
+            velocity += kick;   // the spring overshoots past full size, then settles
+            if (!held) return;
+            held = false;
+            if (graphic != null) graphic.color = restColor;
+        }
+
+        void OnDisable()
+        {
+            // Hidden while held: no pointer-up follows, and it would come back squashed and dark.
+            Release(0f);
+            velocity = 0f;
+        }
 
         void Update()
         {
-            float s = Mathf.Lerp(transform.localScale.x, target, 1f - Mathf.Exp(-20f * Time.unscaledDeltaTime));
-            if (Mathf.Abs(s - transform.localScale.x) < 0.0005f) return;   // at rest: no canvas dirtying
+            float s = transform.localScale.x;
+            if (Mathf.Abs(s - target) < 0.0005f && Mathf.Abs(velocity) < 0.001f) return;   // at rest: no canvas dirtying
+            float dt = Mathf.Min(Time.unscaledDeltaTime, 1f / 30f);
+            velocity += ((target - s) * Stiffness - velocity * Damping) * dt;
+            s += velocity * dt;
             transform.localScale = new Vector3(s, s, 1f);
         }
+    }
+
+    /// <summary>Turns slowly in the screen plane on unscaled time (the light rays behind the victory stars).</summary>
+    public class Rotate : MonoBehaviour
+    {
+        public float speed = 18f;
+        void Update() => transform.Rotate(0f, 0f, speed * Time.unscaledDeltaTime);
     }
 
     /// <summary>Flips a UI image through numbered sprites (prefix0..prefixN-1) at a fixed rate; unscaled time.</summary>
     public class FrameLoop : MonoBehaviour
     {
         Sprite[] frames;
-        float fps;
+        float[] hold;   // seconds each frame shows
         Image img;
+        int index;
         float t;
 
         public void Set(string prefix, int count, float rate) => Set(rate, (prefix, count));
 
-        /// <summary>A loop stitched from several animations, e.g. a bow then a salute. Missing frames are skipped (the
-        /// first frame of the Image stays if nothing is found) and the rate is kept positive.</summary>
+        /// <summary>A loop stitched from several animations, e.g. a bow then a salute; each part lasts count / rate s.
+        /// A part redrawn with more frames than <c>count</c> (the 16-frame redraws, user 18/11: "tăng khung hình cho tất cả
+        /// hoạt ảnh") plays all of them in that same time, so callers never need to know how many were drawn. Missing
+        /// frames are skipped (the Image keeps its sprite if nothing is found).</summary>
         public void Set(float rate, params (string prefix, int count)[] parts)
         {
             var list = new System.Collections.Generic.List<Sprite>();
+            var times = new System.Collections.Generic.List<float>();
+            rate = Mathf.Max(rate, 0.01f);
             foreach (var (prefix, count) in parts)
-                for (int i = 0; i < count; i++)
+            {
+                int drawn = 0;
+                while (drawn < 32 && Art.Has(prefix + drawn)) drawn++;
+                // Only a full 16-frame redraw of a whole set: a part that asks for one frame (pup_leap_0 as a crouch) or
+                // for a slice keeps exactly what it asked for.
+                int n = drawn >= 16 && count >= 4 ? drawn : count;
+                float each = count / rate / Mathf.Max(1, Mathf.Min(n, Mathf.Max(drawn, 1)));
+                for (int i = 0; i < n; i++)
                 {
                     var s = Art.Get(prefix + i);
-                    if (s != null) list.Add(s);
+                    if (s == null) continue;
+                    list.Add(s);
+                    times.Add(each);
                 }
+            }
             frames = list.Count > 0 ? list.ToArray() : null;
-            fps = Mathf.Max(rate, 0.01f);
+            hold = times.ToArray();
+            index = 0;
+            t = 0f;
             img = GetComponent<Image>();
         }
 
         void Update()
         {
             if (frames == null || img == null) return;
-            t += Time.unscaledDeltaTime * fps;
-            var f = frames[(int)t % frames.Length];
-            if (img.sprite != f) img.sprite = f;
+            t += Time.unscaledDeltaTime;
+            while (t >= hold[index])
+            {
+                t -= hold[index];
+                index = (index + 1) % frames.Length;
+            }
+            if (img.sprite != frames[index]) img.sprite = frames[index];
         }
     }
 

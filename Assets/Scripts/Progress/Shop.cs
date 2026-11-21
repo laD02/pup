@@ -25,6 +25,21 @@ namespace SealCatapult.Progress
             return cost >= 0 && AvailableStars(data) >= cost;
         }
 
+        /// <summary>Blaze at its top level melts through every ice cube.</summary>
+        public const int BlazeAll = 99;
+
+        /// <summary>Ice cubes a blazing pup melts through at an upgrade level.</summary>
+        public static int BlazePierce(int level) => level >= UpgradeData.MaxLevel ? BlazeAll : level * 2;
+
+        /// <summary>The number an upgrade's description names at <paramref name="level"/>, the value the game really
+        /// uses (the shop showed the level number for every upgrade: Ice Spikes 1 smashes 2 blocks, Blaze 1 melts 2).</summary>
+        public static int Effect(UpgradeId id, int level, int basePierce) => id switch
+        {
+            UpgradeId.Spiky => basePierce + level,
+            UpgradeId.Blaze => BlazePierce(level),
+            _ => level,   // bounces, pups and ninja stops: one per level
+        };
+
         /// <summary>Spends stars and raises the level. Caller persists.</summary>
         public static bool TryBuy(SaveData data, UpgradeDef def)
         {

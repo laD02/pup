@@ -35,6 +35,9 @@ namespace SealCatapult.Attack
         float height;
 
         public bool IsDown => defeated;
+        /// <summary>Still standing but sliding or falling: it may yet be knocked out (AttackPhase waits before it judges).</summary>
+        public bool Moving => !defeated && rb != null && rb.IsAwake() && rb.linearVelocity.sqrMagnitude > MovingSpeed * MovingSpeed;
+        const float MovingSpeed = 0.3f;
         /// <summary>Feet-to-top height and the spinning body (a pup's knocked-off hat rides on it, CPC).</summary>
         public float Height => height;
         public Transform Body => body;
@@ -90,7 +93,8 @@ namespace SealCatapult.Attack
         void OnDisable() => All.Remove(this);
 
         /// <summary>Standing antics a guard bear cycles through at random, like the genre's bears: it never leaves its spot.</summary>
-        static readonly BearRig.Pose[] Antics = { BearRig.Pose.Taunt, BearRig.Pose.Laugh, BearRig.Pose.Scratch, BearRig.Pose.Juggle, BearRig.Pose.Flex };
+        static readonly BearRig.Pose[] Antics = { BearRig.Pose.Taunt, BearRig.Pose.Laugh, BearRig.Pose.Scratch, BearRig.Pose.Juggle, BearRig.Pose.Flex,
+            BearRig.Pose.FlexFail, BearRig.Pose.Doze, BearRig.Pose.Backfire };
         /// <summary>Each guard bear keeps one looping antic for the whole level (picked from its spot, so a level always
         /// looks the same); Idle means "breathe and throw in random antics".</summary>
         static readonly BearRig.Pose[] Signatures = { BearRig.Pose.Idle, BearRig.Pose.Punch, BearRig.Pose.Smug, BearRig.Pose.Sit, BearRig.Pose.Bowl };

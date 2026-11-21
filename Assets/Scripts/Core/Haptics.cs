@@ -15,18 +15,29 @@ namespace SealCatapult.Core
         static AndroidJavaObject activity, view;
         static AndroidJavaRunnable tick;
         static bool broken;
+        static int failures;
+        const int MaxFailures = 2;
+
+        /// <summary>One failure drops the cached view and tries a fresh one next time (the Activity may have been
+        /// recreated); a second one turns haptics off, so a phone without the call does not log on every hit.</summary>
+        static void Failed(Exception e)
+        {
+            view = null;
+            if (++failures >= MaxFailures) broken = true;
+            Debug.LogWarning($"[SealCatapult] haptics {(broken ? "off" : "retry")}: {e.Message}");
+        }
 #endif
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         /// <summary>Runs on Android's UI thread, outside Tap's try: it catches for itself.</summary>
         static void Tick()
         {
-            try { view.Call<bool>("performHapticFeedback", VirtualKey); }
-            catch (Exception e)
+            try
             {
-                broken = true;
-                Debug.LogWarning($"[SealCatapult] haptics off: {e.Message}");
+                view?.Call<bool>("performHapticFeedback", VirtualKey);
+                failures = 0;   // only failures in a row turn haptics off
             }
+            catch (Exception e) { Failed(e); }
         }
 #endif
 
@@ -47,11 +58,7 @@ namespace SealCatapult.Core
                 }
                 activity.Call("runOnUiThread", tick);   // views are touched on Android's UI thread only
             }
-            catch (Exception e)
-            {
-                broken = true;   // a phone without the call must not log on every hit
-                Debug.LogWarning($"[SealCatapult] haptics off: {e.Message}");
-            }
+            catch (Exception e) { Failed(e); }
 #endif
         }
     }

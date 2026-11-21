@@ -11,7 +11,7 @@ namespace SealCatapult.Attack
     /// </summary>
     public class BearRig : MonoBehaviour
     {
-        public enum Pose { Idle, Taunt, Dizzy, KnockedOut, Eat, Sleep, Flex, Laugh, Scratch, Juggle, Punch, Sit, Smug, Bowl, Dangle }
+        public enum Pose { Idle, Taunt, Dizzy, KnockedOut, Eat, Sleep, Flex, Laugh, Scratch, Juggle, Punch, Sit, Smug, Bowl, Dangle, Throw, Hit, FlexFail, Doze, Backfire }
 
         static readonly int[] Breath = { 0, 1, 2, 1 };
         const float HatHeightShare = 0.92f;   // helmet centre at this share of the idle frame's height above the feet
@@ -24,7 +24,7 @@ namespace SealCatapult.Attack
             public float Hold;   // extra time the last frame stays before falling back to Idle
         }
 
-        static Anim idle, taunt, dizzy, ko, eat, sleep, flex, laugh, scratch, juggle, punch, sit, smug, bowl, dangle;
+        static Anim idle, taunt, dizzy, ko, eat, sleep, flex, laugh, scratch, juggle, punch, sit, smug, bowl, dangle, throwBall, hitBall, flexFail, doze, backfire;
 
         SpriteRenderer sr, hat;
         Anim current;
@@ -75,11 +75,27 @@ namespace SealCatapult.Attack
             smug = Load("smug", 4, 3f, true) ?? idle;
             bowl = Load("bowl", 4, 4f, true) ?? eat;
             dangle = Load("dangle", 4, 3f, true) ?? sit;   // sheet E: legs hanging over a ledge
+            // Sheet F (18/11): the home screen's snowball fight, played once each.
+            throwBall = Load("throw", 8, 10f, false, 0.3f) ?? punch;
+            hitBall = Load("hit", 8, 10f, false, 0.4f) ?? dizzy;
+            // 18/11 ("thêm nhiều hoạt ảnh cho gấu"): three 16-frame gags for the guards, each drawn for the job
+            // (bear_sheet_16_<name>.png): the flex that fails, dozing off on guard, the snowball that lands on its own head.
+            flexFail = Load("flexfail", 16, 8f, false, 0.3f) ?? flex;
+            doze = Load("doze", 16, 7f, false, 0.3f) ?? scratch;
+            backfire = Load("backfire", 16, 8f, false, 0.3f) ?? juggle;
         }
 
         static Anim Load(string name, int count, float fps, bool loop, float hold = 0f)
         {
             if (!Art.Has($"bear_{name}_0")) return null;
+            // A set redrawn with more frames (16-frame redraws, 18/11) keeps the same timing: all its frames, faster.
+            int drawn = count;
+            while (drawn < 32 && Art.Has($"bear_{name}_{drawn}")) drawn++;
+            if (drawn >= 16)   // only a full redraw, never a longer set read in part
+            {
+                fps *= (float)drawn / count;
+                count = drawn;
+            }
             var frames = new Sprite[count];
             for (int i = 0; i < count; i++) frames[i] = Art.Get($"bear_{name}_{i}");
             return new Anim { Frames = frames, Fps = fps, Loop = loop, Hold = hold };
@@ -115,11 +131,16 @@ namespace SealCatapult.Attack
                 Pose.Smug => smug,
                 Pose.Bowl => bowl,
                 Pose.Dangle => dangle,
+                Pose.Throw => throwBall,
+                Pose.Hit => hitBall,
+                Pose.FlexFail => flexFail,
+                Pose.Doze => doze,
+                Pose.Backfire => backfire,
                 _ => idle,
             };
             // A one-shot antic whose frames are missing plays idle, which never ends: report Idle so callers waiting
             // for the antic to finish (Bear.Flinch, the antic timer) are not stuck.
-            bool oneShot = pose is Pose.Taunt or Pose.Dizzy or Pose.Flex or Pose.Laugh or Pose.Scratch or Pose.Juggle;
+            bool oneShot = pose is Pose.Taunt or Pose.Dizzy or Pose.Flex or Pose.Laugh or Pose.Scratch or Pose.Juggle or Pose.Throw or Pose.Hit or Pose.FlexFail or Pose.Doze or Pose.Backfire;
             Current = anim == idle && oneShot ? Pose.Idle : pose;
             Play(anim);
         }
@@ -149,9 +170,9 @@ namespace SealCatapult.Attack
         {
             float dt = Time.deltaTime;
             int count = current.Frames.Length;
-            if (current == idle)
+            if (current == idle && count == 4)
             {
-                // Breathe 0-1-2-1; frame 3 is the blink.
+                // The 4-frame set: breathe 0-1-2-1, frame 3 is the blink. A redrawn idle loops like any other set.
                 frameTime += dt * current.Fps;
                 frame = Breath[(int)frameTime % Breath.Length];
                 blinkTimer -= dt;

@@ -511,6 +511,10 @@ Học theo Angry Birds 2; thay cụm nút tròn trên-giữa của R7e:
   cẩu bị loại (`pup_sheet_b/c_rejected_style`, `pup_reference*`, `pup_ball_bare`), `map_world_stones` (dùng bản `stones40`),
   và trang bản đồ 2 cũ (`map_glacier` → `map_bg_2`; bản đồ giờ là một tranh `map_bg_world`). Còn giữ: ảnh `cpc_ref_*`
   (tham chiếu), `feature_graphic`, `app_icon`.
+  Dọn lần 2 (18/11, người dùng: "tranh nào ko dùng thì xóa đi"): bỏ 6 hình game không còn gọi (`hud_badge`, `rock_ramp`,
+  `sign`, `snow_knob`, `whacker_arm`, `whacker_base`) và bỏ luôn chỗ công cụ vẽ ra chúng (make_art, prep_backgrounds,
+  cut_props); bỏ sheet 8 khung `pup_sheet_s/t/u/v/w` (đã có bản 16 khung thay) và `arena_terrain`. Cách tìm: tên hình không
+  có trong code C# (kể cả ghép tên kiểu "pup_" + tên hoạt ảnh), tranh tham chiếu không công cụ nào đọc ngoài chú thích.
 Chưa làm: mây trôi riêng (mây vẽ liền trong tranh nền); bánh răng quay (cần tranh bánh răng).
 
 ### R12. Thành không giới hạn, mỗi thành một bản đồ 60 màn như CPC
@@ -809,7 +813,9 @@ trong test tự động (`FullLevelReachesAResult`) và bằng tay trên máy �
 
 Canvas 1920×1080, `matchWidthOrHeight` 0.5. Quy ước góc (R7e, 12/11): **trên-trái** mặt hải cẩu + "× N"; **trên-giữa** 4
 nút tròn (loa, nhạc, ?, tạm dừng); **trên-phải** mặt gấu + Tổng + `đã hạ/cần` (pha 2); **dưới-giữa** thanh chú thích một
-dòng. Không có điểm trên HUD. Nút ≥ 90 đơn vị canvas (~48 dp). Panel nằm ngang, nút xếp hàng.
+dòng. Không có điểm trên HUD. Panel nằm ngang, nút xếp hàng. (Từ R10: HUD chỉ còn **một** nút Tạm dừng ở góc trên-phải,
+loa và nhạc nằm trong bảng Tạm dừng.) Vùng chạm ≥ **130** đơn vị canvas (`UiKit.MinHit`, ~48 dp; 1 đơn vị ≈ 0,37 dp):
+nút nhỏ hơn được đệm vùng chạm vô hình. Luật bố cục chung ở mục "Rà soát 20/11" bên dưới.
 
 | Màn hình | Nội dung | Trạng thái |
 |---|---|---|
@@ -904,8 +910,8 @@ crash). Đếm "4 màn thắng" và "180 giây" theo phiên chơi (mở lại ga
 ## 13c. Ngôn ngữ và đánh giá trong app (người dùng 13/11/2026: "làm SEO thật tốt, ưu tiên EU")
 
 - **7 ngôn ngữ**: en, vi, de, fr, es, it, pl (cột theo thứ tự `Loc.Codes`). Lần đầu theo ngôn ngữ máy, không khớp thì
-  English. Nút Ngôn ngữ trong Cài đặt **xoay vòng** en → vi → de → fr → es → it → pl, hiện tên của chính ngôn ngữ đó
-  ("Deutsch", "Polski"). Tên nâng cấp, vùng và huy hiệu dịch **đúng bảng** trong `docs/ASO.md` (mục Châu Âu), để ảnh store
+  English. Nút Ngôn ngữ trong Cài đặt mở **bảng chọn** 7 ngôn ngữ (từ 18/11, không xoay vòng nữa), mỗi nút hiện tên của
+  chính ngôn ngữ đó ("Deutsch", "Polski"); ngôn ngữ đang dùng là nút vàng **có ngôi sao** (màu không là tín hiệu duy nhất). Tên nâng cấp, vùng và huy hiệu dịch **đúng bảng** trong `docs/ASO.md` (mục Châu Âu), để ảnh store
   và mô tả nói cùng một chữ. Giọng thân mật (du / tu / tú). Chữ dài hơn khung thì tự co tới 65% cỡ chữ (`UiKit.Text`),
   không tràn. Bản dịch do Claude viết, chưa có người bản xứ đọc lại.
 - **Đánh giá trong app** (Google Play In-App Review, như one-fill-line `docs/ASO.md` §5): hỏi **một lần**, 1,5 giây sau khi
@@ -973,3 +979,213 @@ bật/tắt, EN/VI, tắt app mở lại giữ tiến trình, xoay hai chiều n
 5. **Tiền tệ:** chỉ sao.
 6. **Tên:** giữ "Seal Catapult / Hải Cẩu Bay".
 7. Chế độ chiến thuật: không làm. Vùng 2–3: bảng màu (nền + đá) đã có (`LevelData.zone` 0–2, tint trong `AttackPhase.Palettes`); màn mẫu của vùng 2–3 để sau khi vùng 1 qua QA.
+
+### Màn hình chính: trận ném tuyết (18/11)
+Người dùng: "nhìn quá xấu, quá đơn điệu … vẽ nền kiểu như 2 bên đang chiến đấu với nhau, tham khảo top game". Nền `menu_bay.png`
+(ChatGPT, nét viền đậm như pit) là trại hải cẩu bên trái (tháp gỗ, cờ, đống bóng tuyết) đối mặt pháo đài băng của gấu bên phải,
+bóng tuyết bay giữa trời; cờ trại hải cẩu mang dấu vây hải cẩu, không phải dấu chân gấu (người dùng 18/11); dải tuyết dưới cùng 8,4% chiều cao là chỗ nhân vật đứng (`MainMenuView.MenuSnowLine`, gắn theo tranh).
+`MenuBattle.cs`: 2 hải cẩu (nhảy, vẫy) và 2 gấu (khiêu khích, khoe cơ) ném qua lại một quả bóng tuyết. Mọi động tác ném
+và trúng bóng đều được vẽ riêng (người dùng 18/11: "vẽ thêm các hoạt ảnh cho khớp hành động, đừng tận dụng những hoạt ảnh
+không khớp"): `pup_sheet_throw.png` và `bear_sheet_f.png`, mỗi tờ 8 khung ném (xúc tuyết, nặn, giơ, vung, ném, khoe) + 8 khung
+trúng bóng (tuyết dính mặt, lùi, lắc đầu, lau mặt). Bóng rời tay ở khung 6 (`PupRelease`, `BearRelease`); quả bóng bay do code
+vẽ nên hai tờ nằm trong `FX_FREE` (bỏ mảnh rời). Gấu ở màn hình chính không đội mũ băng. Nhân vật không đứng sau nút Play.
+
+### Phong cách nút: pha lê băng (18/11)
+Người dùng chọn kiểu 2 "Ice crystal" trong 6 mẫu (`button_styles` ChatGPT): nút cắt cạnh như khối băng màu (xanh lá = chính,
+cam = phụ ấm, xanh dương = thường), tuyết phủ trên đỉnh, nhũ băng rủ dưới; nút tròn và bảng cùng kiểu băng. Tranh nguồn
+`Assets/Art/Reference/ui_kit.png` (cắt bằng `Tools/cut_props.py`, giữ đúng bố cục cũ) và `ui_icons.png` (12 icon trên nút:
+trắng-xanh băng, viền xanh đậm; thay các icon SVG phẳng của make_art). Chữ trong bảng băng lùi vào trong viền dày.
+Nhấn nút (`ButtonJuice`): lún còn 86 % và tối đi khi giữ, nhả ra nảy vượt cỡ rồi về (lò xo, thời gian thực); hành động
+chạy ngay (màn hình chuyển có fade nên vẫn thấy cú nảy).
+
+### Bảng (modal) thiết kế lại (18/11)
+Bản thiết kế duyệt với người dùng: `button_styles`/`modals_a2`/`modals_b` (ChatGPT, kiểu pha lê băng). Trang Nâng cấp
+(shop) là trang riêng, chưa làm đợt này. Mọi nhân vật trong bảng là hoạt ảnh vẽ riêng cho bảng đó, 16 khung, hài hước
+kiểu tình huống chứ không trẻ con (người dùng: "hướng tới hài hước 1 chút, đừng trẻ con quá"):
+- Tạm dừng: bảng băng, ruy băng "Paused", lâu đài · màn, Resume (xanh lá) / Retry / Map xếp dọc, 2 nút tròn nhạc/âm
+  thanh; hải cẩu nhâm nhi cacao rồi xem đồng hồ (`pup_modal_wait`) đứng sát mép trái bảng.
+- Kết quả thắng/thua: đúng cấu trúc bảng kết quả của CPC, xem từng khung trong video `1Dp_WM-9ag0` (các bảng ở giây
+  7, 31, 61, 86, 345…; người dùng: "hoạt ảnh phải nằm trong modal như cpc", "hải cẩu lại to bằng gấu là thế nào", "xem lại
+  thật kĩ các modal cpc để thiết kế lại"). Bảng gần vuông, thoáng, ruy băng mang dòng tiêu đề, "Mission N" trong bảng ở trên cùng,
+  dòng phụ to ngay dưới ruy băng tiêu đề (người dùng: "vẫn thêm ruy băng"), cảnh nhỏ ở giữa trên đốm tuyết bầu dục (thắng: hải cẩu kính râm đứng trên bụng
+  gấu nằm choáng `bear_modal_ko`; Perfect thêm 2 hải cẩu hai bên + sao lấp lánh quanh dòng vàng; thua: gấu chỉ tay cười
+  `bear_modal_mock` cạnh hải cẩu u đầu `pup_modal_lose`; gấu luôn to hơn hải cẩu), dòng số liệu căn giữa với con số to
+  màu xanh, rồi phần riêng của game này: 3 sao kèm điều kiện. MỘT nút chính ở góc dưới phải; Map/Retry là nút tròn nhỏ
+  góc dưới trái; nút quảng cáo +1 hải cẩu cạnh nút chính khi thua.
+- Cài đặt: icon cho từng dòng (nhạc, loa, quả địa cầu), Stats/Erase có icon; hải cẩu air guitar (`pup_modal_music`).
+  Ngôn ngữ mở bảng chọn 7 ngôn ngữ (tên gốc), không xoay vòng khi bấm nữa.
+- Thống kê: các dòng trên dải băng có icon (mặt gấu, dấu chân 1–3, sao); hải cẩu lau cúp (`pup_modal_trophy`).
+- Hướng dẫn: 4 thẻ bước có tranh (`step_1..4`), hải cẩu đọc sách ngược (`pup_modal_read`).
+Mảnh ghép: `Assets/Art/Reference/ui_modal_kit.png` (cut_props). Hoạt ảnh: `pup_sheet_16_modal_*.png`,
+`bear_sheet_16_modal_*.png` (slice_sheets `SMOOTH_SIZE`; mọi tờ 16 khung của bất kỳ nhân vật nào khai báo ở đó).
+Code dùng chung: `UiKit.Cast` (nhân vật đứng theo chân), `UiKit.ListRow`, `Rotate` (tia sáng sau sao).
+
+### Thương hiệu, màn hình loading, chuyển cảnh (18/11)
+- Tên game là thương hiệu: "Seal Catapult" ở MỌI ngôn ngữ (người dùng: "tên game ko theo ngôn ngữ"); `Loc` `title` giống
+  nhau cả 7 cột. Tên trên Google Play theo ngôn ngữ ở `docs/ASO.md` là chuyện riêng của trang cửa hàng.
+- Logo vẽ (`Assets/Art/Reference/logo.png`, cắt bằng cut_props → `logo`): "Seal" chữ băng phủ tuyết, "CATAPULT" chữ gỗ
+  buộc dây thừng, hải cẩu bay ra từ gáo máy bắn kèm bóng tuyết, viền xanh đậm + viền trắng. Dùng qua `UiKit.Brand` ở màn
+  hình chính, màn loading và trang About; thiếu ảnh thì mới rơi về chữ vàng.
+- Màn loading lúc vào game (`BootView`): tranh nền trang chính phủ lớp tối, logo, chữ "Loading…" (khoá `loading`, 7 ngôn
+  ngữ) và thanh tiến độ băng chạy đầy trong 1,8 giây.
+- Chuyển cảnh (`ScreenFader`): nước dâng phủ màn hình như cũ; ở giữa là hải cẩu chạy trên quả bóng tuyết lăn
+  (`pup_sheet_16_loader.png`, 16 khung) trên chữ "Loading…", thay cho gấu xách lồng chạy ngang.
+- Mọi bảng giữ ruy băng tiêu đề (người dùng: "vẫn thêm ruy băng").
+- Nút X đỏ (`icon_close`, tranh `ui_close.png`) ở góc trên phải mọi bảng (người dùng: "các modal ko có dấu x để tắt ak"):
+  Cài đặt, chọn ngôn ngữ, xác nhận xoá (= Không), Thống kê, Hướng dẫn/About, Tạm dừng (= Resume). Không có trên bảng Kết
+  quả và thẻ hướng dẫn lần đầu (bắt buộc chọn nút). `UiKit.CloseButton`.
+- Gấu gác có thêm 3 trò 16 khung, vẽ riêng (`bear_sheet_16_flexfail/doze/backfire.png`; người dùng: "thêm nhiều hoạt ảnh
+  cho gấu"): khoe cơ nín thở rồi xì bụng, đứng gác ngủ gật giật mình, tung bóng tuyết rơi trúng đầu mình. Chúng nằm trong
+  `Bear.Antics`: chỉ gấu đứng thường (signature Idle) mới xen ngẫu nhiên, gấu có động tác riêng thì không.
+- 16 khung cho mọi hoạt ảnh (người dùng 18/11: "tăng khung hình cho tất cả hoạt ảnh"). Cách làm: ghép các khung đang có
+  thành một dải, nhờ ChatGPT vẽ khung chen giữa (bản gốc ở khung 1/5/9/13), lưu `<kind>_sheet_16_<anim>.png`; slice_sheets
+  (`SMOOTH_MATCH`) đo chiều cao các khung cũ để bản mới giữ đúng cỡ (gấu nằm/ngồi không bị phóng to). Code không cần biết
+  số khung: `BearRig.Load` và `FrameLoop` tự đếm khung và giữ nguyên thời lượng. Xong cả 15 hoạt ảnh gấu (19/11); hải
+  cẩu còn lại làm tiếp. Bài học: một tờ có viền đầu đứt làm việc xoá nền trắng ăn mất đầu (bản "cười" đầu tiên): xem mọi
+  khung trên nền màu sau khi cắt, lỗi thì nhờ vẽ lại với "bold fully closed outline".
+- Bản đồ (19/11, người dùng: "cho lồng và gấu to bằng hải cẩu di chuyển"): lồng, hải cẩu trong lồng, gấu trùm và gấu đứng
+  bên đường cùng cỡ hải cẩu đi trên đường (Stone 64 × 1,9 ≈ 122 px), đứng trên ô đá; ô trùm lớn hơn không làm gấu/lồng to hơn.
+- Lồng trên bản đồ làm lại theo CPC (19/11, người dùng: "xem lại hoạt họa trong lồng của cpc và làm lại đi, nhìn quá tệ";
+  video CPC giây 64–66): lồng chim cao thanh mảnh, nan mảnh, mái vòm có khoen, trên đế tròn đỏ (`cage_cpc.png` →
+  `cage`/`cage_open`, lòng lồng trong suốt). Hải cẩu nằm gọn TRONG lồng, vẽ trước rồi lồng đè lên (nhìn rõ qua nan), hoảng
+  hốt kêu cứu, 16 khung (`pup_sheet_16_captive.png`), không khóc. Chân đặt trong lòng đế (`CaptiveFloor` 0,22).
+- Mọi thứ trên ô (hải cẩu đi, lồng, gấu trùm) đứng với chân ở GIỮA ô đá (người dùng: "mọi thứ chưa đứng đúng giữa của ô").
+- Nhân vật trên bản đồ nổi khỏi tranh (19/11, người dùng: "chưa làm nổi bật hoạt ảnh vì nó là chính, đang bị hòa vào map"):
+  `UiKit.StandOut` = viền xanh đậm dày quanh nhân vật (UI Outline) + bóng đổ + quầng sáng ấm mờ phía sau + bóng tối dưới
+  chân; dùng cho hải cẩu đi, gấu trùm, gấu bên đường; lồng chỉ có quầng + bóng chân (viền làm nan lồng dày đen che hải
+  cẩu), hải cẩu trong lồng có viền.
+- Hải cẩu hết lượt ở pha 2 làm như CPC (19/11, người dùng: "khi hải cẩu hết nhiệm vụ thì nó nảy lên và rơi xuống như cpc";
+  video CPC giây 49,3–50,5 ở 20 fps): khói bụp, hải cẩu quay mặt ra gãi đầu cười ngượng (`pup_sheet_16_exit.png`, 16 khung),
+  đứng 0,4 s, nảy lên rồi rơi thẳng xuyên đất ra khỏi màn hình, vẽ đè lên đá. Thay cho ngồi choáng rồi mờ dần.
+- Dọn hình không dùng (19/11): `bg_dusk`, `bg_floes`, `fx_rays`, `mark_tick`, `icon_bulb`, `pup_help_*` (thay bằng
+  `pup_captive`); `pup_sheet_help.png` giữ lại làm mẫu phong cách để vẽ tờ hải cẩu mới.
+- 16 khung, tình trạng 19/11: xong 17 hoạt ảnh gấu và 28 hoạt ảnh hải cẩu (kể cả các bản không mũ: vùng vẫy, choáng,
+  đứng dậy, bị kẹt). Còn dưới 16 khung: `op_pull` (kéo cần: ChatGPT vẽ sai trình tự 2 lần, giữ 8 khung), và các bộ dùng
+  theo lát/khung lẻ hoặc gần như không hiện: `lever`, `reach`, `grab`, `leap`, `ready`, `hang`, `hang_fast`, `idle`,
+  `idle_bare`, `ball`, `ball_bare`, `cheer_bare`, `walk_bare`, `dive`, `ninja`.
+- CỠ của bản vẽ lại: khung 1 của bản mới = khung 0 của bản cũ vẽ lại, nên slice_sheets ép khung đầu cao đúng bằng khung 0
+  bản đã commit (`("first", px)`, bảng `SMOOTH_FIRST` cho hải cẩu và `SMOOTH_SIZE` cho gấu). KHÔNG đo theo khung đang có
+  trên đĩa (trôi dần sau mỗi lần cắt: gấu đứng thở −32 %, khoe cơ +26 % → gấu phình ra ở trang chính, người dùng báo
+  19/11) và không đo theo mũ/chiều cao trung vị (lệch 5–20 %).
+- Code chỉ tự kéo dài một bộ khi nó đủ 16 khung trở lên (`PupRig.Load`, `BearRig.Load`, `FrameLoop`): bộ dùng theo lát
+  (lever 0–3 / 4–7, leap_0 làm dáng ngồi) giữ nguyên.
+- VĂNG ở pha 2, làm lại theo CPC (19/11, người dùng: "xem thật kĩ là văng và vật lí của pha cpc và vẽ lại hoạt ảnh
+  văng"). Xem video CPC 60 khung/giây, khung hình bám theo chim cánh cụt (2 cú văng, 44–48 s và 37–41 s). Kết luận này
+  THAY cho ghi chú 17/11 ("một hình vẽ, cả thân xoay"), ghi chú đó sai:
+  - Chim lộn nhào bằng nhiều DÁNG VẼ khác góc nhìn: lưng quay ra co tròn chân thò ra → nghiêng 3/4 → nghiêng thấy
+    mặt và bụng → chúi đầu → lại lưng. Một vòng khoảng 0,65 s, lộn theo hướng bay.
+  - Một cụm bụi xám nhỏ bám theo suốt đường bay; mỗi lần đập tường/sàn có cụm khói trắng to + vòng vàng; nảy lại giữ
+    phần lớn tốc độ.
+  - Trong game: `pup_sheet_16_flung.png` (16 khung, một vòng lộn nhào, vẽ đang bay sang phải, không mũ), chạy 0,65 s/vòng;
+    thân KHÔNG xoay bằng code nữa (`PufferController.Spin` khoá xoay, chỉ lật mặt theo hướng bay); vệt `Fx.Smoke` xám
+    suốt lúc văng. Dáng lăn trên đất (`Roll`) và quả cầu gai (nâng cấp) giữ nguyên.
+- 16 khung, đợt 19/11 (tiếp): thêm `hang`, `hang_fast` (đu dây), `cheer_bare`, `walk_bare`. Còn dưới 16: `op_pull` (8),
+  `lever`, `reach`, `grab`, `leap`, `ready`, `idle`/`idle_bare` (đứng yên + thở bằng code), `ball`/`ball_bare` (một hình
+  xoay), `dive`, `ninja`.
+  - Đu dây 16 khung vẽ đủ một nhịp lắc (ra, về, sang bên kia, về) nên `PupRig.Swing` chạy thẳng vòng, không ping-pong,
+    giữ nhịp cũ (fps × 4/6).
+  - Bước đi tính theo quãng đường cho CẢ vòng (`WalkCycle = 0.88`), không theo từng khung: thêm khung không làm chân
+    bước chậm lại (trước đó `WalkStep` mỗi khung khiến bộ 16 khung bước chậm gấp đôi).
+  - Hải cẩu không mũ: mõm hở viền chỗ ria nên nền trắng tràn vào xoá cả đầu, xin "viền kín" 2 lần vẫn hở. Sửa trong
+    công cụ: `SEAL_GAPS` ở `Tools/slice_sheets.py` chỉ cho nền đi qua khe rộng hơn 13 px. Tờ không mũ nào mất đầu thì
+    thêm tên tờ vào đó, không cần vẽ lại.
+- 16 khung, đợt 20/11: thêm `op_pull` (kéo cần máy bắn), `dive` (bổ nhào), `ready` (ngồi xuống ở mép cầu), `ninja`
+  (lơ lửng khoanh tay). Còn dưới 16: `idle`/`idle_bare` (đứng yên + thở bằng code), `ball`/`ball_bare` (một hình xoay).
+  - Đã XOÁ các dáng không còn chỗ nào gọi (20/11): `Pose.Grab`, `Pose.Leap`, `Pose.LeverReady/LeverPull` và hình
+    `pup_reach_*`, `pup_grab_*`, `pup_leap_*`, `pup_lever_*`. Các hàng đó vẫn nằm trên tờ gốc và slice_sheets vẫn ĐO
+    chúng (tờ D và K lấy cỡ theo hàng `lever`, `reach`) nhưng không ghi ra: bảng `UNUSED`. Trước khi vẽ lại một bộ,
+    grep xem `Pose` của nó có chỗ nào `SetPose` không (đã vẽ `reach` 16 khung rồi mới phát hiện không dùng, phải bỏ).
+  - Rà toàn bộ (20/11): 15 bộ hải cẩu 16 khung không bao giờ hiện (21,7 MB). Người dùng chọn: NỐI LẠI 4 kiểu văng cũ,
+    XOÁ 11 bộ còn lại.
+    - Văng: xem mục "VĂNG làm lại lần 3 (20/11)" ngay dưới; 4 kiểu cũ (`tumble`, `fling_cartwheel`, `fling_backflip`,
+      `fling_corkscrew`, mắt xoáy, dang tay chân) đã bỏ cùng ngày vì người dùng thấy chưa giống CPC.
+    - Đã xoá hình + dáng: `fall`, `glide`, `getup`, `getup_bare`, `flinch`, `flat`, `stuck_wall`, `hang_fast`,
+      `walk_bare`, `cheer_bare` (và `Pose.Fall/Glide/GetUp/Flinch/Tumble/Flat/StuckSlope`). `hang` về 4 khung cũ: bộ
+      `swing` thay nó lúc đu dây, chỉ `pup_hang_0` còn hiện trên màn chuyển cảnh (`HudView`).
+    - Bài học: "đã xem trong game" chỉ tính khi đã lần từ tên bộ hình tới dáng đang hiện. Hôm 19/11 báo đã xem `hang`
+      16 khung, thực ra đang xem `swing`.
+  - VĂNG làm lại lần 3 (20/11, người dùng: "văng chưa giống với game cpc, quan sát thật kĩ các kiểu văng của cpc và
+    làm lại", rồi "sáng tạo nhiều kiểu văng thì càng tốt"). Xem lại video CPC bằng công cụ bám nhân vật (ô 110 px,
+    10–30 khung/giây) ở 3 màn (36–48 s, 93–105 s, 201–203 s):
+    - CPC có HAI kiểu văng, đổi qua lại sau MỖI lần va chạm: (A) co tròn như quả bóng, chân thò ra, lộn qua các góc
+      nhìn vẽ sẵn (lưng → nghiêng 3/4 → mặt và bụng → chúi đầu); (B) thân duỗi thẳng nhìn nghiêng, chân đá ra, cả hình
+      quay tròn như chong chóng (ghi chú 17/11 "một hình, cả thân xoay" đúng cho kiểu B, ghi chú 19/11 đúng cho kiểu A).
+    - Mắt mở to, miệng há ngạc nhiên, KHÔNG phải mắt xoáy. Cụm khói xám 2–3 đốm nằm ngay TRÊN thân suốt đường bay, không
+      phải chuỗi chấm phía sau. Đập tường: mây trắng to + bóng trắng + vòng vàng; trúng gấu: sao vàng.
+    - Hết đà: đáp xuống (hay đáp lên bụng gấu vừa hạ), quay mặt ra đưa tay lên đầu, có vòng sáng trắng + vòng vàng, giữ
+      khoảng 1 s rồi tụt xuống khỏi hình (đã có: `Pose.Exit`).
+    - Tốc độ và độ nảy tính theo bề rộng màn hình gần bằng game mình (khoảng 0,25 màn hình/giây). Khác biệt lớn còn lại
+      là CỠ nhân vật: chim CPC cao khoảng 9 % chiều cao màn hình, hải cẩu ở pha 2 của mình khoảng 4–5 % (`ArenaScale`
+      0,75 + màn hình rộng). Chưa đổi: đó là thiết kế màn chơi, chờ người dùng quyết.
+    - Trong game: `flungSets` 6 bộ 16 khung, MỌI va chạm lúc đang văng (đá, băng, gấu, TNT) gọi `rig.NextStyle()` ở đầu
+      `PufferController.OnCollisionEnter2D`: chọn NGẪU NHIÊN một bộ KHÁC bộ đang chạy (người dùng 20/11: "1 con có thể
+      có nhiều kiểu văng khi va chạm", "sau khi va chạm thì sẽ random kiểu văng"), giữ tối thiểu 0,12 s (`StyleHold`): `flung` (A, co tròn, khung 1 cao 215 px), `fling_spin` (B, chong chóng nhìn nghiêng),
+      và 4 kiểu riêng của game: `fling_star` (xoay bánh xe nhìn thẳng), `fling_paddle` (bơi chó hoảng loạn, không xoay),
+      `fling_drill` (lăn quanh trục dọc như mũi khoan), `fling_top` (đứng thẳng xoay như con quay). Khói:
+      `Fx.BodySmoke` vẽ đè lên thân (order thân + 1), sống 0,16 s.
+    - CỠ bằng nhau ở mọi hoạt ảnh (người dùng 20/11: "kích cỡ hải cẩu phải bằng nhau ở mọi hoạt ảnh"): dáng co, duỗi,
+      xoay không đo bằng chiều cao được, nên các bộ không mũ lúc bay/lăn/trượt (6 kiểu văng, `roll`, `slide`) đo bằng
+      DIỆN TÍCH LÔNG TRẮNG: quy tắc `("fur", 138)` trong slice_sheets (căn bậc hai số điểm ảnh trắng, 138 = `idle_bare`,
+      `dizzy_bare`, `exit`). Trước đó lệch tới +21 % (`fling_star`), +18 % (`roll`, `slide`). Bộ không mũ mới: dùng `fur`.
+    - Pha 2 theo tỉ lệ CPC (người dùng 20/11: "làm giống cpc đi nhưng phải thấy hết như cpc"). CPC: chim cao khoảng
+      một khối băng, 9 % chiều cao màn hình, và một màn hình chứa cả sàn lẫn đường bay vào. Ba thay đổi, thay cho các
+      quyết định 12–13/11 (hải cẩu nhỏ hơn, bay cao hơn, nhìn xa hơn):
+      - `PufferController.ArenaScale` 0,75 → 1,0 (hình và vùng va chạm cùng to lên; khối lượng không đổi).
+      - Đường bay vào hạ từ 8,8–10,4 xuống 7,6–8,8 (`EntryLow/High`, `SpawnPoint` 8,2): ngay trên pháo đài cao nhất
+        (đầu gấu tới khoảng 7).
+      - `AttackZoom` 1,3 → 1,05, tâm khung nhìn 5,3 → 4,7: sàn, pháo đài và đường bay nằm trọn một màn hình, hải cẩu
+        không chui sau thanh HUD. Đã thử 1,1 với đường bay cũ: sàn và gấu bị cắt lúc đang bay.
+      Hải cẩu to gấp khoảng 1,6 lần trên màn hình; gấu và băng to hơn 24 %.
+    - Công cụ bám nhân vật: `Tools/cpc_track.py <giây bắt đầu> <độ dài> <fps> <out.png> [ô] [cột] [video]` (đốm tối đang
+      chuyển động = chim cánh cụt). Luôn dùng nó, đừng nhìn khung toàn cảnh.
+  - `ready`: khung 1 là dáng đứng (cao bằng `idle_2`, 283 px), khung 16 là dáng ngồi cũ; chạy một lần trong 0,25 s chờ ở
+    mép cầu (`EdgeCrouch`), rồi giữ. `ninja`: 16 khung lặp 0,8 s, cùng một dáng, chỉ khăn/băng đầu bay và chớp mắt.
+  - Bộ chạy MỘT LẦN rồi giữ khung cuối (`op_pull`, `ready`): khung 16 phải là dáng đứng yên đẹp. Lần vẽ đầu `op_pull`
+    kết thúc bằng mặt nhăn, phải xin lại "khung 16 gần giống khung 1".
+  - `dive`: khung 0–9 chúi mũi một lần (0,25 s), 10–15 lặp dáng ngư lôi giữ góc -70° (`DiveArtAngle`), chỉ khăn và quả
+    bông bay. Không lặp 8–9 vì vẽ chúi hơn một chút, lặp sẽ giật. Lần vẽ đầu tự quay về nằm ngang (sai), lần hai mọc
+    hai quả bông trên mũ: luôn soi kỹ từng khung.
+
+### Rà soát 20/11: luật bố cục và UI rút ra (người dùng: "xem lại toàn bộ app … fix hết")
+
+Sáu reviewer đọc toàn bộ code; các luật dưới đây là kết quả, mọi màn mới phải theo.
+
+- **Tranh phủ màn hình thì phải kéo được.** Bản đồ fit kiểu "phủ kín" nên 4:3 cắt 12,5 % mỗi bên, 20:9 cắt 10 % trên
+  dưới, đá vẽ ở đó mất hẳn. Giờ tranh bản đồ nằm trong `ScrollRect`: kéo ngang (4:3) hoặc dọc (màn dài) phần bị cắt, mở
+  ra ở viên đá đang chơi. `python3 Tools/map_reach.py` phải in PASS sau mỗi lần đổi đường đi, số đá hoặc vị trí nút trên
+  bản đồ (kiểm 5 tỉ lệ × 10 thế giới × 41 đá, có và không có tai thỏ 100 px ở màn dài hơn 16:9: không viên nào khuất
+  hoặc nằm dưới nút; đá lồng và đá trùm phải lộ cả chỗ lồng/gấu đứng).
+- **Bốn góc bản đồ, mỗi góc một điều khiển**: Back trên-trái, mũi tên "vùng sau" trên-phải, mũi tên "vùng trước"
+  dưới-trái (cách đáy 114), Nâng cấp dưới-phải. Đây là hai chỗ duy nhất một nút 110 không che đá, lồng hay trùm của cả
+  10 thế giới ở mọi tỉ lệ (tìm bằng `Tools/map_reach.py`; giữa mép trái/phải che đá của 5 thế giới ở 16:9, dưới nút
+  Back thì trông như hai nút Back). **Số sao của thành** là một dòng nhỏ dưới tên vùng (ngôi sao + "n/123"), không còn
+  là ô sao góc trên-phải: ô 260 px đó che hai con trùm và một viên đá; tên vùng và số sao không bắt chạm.
+- **Đá bản đồ đứng sát nhau hơn vùng chạm 130**: cú chạm thuộc về viên đá **gần tâm nhất** (`NearestStone`), không phải
+  viên vẽ sau. Đá chưa mở vẫn đáp lại (nhún + tiếng "thud"), không nuốt cú chạm.
+- **Vùng chạm không chồng nhau.** Hai điều khiển cạnh nhau cách ≥ 130 theo chiều chúng xếp (Cài đặt: các hàng cách 130;
+  Tạm dừng: hai nút loa/nhạc bắt đầu dưới nút Bản đồ).
+- **Chữ chỉ để đọc không bắt chạm** (`raycastTarget = false`): thanh gợi ý của HUD từng nuốt cú chạm bắn/lao, ô sao
+  trên bản đồ từng chắn đá bên dưới.
+- **Bảng nào cũng vừa mọi tỉ lệ**: bảng cao hơn 900 hoặc có nhân vật đứng tràn mép phải nằm trong holder co theo
+  `UiKit.CanvasSize()` (chiều cao, và chiều rộng nếu nhân vật đứng ngoài mép). Áp dụng: Kết quả, Cài đặt, Cách chơi.
+- **Bảng nào cũng có ruy băng tiêu đề**, kể cả hộp xác nhận xoá và thẻ nhiệm vụ.
+- **Màu dùng chung** lấy từ `UiKit`: `Accent` (số trong bảng: xanh), `Muted` (chữ phụ), `Danger` (cảnh báo). Không viết
+  màu thẳng trong màn hình cho ba vai trò này.
+- **Chữ ≥ 24 đơn vị (~9 sp)** kể cả khi tự co; chữ đọc lâu (luật sao, các bước Cách chơi, credits) ≥ 30.
+- **Màu không là tín hiệu duy nhất**: cấp nâng cấp chưa mua là viên ngọc **nhỏ và mờ**; ngôn ngữ đang chọn có sao.
+- **Shop nói con số thật.** Dòng mô tả: "Tên · Cấp n/3: tác dụng", là cấp **sắp mua** (đã tối đa thì cấp cao nhất), số
+  lấy từ `Shop.Effect` (Gai băng = xuyên gốc + cấp; Lửa = 2, 4, rồi "mọi khối băng"; còn lại = cấp). Số 1 dùng câu số ít
+  (`upd_<id>_one`). Hết cấp thì chỗ nút mua là nhãn "Tối đa", không phải nút.
+- **Màn trùm**: thẻ nhiệm vụ ghi "Hạ gấu trùm để đi tiếp" (thắng chỉ cần hạ trùm), không ghi số gấu.
+- **Lửa không làm giảm số lần xuyên**: bật Lửa lấy số lớn hơn giữa số còn lại và số của Lửa.
+- **Lưu lỗi thì phải nói.** Ghi save thất bại hoặc file save hỏng: một dải thông báo trên cùng (`SaveNotice`), game thử
+  ghi lại khi app ra nền. File `.tmp` đọc được là bản mới nhất (lần lưu bị cắt trước bước đổi tên).
+- **Màn đứng yên chạy 30 fps**: bản đồ, bảng Tạm dừng, thẻ kết quả.
+- **Màn đầy đủ nào cũng là tranh**: Shop dùng `UiKit.PaintedBackdrop` (tranh màn hình chính dưới lớp phủ tối 0,82; màn
+  loading dùng cùng hàm với 0,45), không còn nền navy phẳng. Trang Giới thiệu dùng dàn nhân vật động của các bảng
+  (`pup_modal_win`, `bear_modal_mock`) thay ba sprite đứng yên.
+- Nút Truyện có icon riêng: cuốn sách mở `glyph_book` (ChatGPT vẽ theo kiểu `ui_icons.png`, sheet
+  `Assets/Art/Reference/ui_icon_book.png`, cắt bằng `Tools/cut_props.py`); ▶ chỉ còn là Chơi.
+- Còn treo: không làm SpriteAtlas: sprite nằm trong `Resources/` nên đóng atlas sẽ đưa cả atlas
+  lẫn texture gốc vào APK (gấp đôi dung lượng phần đó); muốn làm phải chuyển sprite ra khỏi `Resources` trước. Quảng cáo:
+  Play khai 13+ nên không bật cờ "hướng tới trẻ em"; nếu đổi đối tượng xuống dưới 13 thì phải bật trong `AdMob.StartSdk`.

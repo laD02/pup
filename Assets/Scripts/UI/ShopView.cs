@@ -29,7 +29,12 @@ namespace SealCatapult.UI
             Rebuild();
         }
 
-        void Close() => canvas.enabled = false;
+        void Close()
+        {
+            canvas.enabled = false;
+            if (content != null) Destroy(content.gameObject);   // a disabled canvas still runs its children's animations
+            content = null;
+        }
 
         /// <summary>Android Back: closes the shop when it is open. False when there was nothing to close.</summary>
         public bool HandleBack()
@@ -39,12 +44,15 @@ namespace SealCatapult.UI
             return true;
         }
 
-        void Rebuild()
+        /// <param name="animate">False after a purchase: the cards stay put instead of sliding in again.</param>
+        void Rebuild(bool animate = true)
         {
             if (content != null) Destroy(content.gameObject);
             var dim = UiKit.Overlay(canvas.transform, "Overlay");
             dim.GetComponent<UnityEngine.UI.Image>().color = new Color(0.03f, 0.08f, 0.18f, 1f); // full screen, hides the map
             content = dim;
+            // A painted screen like every other (it was the one flat navy page): the home painting under a deep veil.
+            UiKit.PaintedBackdrop(dim, 0.82f);
             // Corner controls stay clear of notches and rounded corners, like every other screen.
             var overlay = UiKit.SafeRoot(canvas);
             overlay.SetParent(dim, false);
@@ -64,7 +72,19 @@ namespace SealCatapult.UI
 
             var upgrades = GameDatabase.Instance.upgrades.upgrades;
             for (int i = 0; i < upgrades.Count; i++)
-                BuildRow(overlay, upgrades[i], i < 3 ? new Vector2((i - 1) * RowPitch, 170) : new Vector2((i - 3.5f) * RowPitch, -70), data, i);
+                BuildRow(overlay, upgrades[i], i < 3 ? new Vector2((i - 1) * RowPitch, 170) : new Vector2((i - 3.5f) * RowPitch, -70), data, i, animate);
+        }
+
+        /// <summary>"Ice Spikes · Lv 2/3: Smash through 3 ice blocks": the level the next purchase gives (the top level
+        /// once maxed) and what it really does.</summary>
+        static string Describe(UpgradeDef def, SaveData data)
+        {
+            int shown = Mathf.Min(Shop.Level(data, def.id) + 1, UpgradeData.MaxLevel);
+            int effect = Shop.Effect(def.id, shown, GameDatabase.Instance.tuning.basePierce);
+            string key = "upd_" + def.id;
+            if (def.id == UpgradeId.Blaze && effect >= Shop.BlazeAll) key += "_all";
+            else if (effect == 1 && Loc.Has(key + "_one")) key += "_one";   // "+1 bounce", not "+1 bounces"
+            return Loc.T("shop_line", Loc.T("up_" + def.id), Loc.T("lv", shown, UpgradeData.MaxLevel), Loc.T(key, effect));
         }
 
         TextMeshProUGUI description;
@@ -72,10 +92,9 @@ namespace SealCatapult.UI
         const float RowPitch = 540f, RowWidth = 520f;
 
         /// <summary>One list row: icon · name + level pips · price button. Tapping the row explains it.</summary>
-        void BuildRow(Transform parent, UpgradeDef def, Vector2 position, SaveData data, int index)
+        void BuildRow(Transform parent, UpgradeDef def, Vector2 position, SaveData data, int index, bool animate)
         {
             int level = Shop.Level(data, def.id);
-            int effect = Mathf.Max(1, Mathf.Min(level + 1, UpgradeData.MaxLevel));
             var row = UiKit.Place(UiKit.Node(parent, "Row " + def.id), UiKit.Center, position, new Vector2(RowWidth, 220));
             var bg = row.gameObject.AddComponent<UnityEngine.UI.Image>();
             bg.sprite = Art.Get("ui_panel");
@@ -85,9 +104,9 @@ namespace SealCatapult.UI
             select.onClick.AddListener(() =>
             {
                 AudioManager.Sfx("click");
-                description.text = $"{Loc.T("up_" + def.id)}: {Loc.T("upd_" + def.id, effect)}";
+                description.text = Describe(def, SaveSystem.Data);
             });
-            row.gameObject.AddComponent<SlideIn>().delay = 0.06f * index;
+            if (animate) row.gameObject.AddComponent<SlideIn>().delay = 0.06f * index;
 
             UiKit.Image(row, def.icon, new Vector2(0f, 0.5f), new Vector2(14, 0), new Vector2(150, 150));
             var name = UiKit.Text(row, Loc.T("up_" + def.id), 40, new Vector2(0f, 0.5f), new Vector2(170, 40), new Vector2(240, 70), null,
@@ -97,21 +116,28 @@ namespace SealCatapult.UI
             name.fontSizeMax = 40;
             for (int s = 0; s < UpgradeData.MaxLevel; s++)
             {
-                var pip = UiKit.Image(row, "gem", new Vector2(0f, 0.5f), new Vector2(174 + s * 48, -30), new Vector2(40, 40));
-                pip.color = s < level ? Color.white : new Color(1f, 1f, 1f, 0.25f);
+                // A level not bought yet is a small faint gem: size as well as shade (colour is never the only signal).
+                bool got = s < level;
+                var pip = UiKit.Image(row, "gem", new Vector2(0f, 0.5f), new Vector2(174 + s * 48 + (got ? 0 : 8), -30), got ? new Vector2(40, 40) : new Vector2(24, 24));
+                pip.color = got ? Color.white : new Color(1f, 1f, 1f, 0.35f);
             }
 
             int cost = Shop.NextCost(data, def);
             bool canBuy = Shop.CanBuy(data, def);
             // The price alone ("3 ★"): with the word Buy the label ran into the star in German and French (QA 15/11).
-            string label = cost < 0 ? Loc.T("maxed") : cost.ToString();
-            var buy = UiKit.Button(row, label, canBuy ? ButtonStyle.Gold : ButtonStyle.Teal, new Vector2(1f, 0.5f), new Vector2(-14, -34),
-                new Vector2(180, 90), () => Buy(def));
             if (cost < 0)
             {
-                buy.interactable = false;
+                // Nothing left to buy: a plain label, not a button (it looked and squashed like one, and it kept a tap
+                // on it from reaching the card, so no description showed).
+                var max = UiKit.Image(row, "ui_pill", new Vector2(1f, 0.5f), new Vector2(-14, -34), new Vector2(180, 90));
+                max.type = UnityEngine.UI.Image.Type.Sliced;
+                max.preserveAspect = false;
+                UiKit.Text(max.transform, Loc.T("maxed"), 38, UiKit.Center, new Vector2(0, 2), new Vector2(160, 80), Color.white,
+                    TextAlignmentOptions.Center, true);
                 return;
             }
+            var buy = UiKit.Button(row, cost.ToString(), canBuy ? ButtonStyle.Gold : ButtonStyle.Teal, new Vector2(1f, 0.5f), new Vector2(-14, -34),
+                new Vector2(180, 90), () => Buy(def));
             UiKit.Image(buy.transform, "star_full", new Vector2(1f, 0.5f), new Vector2(-22, 4), new Vector2(44, 44));
             var text = buy.GetComponentInChildren<TMPro.TextMeshProUGUI>();
             var rt = text.rectTransform;
@@ -136,7 +162,8 @@ namespace SealCatapult.UI
             SaveSystem.Save();
             AudioManager.Sfx("star", 0f);
             onChanged?.Invoke();
-            Rebuild();
+            Rebuild(animate: false);
+            description.text = Describe(def, data);   // the card just bought stays explained (it fell back to the hint)
         }
     }
 }

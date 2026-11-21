@@ -7,7 +7,7 @@ namespace SealCatapult.UI
 {
     /// <summary>
     /// Level map, one page per castle, laid out like CPC's (report §2, user 16/11: "thiết kế lại trang map, học tập cpc"):
-    /// a top-down sea of ice islands with ONE long trail of sixty small "?" stones winding in an S from the igloo
+    /// a top-down sea of ice islands with ONE long trail of small "?" stones (LevelCatalog.PerCastle) winding in an S from the igloo
     /// village to the bear fortress. Every tenth stone is a cage on an orange base ("HELP!" by the next one), the last is
     /// the castle's boss; two fish stones are the bonus runs. Cleared stones show their stars; the hero stands on the
     /// next one. Levels open strictly in order, as in CPC.
@@ -17,7 +17,7 @@ namespace SealCatapult.UI
         const string Painting = "map_bg_world";   // Assets/Art/Reference/map_world.png (ChatGPT, 16/11)
         // The trail through the painting's own pixels (1672×941, y down): the centres of the 51 stones ChatGPT painted on
         // the path (map_world_stones40.png, found by Tools/map_stones.py), so every point lies on the painted path. The
-        // level stones are spread evenly along it and drawn on the clean painting (LevelGenerator.PerCastle per castle, 41 since 17/11).
+        // level stones are spread evenly along it and drawn on the clean painting (LevelCatalog.PerCastle per castle, 41 since 17/11).
         const float PaintingW = 1672f, PaintingH = 941f;
         static readonly Vector2[] Trail =
         {
@@ -73,6 +73,8 @@ namespace SealCatapult.UI
         }
 
         const float Stone = 64f;   // 41 roomy stones
+        const float PrevArrowUp = 114f;   // the previous-area arrow's bottom edge above the screen's (Tools/map_reach.py)
+        const float CaptiveFloor = 0.22f;   // the pup's feet in the cage's base dish (red top at 0.27 of cage.png's height, 19/11)
 
         /// <summary>Pages that can be opened: every castle reached so far, plus the next one (shown locked).</summary>
         static int PageCount(SaveData data) => Mathf.Min(LevelCatalog.CastleOf(CurrentLevel(data)) + 2, WorldTheme.Count);   // ten castles at most
@@ -102,6 +104,13 @@ namespace SealCatapult.UI
             hopPending = -1;   // the star pop and the walk play once, not again when a page is rebuilt
             // The next level starts on a timer from here (not from the walk's end: a page switch destroys the walk).
             if (playNext >= 0) StartCoroutine(PlayAfter(hopStarted ? Hop.Delay + WalkTime + LandPause : NoHopPause));
+        }
+
+        /// <summary>The map paintings are a megapixel each and every page visited loaded one: free them with the map.</summary>
+        void OnDestroy()
+        {
+            Art.Release("map_bg");
+            Art.Release("bg_menu");   // the shop's backdrop, loaded when the shop was opened from the map
         }
 
         /// <summary>The next level to play: the first one open and not yet won. The castles have no end, so there is
@@ -141,18 +150,44 @@ namespace SealCatapult.UI
         void Build()
         {
             canvas = UiKit.CreateCanvas("Map");
-            // Top-down island fills the screen (cropped to cover any aspect).
+            // Top-down island fills the screen (cropped to cover any aspect). The part that does not fit is not lost:
+            // the painting pans under a finger (audit 20/11: 4:3 cut 12.5 % off each side and 20:9 10 % off the top and
+            // bottom, with the stones painted there out of sight and out of reach).
             string painting = WorldOf(page).painting;
-            var map = UiKit.Image(canvas.transform, Art.Has(painting) ? painting : "map_bg", UiKit.Center, Vector2.zero, new Vector2(1920, 1080));
+            Vector2 view = UiKit.CanvasSize();
+            Vector2 paint = new Vector2(1920f, 1080f) * Mathf.Max(view.x / 1920f, view.y / 1080f);
+            var pan = UiKit.Stretch(UiKit.Node(canvas.transform, "Pan"));
+            var map = UiKit.Image(pan, Art.Has(painting) ? painting : "map_bg", UiKit.Center, Vector2.zero, paint);
             map.preserveAspect = false;
-            var fitter = map.gameObject.AddComponent<UnityEngine.UI.AspectRatioFitter>();
-            fitter.aspectMode = UnityEngine.UI.AspectRatioFitter.AspectMode.EnvelopeParent;
-            fitter.aspectRatio = 1920f / 1080f;
-            map.transform.SetAsFirstSibling();
+            Vector2 slack = Vector2.Max(Vector2.zero, (paint - view) * 0.5f);   // how far the painting can slide each way
+            // Only where there is something to pan (not at 16:9): a ScrollRect takes every drag that starts on a stone,
+            // and a finger that slides past the drag threshold while tapping loses its tap (UiKit raises that threshold).
+            if (slack.x > 1f || slack.y > 1f)
+            {
+                map.raycastTarget = true;   // a drag that starts on the painting or on a stone reaches the scroll view
+                var scroll = pan.gameObject.AddComponent<UnityEngine.UI.ScrollRect>();
+                scroll.content = map.rectTransform;
+                scroll.viewport = pan;
+                scroll.horizontal = slack.x > 1f;
+                scroll.vertical = slack.y > 1f;
+                scroll.movementType = UnityEngine.UI.ScrollRect.MovementType.Clamped;
+            }
             var root = UiKit.SafeRoot(canvas);
+            // The screen's buttons draw over everything on the painting, the captive's "HELP!" (its own sorted canvas)
+            // included: the map pans now, so that word can come to lie under the top bar.
+            var controls = root.gameObject.AddComponent<Canvas>();
+            controls.overrideSorting = true;
+            controls.sortingOrder = 10;
+            root.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
             // Layout A top bar (GAME_DESIGN.md §R10): Back, the area's name, stars earned. Sound and music: Settings.
-            UiKit.TopBar(root, CastleName(page), () => SceneLoader.Load(SceneLoader.MainMenu), "", out starsLabel);
+            // The stars are a line under the name, not the pill in the right corner: no place on the map's edge is free
+            // of stones for a 260 px pill on every screen (it hid two castle bosses and a stone; Tools/map_reach.py).
+            // Name and stars take no taps, so a stone under them can still be played.
+            var bar = UiKit.TopBar(root, "", () => SceneLoader.Load(SceneLoader.MainMenu), null, out _);
+            UiKit.Text(bar, CastleName(page), 54, UiKit.TopLeft, new Vector2(150, 4), new Vector2(760, 62), Color.white, TextAlignmentOptions.Left, true);
+            UiKit.Image(bar, "star_full", UiKit.BottomLeft, new Vector2(150, -2), new Vector2(46, 46));
+            starsLabel = UiKit.Text(bar, "", 40, UiKit.BottomLeft, new Vector2(204, -4), new Vector2(300, 48), Color.white, TextAlignmentOptions.Left, true);
             var upgrades = UiKit.Button(root, Loc.T("shop"), ButtonStyle.Warm, UiKit.BottomRight, new Vector2(-24, 24), new Vector2(320, 110),
                 () => { playNext = -1; shop.Open(); }, "glyph_shop");
             // Stars left to spend, on the button that spends them (the pill above counts stars earned, a different
@@ -164,15 +199,19 @@ namespace SealCatapult.UI
             spendPulse.speed = 5f;
             if (shop == null) shop = ShopView.Create(RefreshStars);
             RefreshStars();
-            // Page arrows on the side edges, vertically centred: next area / previous area.
+            // Page arrows, one control per corner: next area top-right, previous area bottom-left above the edge
+            // (top-left is Back, bottom-right Upgrades). These are the only two places where a 110 px button covers no
+            // stone, cage or boss of any of the ten worlds on any screen shape: mid-height on the side edges hid stones
+            // of five worlds at 16:9, where nothing can pan. Tools/map_reach.py checks every stone against them.
             if (page + 1 < PageCount(SaveSystem.Data))
-                UiKit.Button(root, null, ButtonStyle.Gold, new Vector2(1f, 0.5f), new Vector2(-24, 0), new Vector2(110, 110),
+                UiKit.Button(root, null, ButtonStyle.Gold, UiKit.TopRight, new Vector2(-24, -24), new Vector2(110, 110),
                     () => ShowPage(page + 1), "glyph_next");
             if (page > 0)
             {
-                var prev = UiKit.Button(root, null, ButtonStyle.Gold, new Vector2(0f, 0.5f), new Vector2(24, 0), new Vector2(110, 110),
+                var prev = UiKit.Button(root, null, ButtonStyle.Gold, UiKit.BottomLeft, new Vector2(24, PrevArrowUp), new Vector2(110, 110),
                     () => ShowPage(page - 1), "glyph_next");
-                prev.transform.Find("Glyph").localScale = new Vector3(-1f, 1f, 1f);   // the same arrow, pointing left
+                var glyph = prev.transform.Find("Glyph");   // absent once a painted icon_next exists (UiKit.Button)
+                if (glyph != null) glyph.localScale = new Vector3(-1f, 1f, 1f);   // the same arrow, pointing left
             }
 
             var data = SaveSystem.Data;
@@ -189,6 +228,13 @@ namespace SealCatapult.UI
                 spot.sizeDelta = Vector2.zero;
                 spot.anchoredPosition = Vector2.zero;
                 spots[i] = spot;
+            }
+            // Open on the stone to play (this page's), so on a screen that crops the painting it is never out of sight.
+            int here = CurrentLevel(data) - first;
+            if (here >= 0 && here < stones.Length)
+            {
+                Vector2 at = new Vector2((stones[here].x / PaintingW - 0.5f) * paint.x, (0.5f - stones[here].y / PaintingH) * paint.y);
+                map.rectTransform.anchoredPosition = new Vector2(Mathf.Clamp(-at.x, -slack.x, slack.x), Mathf.Clamp(-at.y, -slack.y, slack.y));
             }
             int nextCage = -1;   // the nearest cage not yet opened calls for help
             for (int i = 0; i < stones.Length && nextCage < 0; i++)
@@ -259,6 +305,13 @@ namespace SealCatapult.UI
             int stars = data.StarsOf(index);
             bool current = unlocked && stars == 0;
             float size = final ? Stone * 1.5f : Stone;
+            // Whatever moves all the time (the hero and its pad, a captive, the boss) gets its own canvas: animated in the
+            // map's one big canvas it re-batched the painting, the 41 stones and the text every frame.
+            if (current || (kind == LevelKind.Boss && stars == 0))
+            {
+                root.gameObject.AddComponent<Canvas>();
+                root.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();   // a nested canvas needs its own for taps
+            }
             // "You are here": the green pad under the stone, the hero standing on it (CPC: the green disc).
             if (current)
             {
@@ -272,8 +325,12 @@ namespace SealCatapult.UI
                 var plinth = UiKit.Image(root, "powder", UiKit.Center, pos + new Vector2(0, -size * 0.18f), new Vector2(size * 1.3f, size * 0.55f));
                 plinth.color = new Color(1f, 0.55f, 0.15f);
             }
+            // A level not open yet answers the tap (a dull thud and the squash) instead of swallowing it.
             var button = UiKit.ImageButton(root, stars > 0 ? "node_star" : "node_stone", UiKit.Center, pos, new Vector2(size, size),
-                () => SceneLoader.PlayLevel(index), juice: unlocked && !current);
+                unlocked ? () => SceneLoader.PlayLevel(index) : (System.Action)(() => AudioManager.Sfx("thud", 0.06f, 0.5f)), juice: !current);
+            // Stones stand 70-120 px apart and each has a 130 px touch area, so the areas overlap: a tap goes to the
+            // stone whose centre is nearest (audit 20/11: the next stone's area covered half of this one).
+            button.gameObject.AddComponent<NearestStone>();
             // CPC: the stone just won turns into its star disc with a pop as the map opens.
             if (stars > 0 && index == hopPending)
             {
@@ -281,69 +338,75 @@ namespace SealCatapult.UI
                 root.gameObject.AddComponent<Sparkle>().delay = StarPop + 0.15f;   // twinkles fly out of the new star
                 instance.StartCoroutine(SfxAfter(StarPop + 0.1f, kind == LevelKind.Boss && !final ? "cage" : "star"));
             }
-            button.interactable = unlocked;
             if (!unlocked) button.GetComponent<UnityEngine.UI.Image>().color = new Color(0.78f, 0.84f, 0.92f, 1f);   // dim, not yet open
             if (kind == LevelKind.Boss && final && stars == 0)
             {
                 // The castle's boss waits at the gate, alive (its idle antics).
-                var boss = UiKit.Image(button.transform, Art.Has("bear_idle_0") ? "bear_idle_0" : "bear", UiKit.Center, new Vector2(0, size * 0.45f), new Vector2(size * 1.1f, size * 1.1f));
+                // As big as the walking hero, feet on the middle of the stone like the hero's (user 19/11).
+                var boss = UiKit.Image(button.transform, Art.Has("bear_idle_0") ? "bear_idle_0" : "bear", UiKit.Center, new Vector2(0, -Stone * 0.05f), new Vector2(Stone * 1.9f, Stone * 1.9f));
+                boss.rectTransform.pivot = new Vector2(0.5f, 0f);
+                UiKit.StandOut(boss, new Vector2(0, -Stone * 0.05f), Stone * 1.3f);
                 if (Art.Has("bear_taunt_3")) boss.gameObject.AddComponent<FrameLoop>().Set(5f, ("bear_punch_", 4), ("bear_punch_", 4), ("bear_idle_", 4), ("bear_taunt_", 4));   // CPC: the boss shadow-boxes
             }
             else if (kind == LevelKind.Boss)
             {
-                // The captive stands in the cage calling for help until it is freed (user 18/11: "hải cẩu trong lồng bị lồng
-                // che … chưa có hoạt ảnh help"): the cage's back half behind it, the bars over it at half strength, so
-                // the pup reads clearly; it hops and waves its flippers (pup_help, falling back to the wave).
-                var cageArt = stars > 0 && Art.Has("cage_open") ? "cage_open" : "cage";
-                var cageSize = new Vector2(size * 1.2f, size * 1.2f);
-                var cage = UiKit.Image(button.transform, cageArt, UiKit.Center, new Vector2(0, size * 0.42f), cageSize);
-                if (stars == 0)
+                // CPC's map cage, studied frame by frame (video 18/11; user 19/11: "xem lại hoạt họa trong lồng của cpc và
+                // làm lại"): a tall slim bird cage with thin bars on a round red base, the pup INSIDE it, whole and
+                // clearly seen through the bars, waving both flippers above its head and shouting for rescue (16 frames,
+                // pup_captive). Drawn pup first, cage over it; the cage is as tall as the walking hero, feet on the stone.
+                bool freed = stars > 0;
+                var cageArt = freed && Art.Has("cage_open") ? "cage_open" : "cage";
+                var cageSprite = Art.Get(cageArt);
+                float cageH = Stone * 2.3f;   // a little taller than the walking hero: the slim cage reads smaller
+                float cageW = cageSprite != null ? cageH * cageSprite.rect.width / cageSprite.rect.height : cageH * 0.72f;
+                var holder = UiKit.Place(UiKit.Node(button.transform, "Cage"), UiKit.Center, new Vector2(0, -Stone * 0.05f), new Vector2(cageW, cageH));
+                holder.pivot = new Vector2(0.5f, 0f);   // stands on the middle of the stone, like the hero (user 19/11)
+                UiKit.Ground(holder, new Vector2(0, -Stone * 0.05f), cageW * 1.2f);
+                if (!freed)
                 {
-                    cage.color = new Color(0.75f, 0.78f, 0.86f, 1f);   // the bars behind, in shadow
-                    string loop = Art.Has("pup_help_7") ? "pup_help_" : "pup_wave_";
-                    var captive = UiKit.Image(cage.transform, loop + "0", UiKit.Center, new Vector2(0, -size * 0.08f), new Vector2(size * 1.05f, size * 1.05f));
+                    string loop = Art.Has("pup_captive_15") ? "pup_captive_" : "pup_wave_";
+                    // Inside the bars, above the base plate (CaptiveFloor of the cage's height), as tall as fits under the dome.
+                    var captive = UiKit.Image(holder, loop + "0", UiKit.Bottom, new Vector2(0, cageH * CaptiveFloor), new Vector2(cageW * 1.0f, cageH * 0.62f));   // fills the bars up to the dome
+                    captive.rectTransform.pivot = new Vector2(0.5f, 0f);
                     captive.raycastTarget = false;
-                    captive.gameObject.AddComponent<FrameLoop>().Set(loop, 8, 10f);
-                    var front = UiKit.Image(cage.transform, cageArt, UiKit.Center, Vector2.zero, cageSize);
-                    front.raycastTarget = false;
-                    front.color = new Color(1f, 1f, 1f, 0.35f);   // the bars in front, see-through (CPC: thin bars)
-                    if (calls)
-                    {
-                        // CPC: a big red "HELP!" by the nearest cage, wobbling, shown as the map opens and again now and then.
-                        var cry = UiKit.Text(cage.transform, Loc.T("help_cry"), 58, UiKit.Top, new Vector2(size * 1.25f, size * 0.25f),
-                            new Vector2(260, 70), new Color(0.92f, 0.1f, 0.08f), TextAlignmentOptions.Center, true);
-                        cry.outlineWidth = 0.22f;
-                        cry.outlineColor = new Color32(255, 255, 255, 255);
-                        cry.gameObject.AddComponent<Shout>();
-                        // Drawn over the stones that come after it in the trail (they hid half the word).
-                        var top = cry.gameObject.AddComponent<Canvas>();
-                        top.overrideSorting = true;
-                        top.sortingOrder = 5;
-                    }
+                    UiKit.Stroke(captive, 2f);   // the pup reads through the bars (the cage itself is not stroked: it thickened the bars)
+                    captive.gameObject.AddComponent<FrameLoop>().Set(loop, Art.Has("pup_captive_15") ? 16 : 8, Art.Has("pup_captive_15") ? 14f : 10f);
                 }
-                if (calls)
+                var cage = UiKit.Image(holder, cageArt, UiKit.Center, Vector2.zero, new Vector2(cageW, cageH));
+                cage.rectTransform.anchorMin = Vector2.zero;
+                cage.rectTransform.anchorMax = Vector2.one;
+                cage.rectTransform.offsetMin = cage.rectTransform.offsetMax = Vector2.zero;
+                cage.raycastTarget = false;   // taps reach the stone's button under it
+                if (calls && !freed)
                 {
-                    cage.raycastTarget = false;   // taps reach the stone's button under it (a nested canvas has no raycaster)
-                    cage.gameObject.AddComponent<Canvas>();   // its own canvas: the shaking does not rebuild the whole map
-                    cage.gameObject.AddComponent<Rattle>();   // the nearest captive also shakes the bars
+                    // CPC: a big red "HELP!" by the nearest cage, wobbling, shown as the map opens and again now and then.
+                    var cry = UiKit.Text(holder, Loc.T("help_cry"), 58, UiKit.Top, new Vector2(cageW * 0.5f + 90f, -cageH * 0.05f),
+                        new Vector2(260, 70), UiKit.Danger, TextAlignmentOptions.Center, true);
+                    cry.outlineWidth = 0.22f;
+                    cry.outlineColor = new Color32(255, 255, 255, 255);
+                    cry.gameObject.AddComponent<Shout>();
+                    // Drawn over the stones that come after it in the trail (they hid half the word).
+                    var top = cry.gameObject.AddComponent<Canvas>();
+                    top.overrideSorting = true;
+                    top.sortingOrder = 5;
+                    holder.gameObject.AddComponent<Canvas>();   // its own canvas: the shaking does not rebuild the whole map
+                    holder.gameObject.AddComponent<Rattle>();   // the nearest captive also shakes the cage
                 }
             }
             else if (kind == LevelKind.Bonus) UiKit.Image(button.transform, "fish", UiKit.Center, new Vector2(0, 6), new Vector2(size * 0.6f, size * 0.6f));
-            if (data.PerfectOf(index)) UiKit.Image(button.transform, "badge_perfect", UiKit.TopRight, new Vector2(8, 8), new Vector2(26, 26));
+            if (data.PerfectOf(index)) UiKit.Image(button.transform, "badge_perfect", UiKit.TopRight, new Vector2(12, 12), new Vector2(34, 34));
             // Cleared: the small star row below the stone (this game's 3-star rating, the shop's currency).
             if (stars > 0)
                 for (int s = 0; s < 3; s++)
                     UiKit.Image(button.transform, s < stars ? "star_full" : "star_empty", UiKit.Bottom,
-                        new Vector2((s - 1) * 15, -9 + (s == 1 ? -3 : 0)), new Vector2(18, 18));
+                        new Vector2((s - 1) * 21, -13 + (s == 1 ? -4 : 0)), new Vector2(26, 26));   // 18 px was under 7dp on a phone
             if (current)
             {
                 // The hero stands out on the map (user 18/11: "hải cẩu di chuyển trên ô nhìn chưa nổi bật"): bigger than a stone,
                 // a soft shadow under it (CPC: the big penguin on its green disc is the eye's anchor; no arrow).
-                var shadow = UiKit.Image(root, "powder", UiKit.Center, pos + new Vector2(0, size * 0.05f), new Vector2(size * 0.9f, size * 0.28f));
-                shadow.color = new Color(0f, 0.05f, 0.15f, 0.35f);
-                shadow.raycastTarget = false;
                 var hero = UiKit.Image(root, Art.Has("pup_idle_2") ? "pup_idle_2" : "pup", UiKit.Center, pos + new Vector2(0, size * 0.95f), new Vector2(size * 1.9f, size * 1.9f));
                 hero.raycastTarget = false;
+                UiKit.StandOut(hero, pos + new Vector2(0, size * 0.05f), size * 1.2f);
                 // A still frame and the Bob: the drawn breathing frames differ in size and made the hero flicker.
                 // CPC (live 16/11): after a first clear the hero hops along the trail from the stone it just won.
                 if (hopPending == index - 1 && previous != null)
@@ -378,6 +441,32 @@ namespace SealCatapult.UI
                 button.gameObject.AddComponent<Bob>().pulse = true;
             }
         }
+    }
+
+    /// <summary>Lets a map stone take a tap only when it is the stone nearest to it (their touch areas overlap).</summary>
+    public class NearestStone : MonoBehaviour, ICanvasRaycastFilter
+    {
+        static readonly System.Collections.Generic.List<RectTransform> all = new System.Collections.Generic.List<RectTransform>();
+        RectTransform self;
+
+        void Awake()
+        {
+            self = (RectTransform)transform;
+            all.Add(self);
+        }
+
+        void OnDestroy() => all.Remove(self);
+
+        public bool IsRaycastLocationValid(Vector2 screenPoint, Camera eventCamera)
+        {
+            float mine = Distance(self, screenPoint, eventCamera);
+            foreach (var other in all)
+                if (other != self && other != null && Distance(other, screenPoint, eventCamera) < mine) return false;
+            return true;
+        }
+
+        static float Distance(RectTransform stone, Vector2 screenPoint, Camera eventCamera) =>
+            (RectTransformUtility.WorldToScreenPoint(eventCamera, stone.position) - screenPoint).sqrMagnitude;
     }
 
     /// <summary>Shared camera + backdrop + music for menu scenes (same landscape framing as the game).</summary>

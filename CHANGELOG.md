@@ -1,6 +1,27 @@
 # Changelog
 
 ## [Unreleased]
+- The level map can be dragged on screens that crop it (tablets and long phones), so no level is ever out of reach; it
+  opens on your next level, and a tap always picks the level nearest your finger.
+- The upgrade shop now tells you exactly what the next level does, with the real numbers.
+- Fixed: Blazing Pup could melt fewer ice blocks than Ice Spikes alone.
+- Fixed: a tap on the hint text did not fire or dive; the pause menu's Map button could switch the music instead.
+- The win and loss cards, Settings and How to play now fit long and tablet screens; small text is larger.
+- The game now tells you when it could not save your progress, and tries again.
+- The boss mission card says what it takes to win: beat the boss.
+- Less battery use on the map, the pause menu and the result cards.
+- The upgrade shop now has the painted home scene behind it; the About page has its animated cast.
+- Pups knocked flying in the attack phase now tumble through a drawn somersault with a dust trail.
+- Every character animation was redrawn at 16 frames for smoother motion.
+- A pup knocked flying now tumbles in six styles and changes style at every bounce, with smoke puffing off it.
+- The attack view is closer and the pup is bigger, so the action is easier to read.
+- Smoother bears: every bear animation now has 16 frames instead of 4.
+- A red close button on every pop-up; three new funny bear antics.
+- New Seal Catapult logo, a proper loading screen with a progress bar, and a new loading animation between screens.
+- Redesigned pause, win, loss, settings, stats and how-to-play screens with new funny animations; a language picker in Settings.
+- New ice-crystal look for every button, panel and icon; buttons now sink and bounce when pressed.
+- New home screen: a snowball battle between the seal camp and the bears' ice fortress, with seals and bears throwing
+  and getting hit by snowballs.
 
 - Ten castles, each with its own hand-painted map, one winding road and its own colours, from Frost Bay through the violet Glacier Canyon, the Aurora Forest, the sunset harbour, crystal caves, a volcano, blossom isles, a moonlit ice palace and the amber tundra to the Bear King's Throne. The catapult pit and the bear arena take on each castle's colours. Each castle has 41 levels.
 - Every castle now looks different in play too: its own rock, ice, sky, far scenery and bridge in the catapult pit, and its own backdrop and stone in the bear arena (crystal canyon, pine forest, harbour, glowing caves, volcano, blossom garden, ice palace, amber tundra and the Bear King's storm).

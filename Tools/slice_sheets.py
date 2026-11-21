@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 REF = ROOT / "Assets/Art/Reference"
@@ -31,7 +31,7 @@ BEANIE_PX = 50.0        # sqrt of the red beanie area on a standing pup, output 
 WHITE = 232             # all channels above this count as background when connected to the border
 # Sheets whose outline has gaps (sheet S: the tumbling head's top line is missing, so 232 leaked into the fur):
 # only near-pure white counts as background there. Costs a thin light fringe.
-WHITE_FOR = {"pup_sheet_t4.png": 248, "pup_sheet_f2.png": 248, "pup_sheet_r2.png": 248, "pup_sheet_f3.png": 248, **{f"pup_sheet_16_{a}.png": 248 for a in ("fling_cartwheel", "fling_backflip", "fling_corkscrew", "tumble", "slide", "flat", "stuck_wall", "stuck_buried", "stuck_splat")}, "pup_sheet_s.png": 248, "pup_sheet_u.png": 248, "pup_sheet_v.png": 248, "pup_sheet_x.png": 248}
+WHITE_FOR = {"pup_sheet_t4.png": 248, "pup_sheet_f2.png": 248, "pup_sheet_r2.png": 248, "pup_sheet_f3.png": 248, **{f"pup_sheet_16_{a}.png": 248 for a in ("fling_cartwheel", "fling_backflip", "fling_corkscrew", "tumble", "slide", "flat", "stuck_wall", "stuck_buried", "stuck_splat")}, "pup_sheet_x.png": 248}
 PAD = 4
 
 # Front-view sheets H, I, J, K (ChatGPT, 16/11) share one scale, so frames never jump in size between poses. 1.0 makes the
@@ -59,7 +59,6 @@ SHEETS = [
     ("pup_sheet_h.png", "pup", 4, 4, [None, None, None, "stuck_bare"], ("scale", FRONT_SCALE)),   # wave/hattip/look: sheets L, M
     # sheet T (user 17/11: "hải cẩu dính tường chưa đẹp và hợp lí"): splatted flat on its back, limbs kicking, no hat;
     # rows 3-4 repeat rows 1-2. Cut back-down so the frame's bottom line is the rock surface.
-    ("pup_sheet_t.png", "pup", 4, 4, ["stuck_wall", "stuck_wall", None, None], ("scale", FRONT_SCALE)),
     # hero sheet I (front view, user 16/11: "vẽ lại cả khung đứng chờ và đi bộ nhìn thẳng"): idle, waddle, bare idle, and
     # the mission card's pick-up-the-helmet loop
     ("pup_sheet_i.png", "pup", 4, 4, ["idle", None, "idle_bare", "pickhat"], ("beanie", "idle", FRONT_BEANIE)),   # walk: sheet O
@@ -70,7 +69,12 @@ SHEETS = [
     ("pup_sheet_m.png", "pup", 4, 4, ["look", "look", "hop", "hop"], ("beanie", "look", FRONT_BEANIE)),
     # captive's cry for help on the map (user 18/11: "chưa có hoạt ảnh help cho hải cẩu ở trong lồng"): flippers up and
     # waving, mouth open, a little hop; 8 frames in rows 1-2 (rows 3-4 repeat them)
-    ("pup_sheet_help.png", "pup", 4, 4, ["help", "help", None, None], ("beanie", "help", FRONT_BEANIE)),
+    # pup_sheet_help.png is kept only as the style base for new front-view pup sheets: its "help" frames were replaced
+    # by the cage's pup_captive (19/11).
+    # 18/11: the home screen's snowball fight, drawn for it: throw a snowball, then hit by one (8 frames each).
+    ("pup_sheet_throw.png", "pup", 4, 4, ["throw", "throw", "hit", "hit"], ("beanie", "throw", FRONT_BEANIE)),
+    # 18/11: the modal cast's pups are 16-frame sheets only (pup_sheet_16_modal_*.png, SMOOTH_SIZE); a first cute
+    # 8-frame set (waving, crying) was dropped: "đừng trẻ con quá".
     ("pup_sheet_n.png", "pup", 4, 4, ["dance", "dance", "yawn", "yawn"], ("beanie", "dance", FRONT_BEANIE)),
     ("pup_sheet_o.png", "pup", 4, 4, ["sneeze", "sneeze", "walk", "walk"], ("beanie", "walk", FRONT_BEANIE)),
     # hero sheet K (user 16/11: "thêm hoạt ảnh đu nữa"): front-view hang (flipper tips = the rope point), a fast excited
@@ -86,12 +90,8 @@ SHEETS = [
     # prints for its hatted sheet (the edits keep the same canvas and cell layout), so both sets are the same size.
     ("pup_sheet_e_bare.png", "pup", 4, 4, [None, None, None, "getup_bare"], ("scale", 1.231)),
     # sheet S (CPC video 17/11, ChatGPT edit of sheet E bare): belly slide and rag-doll somersault after the bounces
-    ("pup_sheet_s.png", "pup", 4, 4, ["slide", "slide", "tumble", "tumble"], ("scale", 1.231)),
     # sheets U-X (user 17/11: no curled ball when flung, "nhiều kiểu" for every action): rag-doll fling styles and a
     # knocked-flat rest (edits of S), two more launch flights (edit of D, same 35° flight), two more stuck styles (edit of T)
-    ("pup_sheet_u.png", "pup", 4, 4, ["fling_cartwheel", "fling_cartwheel", "fling_backflip", "fling_backflip"], ("scale", 1.231)),
-    ("pup_sheet_v.png", "pup", 4, 4, ["fling_corkscrew", "fling_corkscrew", "flat", "flat"], ("scale", 1.231)),
-    ("pup_sheet_w.png", "pup", 4, 4, ["launch_panic", "launch_panic", "launch_hero", "launch_hero"], ("scale", 0.890)),
     # sheet T4 (user 17/11: "kiểu nằm dính hình như bị sai, vẽ lại"; CPC: flat as a pancake against the rock): one
     # 16-frame splat for every rock face, the pup's back on the frame's top line
     ("pup_sheet_t4.png", "pup", 4, 4, ["stuck_splat"] * 4, ("scale", FRONT_SCALE)),
@@ -99,7 +99,7 @@ SHEETS = [
     # flippers pressed back, feet trailing, and the whole sprite spins): one held pose with a small shiver, 16 frames
     ("pup_sheet_f2.png", "pup", 4, 4, ["flung"] * 4, ("scale", 1.231)),
     # sheet R2: CPC's ground roll, curled round seen from the side (the code rolls it like a wheel)
-    ("pup_sheet_r2.png", "pup", 4, 4, ["roll"] * 4, ("scale", 1.231)),
+    ("pup_sheet_r2.png", "pup", 4, 4, ["roll"] * 4, ("fur", "roll", 138)),
     # sheets Y, Z, Q2 (user 17/11: swing, bungee and no-rope drop each their own ride, gently funny, "đừng lố quá"):
     # edits of K (swing, bungee: rope point at the top centre) and Q (jump off, fall); a Q2 replaces Q's rows
     ("pup_sheet_y.png", "pup", 4, 4, ["swing"] * 4, ("scale", 1.076)),
@@ -117,8 +117,10 @@ SHEETS = [
     # report §11: sitting on a ledge with legs dangling. ChatGPT drew four different sitting angles per row; only the
     # third column (legs hanging straight down) is the dangle, so that column read top to bottom is the loop.
     ("bear_sheet_e.png", "bear", 4, 4, ["dangle"] * 4, ("height", "dangle", 230), 2),
+    # Sheet F (18/11): the home screen's snowball fight, drawn for it (throw, then hit by a snowball), 8 frames each.
+    ("bear_sheet_f.png", "bear", 4, 4, ["throw", "throw", "hit", "hit"], ("height", "hit", 260)),   # sized by the upright hit row (the throw row crouches),
 ]
-ANCHOR = {"roll": "center", "flung": "center", "stuck_splat": "rope", "swing": "rope", "bungee": "rope", "fling_cartwheel": "center", "fling_backflip": "center", "fling_corkscrew": "center", "flat": "bottom", "launch_panic": "center", "launch_hero": "center", "stuck_buried": "bottom", "stuck_wall": "bottom", "slide": "center", "tumble": "center", "op_wait": "bottom", "op_pull": "bottom", "drop_jump": "center", "drop_fall": "center", "hang_fast": "rope", "reach": "bottom", "ready": "bottom", "hop": "bottom", "dance": "bottom", "yawn": "bottom", "sneeze": "bottom", "pickhat": "bottom", "wave": "bottom", "help": "bottom", "hattip": "bottom", "look": "bottom", "stuck_bare": "center", "getup_bare": "bottom", "walk_bare": "bottom", "dizzy_bare": "bottom", "cheer_bare": "bottom", "idle_bare": "bottom", "flail_bare": "center", "ball_bare": "center", "salute": "bottom", "dangle": "bottom", "punch": "bottom", "sit": "bottom", "smug": "bottom", "bowl": "bottom", "grab": "bottom", "stuck": "center", "flinch": "bottom", "spin": "center", "fly": "center", "divening": "center", "getup": "bottom", "eat": "bottom", "sleep": "bottom",
+ANCHOR = {"roll": "center", "flung": "center", "stuck_splat": "rope", "swing": "rope", "bungee": "rope", "fling_cartwheel": "center", "fling_backflip": "center", "fling_corkscrew": "center", "flat": "bottom", "launch_panic": "center", "launch_hero": "center", "stuck_buried": "bottom", "stuck_wall": "bottom", "slide": "center", "tumble": "center", "op_wait": "bottom", "op_pull": "bottom", "drop_jump": "center", "drop_fall": "center", "hang_fast": "rope", "reach": "bottom", "ready": "bottom", "hop": "bottom", "dance": "bottom", "yawn": "bottom", "sneeze": "bottom", "pickhat": "bottom", "wave": "bottom", "hattip": "bottom", "look": "bottom", "stuck_bare": "center", "getup_bare": "bottom", "walk_bare": "bottom", "dizzy_bare": "bottom", "cheer_bare": "bottom", "idle_bare": "bottom", "flail_bare": "center", "ball_bare": "center", "salute": "bottom", "dangle": "bottom", "punch": "bottom", "exit": "center", "captive": "bottom", "flexfail": "bottom", "doze": "bottom", "backfire": "bottom", "loader": "bottom", "modal_wait": "bottom", "modal_win": "bottom", "modal_lose": "bottom", "modal_music": "bottom", "modal_trophy": "bottom", "modal_read": "bottom", "modal_mock": "bottom", "modal_ko": "bottom", "throw": "bottom", "hit": "bottom", "sit": "bottom", "smug": "bottom", "bowl": "bottom", "grab": "bottom", "stuck": "center", "flinch": "bottom", "spin": "center", "fly": "center", "divening": "center", "dive": "center", "fling_spin": "center", "fling_star": "center", "fling_top": "center", "fling_paddle": "center", "fling_drill": "center", "ninja": "center", "getup": "bottom", "eat": "bottom", "sleep": "bottom",
           "laugh": "bottom", "scratch": "bottom", "juggle": "bottom", "flex": "bottom",
           "leap": "bottom", "walk": "bottom", "idle": "bottom", "cheer": "bottom", "dizzy": "bottom", "taunt": "bottom", "ko": "bottom",
           "hang": "rope", "flail": "center", "glide": "center", "ball": "center",
@@ -135,9 +137,21 @@ REORDER_ROW2 = {("pup_sheet_o.png", "sneeze"): [1, 1, 2, 3]}
 ALIASES = {"pup": "pup_idle_0", "pup_ball": "pup_ball_0", "pup_ball_bare": "pup_ball_bare_0", "pup_dizzy": "pup_dizzy_2", "bear": "bear_idle_0", "bear_helmet": "bear_idle_0"}
 
 
-def remove_background(rgb: np.ndarray, white: int = WHITE) -> np.ndarray:
+# Sheets where white fur meets the white background through a small gap in the outline (19/11: the bare-headed pup's
+# muzzle is open by the whiskers, and asking for a "closed outline" did not close it): the background may only pass
+# through openings wider than 2 x this many px + 1, so the gap is sealed and the head stays.
+SEAL_GAPS = {"pup_sheet_16_fling_drill.png": 6}
+
+
+def remove_background(rgb: np.ndarray, white: int = WHITE, seal: int = 0) -> np.ndarray:
     """Alpha mask: 0 where near-white pixels connect to the border, else 255."""
     light = (rgb > white).all(axis=2)
+    if seal:
+        size = 2 * seal + 1
+        as_img = lambda m: Image.fromarray(m.astype(np.uint8) * 255)
+        wide = np.asarray(as_img(light).filter(ImageFilter.MinFilter(size))) > 0   # light with room around it
+        outside = remove_background(np.dstack([wide] * 3).astype(np.uint8) * 255, 128) == 0
+        return np.where((np.asarray(as_img(outside).filter(ImageFilter.MaxFilter(size))) > 0) & light, 0, 255).astype(np.uint8)
     reach = np.zeros_like(light)
     reach[0, :], reach[-1, :], reach[:, 0], reach[:, -1] = light[0, :], light[-1, :], light[:, 0], light[:, -1]
     while True:   # grow the border region through light pixels until it stops
@@ -164,7 +178,7 @@ def cells(path: Path, cols: int, rows: int) -> list[list[Image.Image | None]]:
     """Grid cells with the background removed, uncropped (frames keep their place in the cell). An empty cell stays in
     the grid as None so later frames keep their number (a spare or missing drawing never renumbers the rest)."""
     rgb = np.asarray(Image.open(path).convert("RGB"))
-    rgba = Image.fromarray(np.dstack([rgb, remove_background(rgb, WHITE_FOR.get(path.name, WHITE))]), "RGBA")
+    rgba = Image.fromarray(np.dstack([rgb, remove_background(rgb, WHITE_FOR.get(path.name, WHITE), SEAL_GAPS.get(path.name, 0))]), "RGBA")
     w, h = rgba.size
     grid = []
     for r in range(rows):
@@ -223,12 +237,12 @@ def crop(frames: list[Image.Image], mode: str) -> list[Image.Image]:
 # Front-view sheets (16/11): ChatGPT sprinkles yellow "!" ticks and motion strokes around the pup, a different set in
 # every frame, so they blink on and off as the frames play (user: "hải cẩu trên hàng bị nhấp nháy"). Only the pup's
 # body and anything nearly as big (a helmet lying beside it) is kept.
-FX_FREE = {"pup_sheet_t4.png", "pup_sheet_f2.png", "pup_sheet_r2.png", "pup_sheet_f3.png", "pup_sheet_y.png", "pup_sheet_z.png", "pup_sheet_q2.png", *(f"pup_sheet_16_{a}.png" for a in ("fling_cartwheel", "fling_backflip", "fling_corkscrew", "tumble", "slide", "flat", "launch_panic", "launch_hero", "stuck_wall", "stuck_buried", "stuck_splat")), "pup_sheet_u.png", "pup_sheet_v.png", "pup_sheet_w.png", "pup_sheet_x.png", "pup_sheet_t.png", "pup_sheet_s.png", "pup_sheet_r.png", "pup_sheet_p.png", "pup_sheet_q.png", "pup_sheet_h.png", "pup_sheet_i.png", "pup_sheet_k.png", "pup_sheet_l.png", "pup_sheet_m.png",
+FX_FREE = {"bear_sheet_f.png", "bear_sheet_16_ko.png", "bear_sheet_16_flex.png", "bear_sheet_16_bowl.png", "bear_sheet_16_throw.png", "pup_sheet_16_fall.png", "pup_sheet_16_throw.png", "pup_sheet_throw.png", "pup_sheet_t4.png", "pup_sheet_f2.png", "pup_sheet_r2.png", "pup_sheet_f3.png", "pup_sheet_y.png", "pup_sheet_z.png", "pup_sheet_q2.png", *(f"pup_sheet_16_{a}.png" for a in ("fling_cartwheel", "fling_backflip", "fling_corkscrew", "tumble", "slide", "flat", "launch_panic", "launch_hero", "stuck_wall", "stuck_buried", "stuck_splat")), "pup_sheet_x.png", "pup_sheet_r.png", "pup_sheet_p.png", "pup_sheet_q.png", "pup_sheet_h.png", "pup_sheet_i.png", "pup_sheet_k.png", "pup_sheet_l.png", "pup_sheet_m.png",
            "pup_sheet_n.png", "pup_sheet_o.png"}
 KEEP_SHARE = 0.08
 # Within one ChatGPT row the pup also grows and shrinks a few percent from cell to cell, which pops as the frames play.
 # Where the helmet sits on the head the whole time, each frame is sized by its own helmet instead of the row's median.
-PER_FRAME_SIZE = {"idle", "walk", "wave", "help", "look", "hop", "dance", "yawn", "hang", "hang_fast", "reach", "ready"}
+PER_FRAME_SIZE = {"idle", "walk", "wave", "look", "hop", "dance", "yawn", "hang", "hang_fast", "reach", "ready"}
 
 
 def even_size(img: Image.Image) -> Image.Image:
@@ -273,6 +287,8 @@ def keep_body(img: Image.Image, share: float = KEEP_SHARE) -> Image.Image:
 
 # Rows that ChatGPT drew standing on a slab of ice ledge: the slab is erased so the pup stands on the game's own bridge.
 STRIP_LEDGE = {"grab"}
+# Rows no pose plays any more (20/11): still measured, since their sheets are scaled by them, but not written.
+UNUSED = {"leap", "lever", "grab", "reach", "fall", "glide", "getup", "getup_bare", "flinch", "hang_fast", "walk_bare", "cheer_bare"}
 
 
 def strip_ledge(img: Image.Image) -> Image.Image:
@@ -312,6 +328,18 @@ def remove_stale(prefix: str, anim: str, keep: set[str]) -> None:
             print(f"  removed stale {png.name}")
 
 
+# The bare-headed pup is the same animal in every pose (user 20/11: "kích cỡ hải cẩu phải bằng nhau ở mọi hoạt ảnh"):
+# poses that curl, stretch or turn cannot be sized by height, so they are sized by how much white fur shows.
+# 138 = idle_bare / dizzy_bare / exit as committed.
+BARE_FUR = 138
+
+
+def fur(img: Image.Image) -> float:
+    """Square root of the white-fur area of a frame, in px (scarf, outline and face left out)."""
+    a = np.asarray(img.convert("RGBA")).astype(int)
+    return float(((a[..., 3] > 128) & (a[..., :3].min(axis=2) > 200)).sum()) ** 0.5
+
+
 def out_name(prefix: str, anim: str, slot: int) -> str | None:
     """File name for a frame by its slot in the animation's cells; None for a cell that is not a frame."""
     if anim != "divening":
@@ -325,14 +353,93 @@ def out_name(prefix: str, anim: str, slot: int) -> str | None:
 SMOOTH_SCALE = {"fling_cartwheel": 1.231, "fling_backflip": 1.231, "fling_corkscrew": 1.231, "tumble": 1.231, "slide": 1.231,
                 "flat": 1.231, "launch_panic": 0.890, "launch_hero": 0.890, "stuck_wall": FRONT_SCALE,
                 "stuck_buried": FRONT_SCALE, "stuck_splat": FRONT_SCALE}
+# 16-frame in-between redraws of older sets (18/11, "tăng khung hình cho tất cả hoạt ảnh"): sized to match the frames
+# they replace (matched_height), so poses lying, sitting or crouching keep their size.
+SMOOTH_MATCH = {("pup", a) for a in ("cheer", "walk", "wave", "hattip", "hop", "flail", "launch", "glide", "fall", "dizzy",
+                                    "getup", "fly", "spin", "flinch", "dance", "yawn", "look", "sneeze", "stuck",
+                                    "throw", "hit", "op_wait", "drop_jump", "drop_fall", "pickhat",
+                                    "flail_bare", "dizzy_bare", "getup_bare", "stuck_bare", "cheer_bare", "hang", "hang_fast", "walk_bare",
+                                    "op_pull", "dive")} | {("bear", a) for a in ("idle", "taunt", "dizzy", "ko", "eat", "sleep", "flex", "laugh", "scratch", "juggle",
+                                     "punch", "sit", "smug", "bowl", "dangle", "throw", "hit")}
+# Height in px of frame 0 of each pup set before its 16-frame redraw (measured on the committed frames, 19/11).
+SMOOTH_FIRST = {"cheer": 265, "walk": 269, "wave": 271, "hattip": 271, "hop": 268, "flail": 262, "launch": 209, "glide": 220,
+                "fall": 216, "dizzy": 263, "getup": 209, "fly": 257, "spin": 261, "flinch": 317, "dance": 267, "yawn": 271,
+                "look": 264, "sneeze": 264, "stuck": 247,
+                "op_wait": 262, "op_pull": 262, "drop_jump": 252, "drop_fall": 232, "pickhat": 246, "reach": 262,
+                "flail_bare": 258, "dizzy_bare": 254, "getup_bare": 172, "stuck_bare": 207, "cheer_bare": 245,
+                "hang": 301, "hang_fast": 277, "walk_bare": 245, "dive": 248}
+# 16-frame redraws of any character (user 18/11: "tăng khung hình cho tất cả hoạt ảnh"): (kind, anim) -> sizing without
+# the row name, measured on the 16 frames themselves.
+SMOOTH_SIZE = {
+    ("pup", "modal_wait"): ("beanie", FRONT_BEANIE), ("pup", "modal_win"): ("beanie", FRONT_BEANIE),
+    ("pup", "modal_lose"): ("beanie", FRONT_BEANIE), ("pup", "modal_music"): ("beanie", FRONT_BEANIE),
+    ("pup", "modal_trophy"): ("beanie", FRONT_BEANIE), ("pup", "modal_read"): ("beanie", FRONT_BEANIE),
+    ("bear", "modal_mock"): ("height", 260), ("bear", "modal_ko"): ("height", 150),
+    ("bear", "flexfail"): ("height", 260), ("bear", "doze"): ("height", 260), ("bear", "backfire"): ("first", 262),   # frame 1 is the bear standing
+    ("pup", "loader"): ("height", 420),
+    ("pup", "captive"): ("beanie", FRONT_BEANIE),
+    ("pup", "ready"): ("first", 283),   # frame 1 stands like idle_2, then sinks into the crouch
+    ("pup", "ninja"): ("first", 304),
+    **{("pup", a): ("fur", 138) for a in ("flung", "fling_spin", "fling_star", "fling_paddle", "fling_drill", "fling_top", "slide")},   # BARE_FUR
+    ("pup", "exit"): ("beanie", FRONT_BEANIE),   # CPC's sheepish hop out after the turn (19/11)
+    # Bears: frame 1 of each redraw as tall as frame 0 of the committed 4-frame set (19/11). Matching the frames already
+    # on disk drifted run after run (idle -32 %, flex +26 %: bears swelled when they changed antic).
+    **{("bear", n): ("first", h) for n, h in {"idle": 260, "taunt": 259, "dizzy": 288, "ko": 142, "eat": 260, "sleep": 239,
+                                              "flex": 260, "laugh": 262, "scratch": 270, "juggle": 260, "punch": 262, "sit": 243,
+                                              "smug": 266, "bowl": 268, "dangle": 230}.items()},
+    ("bear", "throw"): ("first", 232), ("bear", "hit"): ("first", 260),   # frame 1 as tall as the 8-frame set's
+    ("pup", "throw"): ("scale", 1.136), ("pup", "hit"): ("scale", 1.136),   # the scale pup_sheet_throw.png was cut at   # the map's caged pup calling for rescue (19/11)   # the loading act: pup on its rolling snowball
+}
+
+
+def matched_height(kind: str, anim: str) -> float | None:
+    """Median drawn height (alpha box) of the frames already cut for this animation: a 16-frame redraw is scaled to
+    match them, so a lying or sitting bear keeps the size its sheet gave it."""
+    heights = []
+    for f in sorted(OUT.glob(f"{kind}_{anim}_*.png")):
+        if not f.stem[len(kind) + len(anim) + 2:].isdigit():
+            continue   # pup_hang_fast_0 is not a frame of pup_hang
+        box = Image.open(f).getchannel("A").getbbox()
+        if box:
+            heights.append(box[3] - box[1])
+    return sorted(heights)[len(heights) // 2] if heights else None
 
 
 def with_smooth(sheets: list) -> list:
     if (REF / "pup_sheet_q2.png").exists():
         sheets = [e for e in sheets if e[0] != "pup_sheet_q.png"]
-    smooth = {a for a in SMOOTH_SCALE if (REF / f"pup_sheet_16_{a}.png").exists()}
-    out = [(e[0], e[1], e[2], e[3], [None if n in smooth else n for n in e[4]], *e[5:]) for e in sheets]
-    out += [(f"pup_sheet_16_{a}.png", "pup", 4, 4, [a] * 4, ("scale", SMOOTH_SCALE[a])) for a in sorted(smooth)]
+    # Every 16-frame redraw: <kind>_sheet_16_<anim>.png. Sizing: SMOOTH_SIZE, else the pup scale of SMOOTH_SCALE, else
+    # ("match",): the height of the frames it replaces. The older rows of that animation are dropped, except a row its
+    # sheet is measured by (dropping it broke the sheet's scale); the redraw is cut last, so it overwrites those frames.
+    pairs = [("pup", a) for a in SMOOTH_SCALE] + list(SMOOTH_SIZE) + [tuple(k) for k in SMOOTH_MATCH]
+    smooth = {(k, a) for k, a in pairs if (REF / f"{k}_sheet_16_{a}.png").exists()}
+    out = []
+    origin = {}   # (kind, anim) -> the sizing rule of the sheet it was first drawn on
+    for e in sheets:
+        for n in e[4]:
+            if n:
+                origin.setdefault((e[1], n), e[5])
+    for e in sheets:
+        rule = e[5]
+        keep = rule if isinstance(rule, str) else rule[1] if isinstance(rule, tuple) and rule[0] in ("beanie", "height", "fur") else None
+        out.append((e[0], e[1], e[2], e[3], [None if (e[1], n) in smooth and n != keep else n for n in e[4]], *e[5:]))
+    for k, a in sorted(smooth):
+        size = SMOOTH_SIZE.get((k, a))
+        if size is None and k == "pup" and a in SMOOTH_FIRST:
+            # Frame 1 of a redraw is the old frame 1 redrawn: give it the old frame's height. (Sizing by the beanie or
+            # by the median height made redraws 5-20 % too big: snow over the beanie, a pup that gets up from lying.)
+            size = ("first", SMOOTH_FIRST[a])
+        if size is None and (k, a) in SMOOTH_MATCH:
+            px = matched_height(k, a)
+            if px is None:
+                print(f"{k}_sheet_16_{a}.png: skipped, no older frames to match the size of")
+                continue
+            size = ("height", px)
+        if size is None:
+            size = ("scale", SMOOTH_SCALE[a])
+        if size[0] in ("beanie", "height", "first", "fur"):
+            size = (size[0], a, *size[1:])   # the row named for measuring is this animation itself
+        out.append((f"{k}_sheet_16_{a}.png", k, 4, 4, [a] * 4, size))
     return out
 
 
@@ -366,6 +473,16 @@ def cut_sheet(entry: tuple) -> None:
         grid = [[row[only_col]] for row in grid]
     if isinstance(rule, tuple) and rule[0] == "scale":
         scale = rule[1]
+    elif isinstance(rule, tuple) and rule[0] == "first":   # ("first", row, px): that row's FIRST frame is px tall
+        _, row, px = rule
+        first = next(f for f in grid[row_names.index(row)] if f)
+        if name in FX_FREE:
+            first = keep_body(first)
+        box = first.getchannel("A").getbbox()
+        scale = px / (box[3] - box[1])
+    elif isinstance(rule, tuple) and rule[0] == "fur":   # ("fur", row, px): sqrt of that row's median white-fur area
+        _, row, px = rule
+        scale = px / median_of([fur(f) for f in grid[row_names.index(row)] if f], f"the fur of row '{row}'")
     elif isinstance(rule, tuple) and rule[0] == "beanie":   # ("beanie", row, px): that row's helmet measures px
         _, row, px = rule
         scale = px / median_of([beanie(f) for f in grid[row_names.index(row)] if f], f"the beanie of row '{row}'")
@@ -407,7 +524,7 @@ def cut_sheet(entry: tuple) -> None:
         results.append((anim, slots, placed))
     for anim, slots, placed in results:
         written = set()
-        for slot, frame in zip(slots, placed):
+        for slot, frame in zip(slots, placed if anim not in UNUSED else []):
             written.add(out_name(prefix, anim, slot))
             frame.save(OUT / f"{out_name(prefix, anim, slot)}.png")
         if anim == "divening":

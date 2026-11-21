@@ -21,6 +21,7 @@ namespace SealCatapult.EditorTools
     public static class ProjectBuilder
     {
         const string ArtDir = "Assets/Resources/Art";
+        const string AudioDir = "Assets/Resources/Audio";
         const string DataDir = "Assets/Data";
         const string FontTtf = "Assets/Fonts/Baloo2.ttf";
         const string FontAsset = "Assets/Resources/Fonts/Baloo2 SDF.asset";
@@ -51,6 +52,7 @@ namespace SealCatapult.EditorTools
         public static void BuildAll()
         {
             ConfigureSprites();
+            ConfigureAudio();
             CreateFont();
             CreateData(false);
             CreateScenes();
@@ -94,6 +96,7 @@ namespace SealCatapult.EditorTools
         static void BuildAndroid(bool appBundle, bool qa = false)
         {
             ConfigurePlayer();
+            ConfigureAudio();
             EditorUserBuildSettings.buildAppBundle = appBundle;
             if (appBundle && !ConfigureSigning()) return;
             if (!appBundle) PlayerSettings.Android.useCustomKeystore = false;
@@ -151,6 +154,24 @@ namespace SealCatapult.EditorTools
         }
 
         static string ScenePath(string name) => $"Assets/Scenes/{name}.unity";
+
+        // ---------- audio ----------
+
+        /// <summary>The two music tracks stream from the APK. Decompressed on load (the import default) each one sat in
+        /// memory as several MB of PCM; the short effects stay decompressed so they play without a delay.</summary>
+        static void ConfigureAudio()
+        {
+            foreach (var path in Directory.GetFiles(AudioDir, "music_*.wav"))
+            {
+                var importer = (AudioImporter)AssetImporter.GetAtPath(path);
+                if (importer == null) throw new FileNotFoundException($"[SealCatapult] No audio importer for {path}");
+                var settings = importer.defaultSampleSettings;
+                if (settings.loadType == AudioClipLoadType.Streaming) continue;
+                settings.loadType = AudioClipLoadType.Streaming;
+                importer.defaultSampleSettings = settings;
+                importer.SaveAndReimport();
+            }
+        }
 
         // ---------- sprites ----------
 
@@ -251,11 +272,8 @@ namespace SealCatapult.EditorTools
         {
             if (File.Exists(FontAsset)) return;
             var font = AssetDatabase.LoadAssetAtPath<Font>(FontTtf);
-            if (font == null)
-            {
-                Debug.LogError($"[SealCatapult] Missing {FontTtf}");
-                return;
-            }
+            // Thrown, not logged: the build went on and shipped without the font (no Vietnamese glyphs) with exit code 0.
+            if (font == null) throw new FileNotFoundException($"[SealCatapult] Missing {FontTtf}");
             Directory.CreateDirectory(Path.GetDirectoryName(FontAsset));
             // Dynamic atlas: glyphs (incl. Vietnamese diacritics) are added on demand from the TTF.
             var fa = TMP_FontAsset.CreateFontAsset(font, 90, 9, GlyphRenderMode.SDFAA, 1024, 1024,
@@ -348,11 +366,9 @@ namespace SealCatapult.EditorTools
             if (settings == null)
             {
                 var type = System.Type.GetType("GoogleMobileAds.Editor.GoogleMobileAdsSettings, GoogleMobileAds.Editor");
+                // Thrown, not logged: a batch build must stop here with a non-zero exit code.
                 if (type == null)
-                {
-                    Debug.LogError("[SealCatapult] Google Mobile Ads plugin missing (Packages/manifest.json com.google.ads.mobile)");
-                    return;
-                }
+                    throw new System.InvalidOperationException("[SealCatapult] Google Mobile Ads plugin missing (Packages/manifest.json com.google.ads.mobile)");
                 Directory.CreateDirectory(Path.GetDirectoryName(AdMobSettingsPath));
                 settings = ScriptableObject.CreateInstance(type);
                 AssetDatabase.CreateAsset(settings, AdMobSettingsPath);

@@ -14,7 +14,9 @@ namespace SealCatapult.UI
     public class MainMenuView : MonoBehaviour
     {
         const float FlightSeconds = 3.2f;
-        const float MenuShelfHeight = 1.3f;   // snow line of bg_menu above the screen's bottom edge
+        // Where the cast stands on bg_menu: a share of the painting's height above its bottom edge (the snow bank of
+        // menu_bay.png, measured 18/11: snow starts 8.4% up). Tied to the painting, so it holds on every screen shape.
+        const float MenuSnowLine = 0.11f;   // wide phones crop the painting top and bottom: stand clear of the edge
         static readonly Vector2 FlyerFrom = new Vector2(-7.5f, -2.2f);
         static readonly Vector2 FlyerTo = new Vector2(-1.2f, 3.2f);
 
@@ -39,7 +41,7 @@ namespace SealCatapult.UI
                 float h = cam.orthographicSize * 2f * 1.04f;
                 float k = Mathf.Max(h / bg.sprite.bounds.size.y, h * cam.aspect / bg.sprite.bounds.size.x);   // cover any aspect
                 bg.transform.localScale = new Vector3(k, k, 1f);
-                ground = cam.transform.position.y - cam.orthographicSize + MenuShelfHeight;
+                ground = bg.bounds.min.y + bg.bounds.size.y * MenuSnowLine;
             }
             flyer = PupRig.Create(null, FlyerFrom, 20);
             flyer.SetPose(PupRig.Pose.Launched);
@@ -50,6 +52,7 @@ namespace SealCatapult.UI
             op.SetPose(PupRig.Pose.OpWait);
             Art.Spawn("block_ice", null, new Vector2(5.2f, ground + 0.6f), 1.2f, 4);
             Art.Spawn("bear_smug_0", null, new Vector2(5.2f, ground + 1.2f + 0.95f), 1.5f, 5);
+            MenuBattle.Create(ground);   // the snowball battle across the bay
             Loc.Changed += Rebuild;
             SettingsView.ProgressErased += Rebuild;   // the Play label and the pills show the progress
             Rebuild();
@@ -102,20 +105,20 @@ namespace SealCatapult.UI
             UiKit.Text(stars, Progress.Shop.AvailableStars(data).ToString(), 48, new Vector2(1f, 0.5f), new Vector2(-20, 2), new Vector2(110, 80),
                 Color.white, TextAlignmentOptions.Right, true);
 
-            var title = UiKit.Logo(root, Loc.T("title"), 140, UiKit.Top, new Vector2(0, -160), new Vector2(1100, 190));   // under the corner pills, also on 4:3
-            title.enableAutoSizing = true;
-            title.fontSizeMin = 70;
-            title.fontSizeMax = 140;
+            // The painted logo, top centre, between the two corner groups: on 4:3 a 900 px box ran 74 px over the
+            // "where" pill and 84 px over the star pill.
+            float between = UiKit.CanvasSize().x - 2f * (24f + 480f + 30f);
+            var title = UiKit.Brand(root, UiKit.Top, new Vector2(0, -40), new Vector2(Mathf.Clamp(between, 400f, 900f), 460));
             title.gameObject.AddComponent<Bob>().amplitude = 6f;
 
             // Side rails: what you do between levels (left), where you go (right). Big, under the thumbs.
             var rail = new Vector2(300, 112);
             UiKit.Button(root, Loc.T("shop"), ButtonStyle.Warm, new Vector2(0f, 0.5f), new Vector2(24, 20), rail, () => shop.Open(), "glyph_shop");
-            UiKit.Button(root, Loc.T("story"), ButtonStyle.Teal, new Vector2(0f, 0.5f), new Vector2(24, -112), rail, () => IntroView.Play(null), "glyph_play");
+            UiKit.Button(root, Loc.T("story"), ButtonStyle.Teal, new Vector2(0f, 0.5f), new Vector2(24, -112), rail, () => IntroView.Play(null), "glyph_book");   // its own painted mark (ui_icon_book.png): ▶ is Play
             UiKit.Button(root, Loc.T("map"), ButtonStyle.Teal, new Vector2(1f, 0.5f), new Vector2(-24, 20), rail,
                 () => SceneLoader.Load(SceneLoader.LevelMap), "glyph_map");
             UiKit.Button(root, Loc.T("stats"), ButtonStyle.Teal, new Vector2(1f, 0.5f), new Vector2(-24, -112), rail,
-                () => statsPopup = StatsPanel.Show(canvas.transform), "glyph_help");
+                () => statsPopup = StatsPanel.Show(canvas.transform), "row_chart");   // the chart, as in Settings ("?" is How to play)
 
             // The one big button: straight into the next level (a new player's is level 1, teaching by doing).
             UiKit.Button(root, Loc.T("play_level", next + 1), ButtonStyle.Gold, UiKit.Bottom, new Vector2(0, 40), new Vector2(640, 170),

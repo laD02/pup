@@ -100,7 +100,7 @@ namespace SealCatapult.UI
     public class MapBear : MonoBehaviour
     {
         const float MinTurn = 2.5f, MaxTurn = 5f;   // seconds between looking left and right
-        static readonly Vector2 Size = new Vector2(78, 78);
+        static readonly Vector2 Size = new Vector2(122, 122);   // as tall as the walking hero (MapView: Stone 64 × 1.9), user 19/11
         float nextTurn;
 
         public static void Add(Transform trail, Vector2[] spots, float paintingW, float paintingH)
@@ -111,9 +111,11 @@ namespace SealCatapult.UI
                 var node = UiKit.Node(trail, "Map Bear");
                 node.anchorMin = node.anchorMax = new Vector2(spot.x / paintingW, 1f - spot.y / paintingH);
                 node.sizeDelta = Vector2.zero;
+                node.gameObject.AddComponent<Canvas>();   // its own canvas: its frames do not re-batch the whole map
                 var bear = UiKit.Image(node, "bear_idle_0", UiKit.Bottom, Vector2.zero, Size);
                 bear.rectTransform.pivot = new Vector2(0.5f, 0f);   // feet on the spot
                 bear.raycastTarget = false;
+                UiKit.StandOut(bear, Vector2.zero, Size.x * 0.7f);   // stands out from the painting (user 19/11)
                 // Breathing most of the time, a scratch now and then (CPC's bear sniffs and looks about).
                 bear.gameObject.AddComponent<FrameLoop>().Set(5f, ("bear_idle_", 4), ("bear_idle_", 4), ("bear_idle_", 4), ("bear_scratch_", 4));
                 var turner = bear.gameObject.AddComponent<MapBear>();

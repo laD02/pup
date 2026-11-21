@@ -25,6 +25,8 @@ namespace SealCatapult.Ads
         const float RewardGrace = 1f;                     // the reward callback may land after the close callback; 0.3 s lost the pup when it came late
         const float OpenTimeout = 5f;                      // an ad that never opens must not hold the game
         const float ConsentRetryGap = 60f;                 // offline at launch: ask UMP again, at most once a minute
+        const float ConsentTimeout = 30f;                  // UMP never answered: let the next try through (it blocked ads for the session)
+        const float ConsentFormTimeout = 300f;             // the form's callback never came (activity killed under it): same, after a reading-length wait
 
         static readonly object gate = new object();
         static readonly Queue<Action> posted = new Queue<Action>();
@@ -113,6 +115,8 @@ namespace SealCatapult.Ads
             instance.TryConsent();
         }
 
+        int consentAttempt;
+
         void TryConsent()
         {
             if (started || consentRunning || Time.realtimeSinceStartup - lastConsentTry < ConsentRetryGap) return;
@@ -122,8 +126,20 @@ namespace SealCatapult.Ads
             // QA builds act as an EU player so the GDPR form can be checked on the emulator; release builds use real location.
             if (Debug.isDebugBuild)
                 request.ConsentDebugSettings = new ConsentDebugSettings { DebugGeography = DebugGeography.EEA };
+            bool answered = false;
+            int attempt = ++consentAttempt;
+            StartCoroutine(After(ConsentTimeout, () =>
+            {
+                if (answered) return;
+                consentAttempt++;   // this attempt is given up: its answer, if it still comes, is dropped
+                consentRunning = false;
+                Debug.LogWarning("[SealCatapult] consent update: no answer, will ask again");
+            }));
             ConsentInformation.Update(request, updateError => Post(() =>
             {
+                answered = true;
+                // An answer that comes after the watchdog let a newer try through: that try owns the form (two forms otherwise).
+                if (attempt != consentAttempt) return;
                 if (updateError != null) Debug.LogWarning($"[SealCatapult] consent update: {updateError.Message}");
                 // A player who consented last session can see ads while the form (if any) is still on its way.
                 if (ConsentInformation.CanRequestAds()) StartSdk();
@@ -132,8 +148,16 @@ namespace SealCatapult.Ads
                     consentRunning = false;
                     return;
                 }
+                StartCoroutine(After(ConsentFormTimeout, () =>
+                {
+                    if (attempt != consentAttempt || !consentRunning) return;
+                    consentAttempt++;
+                    consentRunning = false;
+                    Debug.LogWarning("[SealCatapult] consent form: no answer, will ask again");
+                }));
                 ConsentForm.LoadAndShowConsentFormIfRequired(formError => Post(() =>
                 {
+                    if (attempt != consentAttempt) return;   // given up above: a newer try owns the flag
                     consentRunning = false;
                     if (formError != null) Debug.LogWarning($"[SealCatapult] consent form: {formError.Message}");
                     if (ConsentInformation.CanRequestAds()) StartSdk();
@@ -282,7 +306,12 @@ namespace SealCatapult.Ads
             ad.OnAdFullScreenContentClosed += () => Post(() => self.StartCoroutine(After(RewardGrace, Finish)));
             ad.OnAdFullScreenContentFailed += _ => Post(Finish);
             self.StartCoroutine(After(OpenTimeout, () => { if (!opened) Finish(); }));
-            ad.Show(_ => Post(() => earned = true));
+            ad.Show(_ => Post(() =>
+            {
+                earned = true;
+                // After Finish the card already said "no ad": nothing can be granted any more, but it must be seen in the log.
+                if (done) Debug.LogWarning($"[SealCatapult] rewarded: the reward came more than {RewardGrace} s after the ad closed and was lost");
+            }));
         }
 
         /// <summary>Settings' Privacy row: reopens the consent form. A withdrawn consent drops the ads already loaded.</summary>

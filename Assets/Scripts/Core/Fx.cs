@@ -219,6 +219,17 @@ namespace SealCatapult.Core
             p.grow = 0.8f;
         }
 
+        /// <summary>CPC's flung penguin wears a small cluster of grey puffs ON its body all the way (video tracked at
+        /// 60 fps, 20/11), not a dotted line behind it: short-lived blobs drawn over the pup.</summary>
+        public static void BodySmoke(Vector2 at, int order)
+        {
+            var p = Particle("powder", at + Random.insideUnitCircle * 0.14f, Random.Range(0.26f, 0.4f), order);
+            p.Renderer.color = new Color(0.62f, 0.64f, 0.7f, 0.95f);
+            p.velocity = Random.insideUnitCircle * 0.25f;
+            p.life = 0.16f;
+            p.grow = 0.5f;
+        }
+
         /// <summary>A soft snow-dust dot left behind a flying pup.</summary>
         public static void Trail(Vector2 at)
         {
@@ -243,27 +254,48 @@ namespace SealCatapult.Core
         public static void FloatingText(string text, Vector2 at, Color color, float size = 5f, float life = 1.1f,
             float tilt = 0f, float rise = 1.4f)
         {
-            var go = new GameObject("FloatText");
-            go.transform.position = at;
-            go.transform.rotation = Quaternion.Euler(0, 0, tilt);
-            var tmp = go.AddComponent<TextMeshPro>();
-            if (font == null)
+            // Pooled like the sprites: every call-out made a new GameObject and TextMeshPro and destroyed it a second later.
+            Debris d = null;
+            while (textPool.Count > 0 && d == null) d = textPool.Pop();   // entries destroyed by a scene unload read as null
+            if (d == null)
             {
-                font = Resources.Load<TMP_FontAsset>("Fonts/Baloo2 SDF");
-                outline = Resources.Load<Material>("Fonts/Baloo2 SDF Outline");
-                if (font == null) Debug.LogError("[SealCatapult] Missing Resources/Fonts/Baloo2 SDF: floating text falls back to TMP's default font (no Vietnamese glyphs).");
+                var go = new GameObject("FloatText");
+                var made = go.AddComponent<TextMeshPro>();
+                if (font == null)
+                {
+                    font = Resources.Load<TMP_FontAsset>("Fonts/Baloo2 SDF");
+                    outline = Resources.Load<Material>("Fonts/Baloo2 SDF Outline");
+                    if (font == null) Debug.LogError("[SealCatapult] Missing Resources/Fonts/Baloo2 SDF: floating text falls back to TMP's default font (no Vietnamese glyphs).");
+                }
+                if (font != null) made.font = font;
+                made.alignment = TextAlignmentOptions.Center;
+                made.sortingOrder = 60;
+                if (outline != null) made.fontSharedMaterial = outline;
+                d = go.AddComponent<Debris>();
+                d.pooledText = made;
             }
-            if (font != null) tmp.font = font;
+            else d.gameObject.SetActive(true);
+            var tmp = d.pooledText;
+            d.transform.localScale = Vector3.one;   // the last use left its pop scale
+            d.transform.position = at;
+            d.ResetState();
+            d.transform.rotation = Quaternion.Euler(0, 0, tilt);
             tmp.text = text;
             tmp.fontSize = size;
             tmp.color = color;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.sortingOrder = 60;
-            if (outline != null) tmp.fontSharedMaterial = outline;
-            var d = go.AddComponent<Debris>();
             d.velocity = new Vector2(0, rise);
             d.life = life;
             d.text = tmp;
+        }
+
+        const int TextPoolCap = 12;
+        static readonly Stack<Debris> textPool = new Stack<Debris>();
+
+        internal static void ReleaseText(Debris d)
+        {
+            if (textPool.Count >= TextPoolCap) { UnityEngine.Object.Destroy(d.gameObject); return; }
+            d.gameObject.SetActive(false);
+            textPool.Push(d);
         }
     }
 
@@ -315,6 +347,7 @@ namespace SealCatapult.Core
         public TMP_Text text;
         public SpriteRenderer Renderer;
         internal bool pooled;
+        internal TMP_Text pooledText;   // set on a pooled call-out (Fx.FloatingText): it goes back to the text pool
 
         const float PopTime = 0.22f;   // text bursts in with an overshoot instead of appearing flat
 
@@ -375,7 +408,8 @@ namespace SealCatapult.Core
             age += dt;
             if (age >= life)
             {
-                if (pooled) Fx.Release(this);
+                if (pooledText != null) Fx.ReleaseText(this);
+                else if (pooled) Fx.Release(this);
                 else Destroy(gameObject);
                 return;
             }

@@ -25,6 +25,7 @@ Unity 6.3 LTS (`6000.3.28f1`) · URP 2D · Android only (Google Play) · **lands
 | Painted art (ChatGPT, v10) | paintings in `Assets/Art/Reference/` (moved there from `~/Downloads`). Backgrounds, map, menu, story, arena terrain: `python3 -I Tools/prep_backgrounds.py` (pit widened to 20:9 with `pit_side_walls.png`, 16:9 crops, seamless cobble tile). Single props on a white sheet (catapult, blocks, objects, UI kit): `python3 -I Tools/cut_props.py` (finds each drawing, names them in reading order per its `SHEETS` list). Then **2. Build Project** (painted blocks/tiles get their own pixels-per-unit there) |
 | Art stand-ins (SVG → PNG) | `Tools/make_art.py` → `Assets/Art/Source`, `Assets/Resources/Art`. Never overwrites or deletes a sprite whose painting exists (see `painted_names()`) or any name the cut tools produce, nor an existing `pup_*`/`bear_*` frame (`--stand-ins` redraws those placeholders on purpose). Needs `rsvg-convert` |
 | Hero + bear frames (ChatGPT sheets → PNG) | sheets in `Assets/Art/Reference/` (`pup_sheet_a..f`, `bear_sheet*.png` per `docs/bear-art-brief.md`), cut by `python3 -I Tools/slice_sheets.py` → `Assets/Resources/Art/pup_<anim>_<i>.png`, `bear_<anim>_<i>.png`, then `ProjectBuilder.BuildAll`. Missing sheets are skipped; `make_art.py` keeps placeholder bear frames |
+| CPC motion study (tracking crop of the penguin) | `python3 -I Tools/cpc_track.py <start s> <dur s> <fps> <out.png> [tile px] [cols] [video]` on the CPC gameplay video (yt-dlp, 60 fps; not in the repo); needs numpy, Pillow, ffmpeg |
 | Sounds & music | `Tools/make_audio.py` → `Assets/Resources/Audio`; keeps WAVs that already exist (a hand-replaced sound wins), `--force` regenerates all |
 
 Replace a PNG/WAV with the same file name and the game picks it up — no code change.
@@ -96,6 +97,9 @@ design the road itself always paints a fork, so the road is designed here and Ch
    `closest`), or ChatGPT merges them into a junction.
 2. In ChatGPT attach `Assets/Art/Reference/map_world.png` (style) + the plan and ask it to paint the world along the
    plan with small pure-red dots on the road centre; nothing else in the picture pure red (bridges, banners, lava).
+   After step 4, `python3 Tools/map_reach.py` must print PASS too: every level stone of every castle can be seen and
+   tapped on 4:3 through 21:9 (the map painting crops and pans; no stone under a button). Run it as well after moving
+   a map button (`MapView.Build`, `UiKit.TopBar`) and keep the button boxes in the tool in step with the code.
 3. `python3 Tools/map_roadcheck.py <image>` must print PASS (one chain of dots, 2 ends, no fork); then look at it too:
    village at one end, fortress gate at the other. On FAIL tell ChatGPT what is wrong and repaint.
 4. Save as `Assets/Art/Reference/map_<world>_dots.png`, then

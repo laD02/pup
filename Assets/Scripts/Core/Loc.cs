@@ -15,12 +15,9 @@ namespace SealCatapult.Core
         static readonly Dictionary<string, string[]> table = new Dictionary<string, string[]>
         {
             // key                       en, vi, then de, fr, es, it, pl (EU listings, docs/ASO.md)
-            ["title"]          = new[] { "Seal Catapult",                             "Hải Cẩu Bay",
+            // The game's name is a brand: the same in every language (user 18/11: "tên game ko theo ngôn ngữ").
+            ["title"]          = new[] { "Seal Catapult",                             "Seal Catapult",
                                          "Seal Catapult", "Seal Catapult", "Seal Catapult", "Seal Catapult", "Seal Catapult" },
-            ["tagline"]        = new[] { "Win back the village fish from the polar bears!", "Giành lại cá cho làng hải cẩu!",
-                                         "Hol den Fisch des Dorfes von den Eisbären zurück!", "Reprends le poisson du village aux ours polaires !", "¡Recupera el pescado del pueblo de los osos polares!", "Riprendi il pesce del villaggio dagli orsi polari!", "Odbierz niedźwiedziom polarnym ryby z wioski!" },
-            ["play"]           = new[] { "Play",                                    "Chơi",
-                                         "Spielen", "Jouer", "Jugar", "Gioca", "Graj" },
             ["settings"]       = new[] { "Settings",                                "Cài đặt",
                                          "Einstellungen", "Réglages", "Ajustes", "Impostazioni", "Ustawienia" },
             ["quit"]           = new[] { "Quit",                                    "Thoát",
@@ -29,8 +26,6 @@ namespace SealCatapult.Core
                                          "Frostbucht", "Baie Gelée", "Bahía Helada", "Baia Gelata", "Mroźna Zatoka" },
             ["shop"]           = new[] { "Upgrades",                                "Nâng cấp",
                                          "Upgrades", "Améliorations", "Mejoras", "Potenziamenti", "Ulepszenia" },
-            ["stars"]          = new[] { "Stars",                                   "Sao",
-                                         "Sterne", "Étoiles", "Estrellas", "Stelle", "Gwiazdki" },
             ["music"]          = new[] { "Music",                                   "Nhạc",
                                          "Musik", "Musique", "Música", "Musica", "Muzyka" },
             ["sfx"]            = new[] { "Sound effects",                           "Hiệu ứng",
@@ -57,18 +52,6 @@ namespace SealCatapult.Core
                                          "Nochmal", "Rejouer", "Reintentar", "Riprova", "Jeszcze raz" },
             ["map"]            = new[] { "Map",                                     "Bản đồ",
                                          "Karte", "Carte", "Mapa", "Mappa", "Mapa" },
-            ["next"]           = new[] { "Next",                                    "Màn tiếp",
-                                         "Weiter", "Suivant", "Siguiente", "Avanti", "Dalej" },
-            ["sound"]          = new[] { "Sound",                                   "Âm thanh",
-                                         "Ton", "Son", "Sonido", "Suono", "Dźwięk" },
-            ["win"]            = new[] { "Fortress smashed!",                       "Phá tan pháo đài!",
-                                         "Festung zerstört!", "Forteresse détruite !", "¡Fortaleza destrozada!", "Fortezza distrutta!", "Twierdza rozbita!" },
-            ["lose"]           = new[] { "The bears held on…",                      "Bầy gấu vẫn trụ…",
-                                         "Die Bären haben gehalten…", "Les ours ont tenu bon…", "Los osos resistieron…", "Gli orsi hanno resistito…", "Niedźwiedzie się utrzymały…" },
-            ["stars_gained"]   = new[] { "+{0} stars",                              "+{0} sao",
-                                         "+{0} Sterne", "+{0} étoiles", "+{0} estrellas", "+{0} stelle", "Gwiazdki: +{0}" },
-            ["score"]          = new[] { "Score {0}",                               "Điểm {0}",
-                                         "Punkte {0}", "Score {0}", "Puntos {0}", "Punti {0}", "Wynik {0}" },
             ["level_n"]        = new[] { "Level {0}",                               "Màn {0}",
                                          "Level {0}", "Niveau {0}", "Nivel {0}", "Livello {0}", "Poziom {0}" },
             ["through"]        = new[] { "{0} pups made it out!",                   "{0} hải cẩu thoát ra ngoài!",
@@ -91,16 +74,8 @@ namespace SealCatapult.Core
                                          "HILFE!", "À L'AIDE !", "¡SOCORRO!", "AIUTO!", "POMOCY!" },
             ["total_label"]    = new[] { "Total",                                   "Tổng",
                                          "Gesamt", "Total", "Total", "Totale", "Razem" },
-            ["on"]             = new[] { "ON",                                      "BẬT",
-                                         "AN", "ON", "ACTIVADO", "ATTIVO", "WŁ." },
-            ["off"]            = new[] { "OFF",                                     "TẮT",
-                                         "AUS", "OFF", "DESACTIVADO", "DISATTIVO", "WYŁ." },
-            ["total_bears"]    = new[] { "Bears on this level: {0}",                "Số gấu trong màn: {0}",
-                                         "Bären in diesem Level: {0}", "Ours dans ce niveau : {0}", "Osos en este nivel: {0}", "Orsi in questo livello: {0}", "Niedźwiedzie w poziomie: {0}" },
             ["bears_hit"]      = new[] { "Bears knocked out: {0}/{1}",              "Gấu đã hạ: {0}/{1}",
                                          "Bären besiegt: {0}/{1}", "Ours assommés : {0}/{1}", "Osos derribados: {0}/{1}", "Orsi abbattuti: {0}/{1}", "Pokonane niedźwiedzie: {0}/{1}" },
-            ["mission_done"]   = new[] { "Mission complete!",                       "Hoàn thành nhiệm vụ!",
-                                         "Mission erfüllt!", "Mission accomplie !", "¡Misión cumplida!", "Missione compiuta!", "Misja wykonana!" },
             ["perfect_mission"]= new[] { "Perfect mission!",                        "Nhiệm vụ hoàn hảo!",
                                          "Perfekte Mission!", "Mission parfaite !", "¡Misión perfecta!", "Missione perfetta!", "Perfekcyjna misja!" },
             ["mission_failed"] = new[] { "Mission failed!",                         "Thất bại!",
@@ -147,8 +122,6 @@ namespace SealCatapult.Core
                                          "HOPPLA!", "OUPS !", "¡UY!", "OPS!", "UPS!" },
             ["grr_miss"]       = new[] { "Grr…",                                    "Grr…",
                                          "Grr…", "Grr…", "Grr…", "Grr…", "Grr…" },
-            ["buy"]            = new[] { "Buy",                                     "Mua",
-                                         "Kaufen", "Acheter", "Comprar", "Compra", "Kup" },
             ["maxed"]          = new[] { "Max",                                     "Tối đa",
                                          "Max", "Max", "Máx.", "Max", "Maks." },
             ["lv"]             = new[] { "Lv {0}/{1}",                              "Cấp {0}/{1}",
@@ -177,8 +150,6 @@ namespace SealCatapult.Core
                                          "So wird gespielt", "Comment jouer", "Cómo jugar", "Come si gioca", "Jak grać" },
             ["about"]          = new[] { "About",                                   "Giới thiệu",
                                          "Info", "À propos", "Acerca de", "Info", "O grze" },
-            ["hint_map"]       = new[] { "Tap a level to play",                     "Chạm vào một màn để chơi",
-                                         "Tippe auf ein Level", "Touche un niveau pour jouer", "Toca un nivel para jugar", "Tocca un livello per giocare", "Stuknij poziom, aby zagrać" },
             ["hint_aim_bungee"] = new[] { "Tap to fire! Hit the pup when it stretches lowest", "Chạm để bắn! Bắn lúc hải cẩu nhún xuống thấp nhất",
                                          "Tippen zum Feuern! Schieß, wenn die Robbe am tiefsten ist", "Touche pour tirer ! Vise quand le phoque est au plus bas", "¡Toca para disparar! Hazlo cuando la foca esté más abajo", "Tocca per sparare! Colpisci quando la foca è più in basso", "Stuknij, by strzelić! Strzel, gdy foka jest najniżej" },
             ["hint_aim"]       = new[] { "Tap to whack! Hit it as it swings over the catapult", "Chạm để đập! Đập lúc nó đu qua máy bắn",
@@ -186,8 +157,6 @@ namespace SealCatapult.Core
             ["hint_dive"] = new[] { "Tap early! The pup dives forward at a slant", "Chạm sớm! Hải cẩu lao chéo về phía trước", "Früh tippen! Die Robbe stürzt schräg nach vorn", "Touche tôt ! Le phoque plonge en biais vers l'avant", "¡Toca pronto! La foca se lanza en diagonal hacia delante", "Tocca presto! La foca si tuffa in diagonale in avanti", "Stuknij wcześnie! Foka nurkuje ukosem do przodu" },
             ["hint_shop"]      = new[] { "Tap an upgrade to see what it does",      "Chạm vào nâng cấp để xem tác dụng",
                                          "Tippe auf ein Upgrade, um zu sehen, was es kann", "Touche une amélioration pour voir ce qu'elle fait", "Toca una mejora para ver qué hace", "Tocca un potenziamento per vedere cosa fa", "Stuknij ulepszenie, by zobaczyć, co daje" },
-            ["perfect"]        = new[] { "Perfect!",                                "Hoàn hảo!",
-                                         "Perfekt!", "Parfait !", "¡Perfecto!", "Perfetto!", "Perfekcyjnie!" },
             ["howto_1"]        = new[] { "Pups swing on the rope. Tap to swing the whacker: a good hit sends them up through the gap and on to the fortress.",
                                          "Hải cẩu đu trên dây. Chạm để máy đập vung búa, đánh chúng bay lọt khe góc trên bên phải, thẳng tới pháo đài.",
                                          "Robben schaukeln am Seil. Tippe, damit der Schläger zuschlägt: ein guter Treffer schickt sie durch die Lücke zur Festung.", "Les phoques se balancent sur la corde. Touche pour frapper : un bon coup les envoie par l'ouverture jusqu'à la forteresse.", "Las focas se balancean en la cuerda. Toca para golpear: un buen golpe las lanza por el hueco hasta la fortaleza.", "Le foche dondolano sulla corda. Tocca per colpire: un buon colpo le manda nel varco fino alla fortezza.", "Foki huśtają się na linie. Stuknij, by uderzyć: dobry cios posyła je przez szczelinę prosto do twierdzy." },
@@ -208,10 +177,9 @@ namespace SealCatapult.Core
             ["collect_fish"] = new[] { "Fly through the fish to collect them!", "Bay xuyên qua đàn cá để gom cá!", "Flieg durch die Fische und sammle sie ein!", "Vole à travers les poissons pour les ramasser !", "¡Vuela entre los peces para recogerlos!", "Vola tra i pesci per raccoglierli!", "Przeleć przez ryby, by je zebrać!" },
             ["fish_got"] = new[] { "Fish collected: {0}/{1}", "Cá đã gom: {0}/{1}", "Gesammelte Fische: {0}/{1}", "Poissons ramassés : {0}/{1}", "Peces recogidos: {0}/{1}", "Pesci raccolti: {0}/{1}", "Zebrane ryby: {0}/{1}" },
             ["ending"] = new[] { "Frost Bay is free! On to the Glacier River.", "Vịnh Băng Giá đã được giải cứu! Tiếp tục tới Sông Băng.", "Die Frostbucht ist frei! Weiter zum Gletscherfluss.", "La Baie Gelée est libre ! En route vers la Rivière Glacée.", "¡La Bahía Helada es libre! Rumbo al Río Glaciar.", "La Baia Gelata è libera! Ora verso il Fiume Glaciale.", "Mroźna Zatoka jest wolna! Teraz nad Lodową Rzekę." },
-            ["castle_freed"] = new[] { "{0} is free! On to the next castle.", "{0} đã được giải cứu! Tiến tới thành tiếp theo.", "{0} ist frei! Weiter zur nächsten Burg.", "{0} est libéré ! En route vers le château suivant.", "¡{0} es libre! Al siguiente castillo.", "{0} è libero! Avanti al prossimo castello.", "{0} wolny! Ruszamy do następnego zamku." },
+            ["castle_freed"] = new[] { "{0} is free! On to the next castle.", "{0} đã được giải cứu! Tiến tới thành tiếp theo.", "{0} ist frei! Weiter zur nächsten Burg.", "{0} : libération ! En route vers le château suivant.", "¡{0} es libre! Al siguiente castillo.", "{0}: liberazione! Avanti al prossimo castello.", "{0}: wolność! Ruszamy do następnego zamku." },   // fr/it/pl: no adjective, the castle names differ in gender
             ["drop_tip"] = new[] { "No rope! Fire as the pup drops past the catapult", "Không dây! Bắn lúc hải cẩu rơi ngang qua máy bắn", "Kein Seil! Feuere, wenn die Robbe am Katapult vorbeifällt", "Pas de corde ! Tire quand le phoque passe devant la catapulte", "¡Sin cuerda! Dispara cuando la foca caiga junto a la catapulta", "Niente corda! Spara quando la foca cade davanti alla catapulta", "Bez liny! Strzelaj, gdy foka spada obok katapulty" },
             ["cage_freed"] = new[] { "The caged pups are free! On along the trail.", "Các bạn hải cẩu trong lồng đã được thả! Đi tiếp thôi.", "Die gefangenen Robben sind frei! Weiter des Weges.", "Les phoques en cage sont libres ! On continue.", "¡Las focas enjauladas son libres! A seguir.", "Le foche in gabbia sono libere! Avanti.", "Foki z klatki są wolne! Ruszamy dalej." },
-            ["castle_n"] = new[] { "Castle {0}", "Thành {0}", "Burg {0}", "Château {0}", "Castillo {0}", "Castello {0}", "Zamek {0}" },
             ["world_canyon"] = new[] { "Glacier Canyon", "Hẻm Núi Băng", "Gletscherschlucht", "Canyon glacé", "Cañón Glaciar", "Canyon di ghiaccio", "Lodowy Kanion" },
             ["world_forest"] = new[] { "Aurora Forest", "Rừng Cực Quang", "Polarlichtwald", "Forêt boréale", "Bosque Aurora", "Foresta dell'aurora", "Las Zorzy" },
             ["world_harbour"] = new[] { "Frozen Harbour", "Cảng Đóng Băng", "Eishafen", "Port gelé", "Puerto Helado", "Porto ghiacciato", "Zamarznięty Port" },
@@ -229,14 +197,29 @@ namespace SealCatapult.Core
             ["star_fish_3"] = new[] { "80% of the fish", "Gom 80% số cá", "80 % der Fische", "80 % des poissons", "El 80 % de los peces", "L'80% dei pesci", "80% ryb" },
             ["retry_attack"] = new[] { "Attack again", "Tấn công lại", "Nochmal angreifen", "Réattaquer", "Atacar de nuevo", "Attacca di nuovo", "Atakuj ponownie" },
             ["star_boss_2"] = new[] { "Boss down with a pup to spare", "Hạ trùm khi còn dư hải cẩu", "Boss besiegt, eine Robbe übrig", "Boss vaincu, un phoque en réserve", "Jefe derrotado y una foca de sobra", "Boss sconfitto, una foca di scorta", "Boss pokonany, foka w zapasie" },
+            ["loading"] = new[] { "Loading…", "Đang tải…", "Lädt…", "Chargement…", "Cargando…", "Caricamento…", "Ładowanie…" },
             ["play_level"] = new[] { "Play · Level {0}", "Chơi · Màn {0}", "Spielen · Level {0}", "Jouer · Niveau {0}", "Jugar · Nivel {0}", "Gioca · Livello {0}", "Graj · Poziom {0}" },
-            ["zone_glacier"] = new[] { "Glacier River", "Sông Băng", "Gletscherfluss", "Rivière Glacée", "Río Glaciar", "Fiume Glaciale", "Lodowa Rzeka" },
+            // Singular forms: the shop names the real number, and level 1 of these gives exactly one.
+            ["upd_Spiky_one"]  = new[] { "Smash through 1 ice block", "Xuyên 1 khối băng", "Durchbricht 1 Eisblock", "Traverse 1 bloc de glace", "Atraviesa 1 bloque de hielo", "Sfonda 1 blocco di ghiaccio", "Przebija bloki lodu: 1" },
+            ["upd_PuffUp_one"] = new[] { "+1 bounce after impact", "+1 lần nảy sau va chạm", "+1 Sprung nach dem Aufprall", "+1 rebond après l'impact", "+1 rebote tras el impacto", "+1 rimbalzo dopo l'impatto", "Odbicia po uderzeniu: +1" },
+            ["upd_School_one"] = new[] { "+1 pup per level", "+1 hải cẩu mỗi màn", "+1 Robbe pro Level", "+1 phoque par niveau", "+1 foca por nivel", "+1 foca per livello", "Foki na poziom: +1" },
+            ["upd_Blaze_all"]  = new[] { "Tap again mid-dive to catch fire and melt through every ice cube", "Chạm lần nữa khi đang lao để bốc lửa, xuyên mọi khối băng",
+                                         "Tippe im Sturzflug erneut: Feuer fangen und alle Eiswürfel schmelzen", "Touche encore en plongée pour t'enflammer et faire fondre tous les cubes de glace", "Toca otra vez en plena caída para arder y derretir todos los cubos de hielo", "Tocca di nuovo in picchiata per prendere fuoco e sciogliere tutti i cubetti di ghiaccio", "Stuknij ponownie w locie, by zapłonąć i stopić wszystkie kostki lodu" },
+            // The shop's caption: upgrade name · level: what it does (French puts a space before the colon).
+            ["shop_line"]      = new[] { "{0} · {1}: {2}", "{0} · {1}: {2}", "{0} · {1}: {2}", "{0} · {1} : {2}", "{0} · {1}: {2}", "{0} · {1}: {2}", "{0} · {1}: {2}" },
+            ["beat_boss"]      = new[] { "Beat the boss bear to continue", "Hạ gấu trùm để đi tiếp", "Besiege den Boss-Bären, um weiterzukommen", "Bats l'ours boss pour continuer", "Derrota al oso jefe para continuar", "Sconfiggi l'orso boss per continuare", "Pokonaj niedźwiedzia bossa, by przejść dalej" },
+            ["save_failed"]    = new[] { "Could not save your progress. Free up some storage.", "Không lưu được tiến trình. Hãy giải phóng bộ nhớ.", "Fortschritt konnte nicht gespeichert werden. Gib Speicher frei.", "Impossible d'enregistrer ta progression. Libère de l'espace.", "No se pudo guardar tu progreso. Libera espacio.", "Impossibile salvare i progressi. Libera spazio.", "Nie udało się zapisać postępu. Zwolnij miejsce." },
+            ["save_damaged"]   = new[] { "The save file was damaged, so progress starts over.", "Tệp lưu bị hỏng nên tiến trình bắt đầu lại.", "Der Spielstand war beschädigt, der Fortschritt beginnt neu.", "La sauvegarde était endommagée : la progression recommence.", "La partida guardada estaba dañada: el progreso empieza de nuevo.", "Il salvataggio era danneggiato: i progressi ricominciano.", "Zapis gry był uszkodzony, postęp zaczyna się od nowa." },
         };
 
         /// <summary>Language codes in table-column order; also the values stored in the save.</summary>
         public static readonly string[] Codes = { "en", "vi", "de", "fr", "es", "it", "pl" };
 
         static int lang = -1;
+
+        /// <summary>Editor play mode without a domain reload keeps statics: read the saved language again.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => lang = -1;
 
         public static string Language => Codes[Index];
 
@@ -264,8 +247,8 @@ namespace SealCatapult.Core
             _ => 0,
         };
 
-        /// <summary>The language after the current one, for the Settings button that cycles through all of them.</summary>
-        public static string NextLanguage => Codes[(Index + 1) % Codes.Length];
+        /// <summary>Each language's own name ("Deutsch", "Tiếng Việt"), for the language picker in Settings.</summary>
+        public static string NameOf(string code) => table["lang_name"][Math.Max(0, Array.IndexOf(Codes, code))];
 
         public static void SetLanguage(string code)
         {
@@ -275,14 +258,23 @@ namespace SealCatapult.Core
             Changed?.Invoke();
         }
 
-        /// <summary>Every key with a non-empty text per language (EditMode test).</summary>
+        /// <summary>True when the table has <paramref name="key"/> (an optional variant, e.g. a singular form).</summary>
+        public static bool Has(string key) => table.ContainsKey(key);
+
+        /// <summary>Every key with a non-empty text per language, and the same {0} {1}… in each of them: a translation
+        /// that drops a placeholder loses its number, one that adds one throws in string.Format (EditMode test).</summary>
         public static bool IsComplete(out string problem)
         {
             foreach (var row in table)
             {
                 if (row.Value.Length != Codes.Length) { problem = $"{row.Key}: {row.Value.Length} columns"; return false; }
                 for (int i = 0; i < Codes.Length; i++)
+                {
                     if (string.IsNullOrEmpty(row.Value[i])) { problem = $"{row.Key}: empty {Codes[i]}"; return false; }
+                    for (int n = 0; n < 4; n++)
+                        if (row.Value[i].Contains("{" + n + "}") != row.Value[0].Contains("{" + n + "}"))
+                        { problem = $"{row.Key}: placeholder {{{n}}} differs in {Codes[i]}"; return false; }
+                }
             }
             problem = null;
             return true;
