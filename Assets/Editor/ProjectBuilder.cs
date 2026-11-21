@@ -73,7 +73,8 @@ namespace SealCatapult.EditorTools
         public static void BuildApk() => BuildAndroid(false);
 
         /// <summary>QA build: a debuggable development APK (Builds/Android/SealCatapult-qa.apk) so QA can seed
-        /// save.json with `adb shell run-as` to reach later levels. Never upload it.</summary>
+        /// save.json with `adb push` (README.md "Install on a phone": it lives in the external files dir, not under run-as) to reach
+        /// later levels. Never upload it.</summary>
         public static void BuildApkQa() => BuildAndroid(false, true);
 
         /// <summary>Re-applies the sprite import settings to every frame in Resources/Art. Frames the slicer adds later

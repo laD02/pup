@@ -84,6 +84,19 @@ it), launch it once, stop it, then push a save: `adb push save.json /sdcard/Andr
 (Unity's persistentDataPath on Android is the external files dir, not `files/` under run-as). A level unlocks when the
 one before it has ≥ 1 star, e.g. `"stars":[3,3,3,3,0,3,3,0,3,3,3,0]` opens 5, 8 and 12.
 
+**Driving a level with `adb` (learned 2026-11-21):** blind `input tap` at a fixed gap only works at some rhythms: on
+`Pixel_QA_34` a tap every 1.6 s got 2-3 pups out of the pit, 1.0, 1.5 and 2.2 s got none. In the arena one tap about
+0.4 s after a pup glides in won level 1. A card that is gone after the next tap is the mission card; one that stays is
+the result card. Frost Bay's first boss is level 12, not 10 (the hand-made levels; later castles: every tenth).
+
+**Seeing the save notices:** stop the game, back up `…/files/save.json`, then for "could not save" make a directory
+where the temp file goes (`adb shell mkdir /sdcard/Android/data/com.sealcatapult.game/files/save.json.tmp`), launch, open
+and close Settings; for "save was damaged" write `{ not json` into `save.json` and launch (the game starts fresh and
+keeps `save.json.corrupt`). Remove the directory or restore the backup afterwards.
+
+**Other screen shapes on one emulator:** `adb shell wm size 1200x1600` (4:3) or `1080x2400` (20:9), relaunch the game,
+`adb shell wm size reset` when done.
+
 **Castle scenery for both phases:** per world `<w>` put three ChatGPT pictures in `Assets/Art/Reference`:
 `pit_<w>.png` (an edit of `pit_bg_wide5.png` that keeps every outline, 1672×941; the colliders are measured on the
 original), `arena_sky_<w>.png` (same composition as `arena_sky.png`) and `wall_<w>.png` (an edit of

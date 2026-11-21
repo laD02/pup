@@ -21,6 +21,7 @@ REACH = 40                             # a stone's radius (32) plus a little, re
 FINAL_REACH = 56                       # the castle's last stone is 1.5 times as big (MapView.BuildNode)
 ART_UP = 75                            # the middle of what stands ON a cage or boss stone (cage 147 px, boss 122 px tall)
 CAGES = (9, 19, 29, 39)                # LevelGenerator.KindForSlot: the cage stones (0-based slot in the castle)
+FIRST_CASTLE_CAGES = (11, 19, 29, 39)  # Frost Bay starts with the hand-made levels: its first boss is level 12 (LevelDesigns)
 FINAL = STONES - 1
 INSETS = (0, 100)                      # safe-area inset at the left and right edge (a punch-hole phone), reference px
 SCREENS = {"4:3": (1600, 1200), "16:9": (1920, 1080), "18.5:9": (2220, 1080), "20:9": (2400, 1080), "21:9": (2520, 1080)}
@@ -69,10 +70,10 @@ def covered(x, y, cw, ch, r, inset):
     return None
 
 
-def hidden(i, x, y, cw, ch, inset):
+def hidden(i, x, y, cw, ch, inset, cages=CAGES):
     """A stone must be clear itself; a cage or boss stone also where its cage or bear stands."""
     why = covered(x, y, cw, ch, FINAL_REACH if i == FINAL else REACH, inset)
-    if why is None and (i in CAGES or i == FINAL):
+    if why is None and (i in cages or i == FINAL):
         why = covered(x, y - ART_UP, cw, ch, REACH, inset)
         why = why and why + " (over its cage or boss)"
     return why
@@ -96,7 +97,8 @@ def main():
                     why = None
                     for step in range(41):
                         f = step / 20 - 1   # only one axis has slack, so one factor covers the whole pan range
-                        why = hidden(i, px / PAINT_W * pw - sx + f * sx, py / PAINT_H * ph - sy + f * sy, cw, ch, inset)
+                        why = hidden(i, px / PAINT_W * pw - sx + f * sx, py / PAINT_H * ph - sy + f * sy, cw, ch, inset,
+                                     FIRST_CASTLE_CAGES if world == WORLDS[0] else CAGES)
                         if why is None:
                             break
                     if why is not None:
